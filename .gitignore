@@ -1,0 +1,14 @@
+.qodo
+# Spring Boot
+BE/target/
+BE/*.log
+BE/.idea/
+BE/*.iml
+
+# React
+fe/node_modules/
+fe/build/
+fe/dist/
+
+# Hệ điều hành
+.DS_Store
