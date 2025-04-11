@@ -4,10 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class StationeryMgntBeApplication {
+public class StationeryManagementApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(StationeryMgntBeApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(StationeryManagementApplication.class, args);
+    }
 }
