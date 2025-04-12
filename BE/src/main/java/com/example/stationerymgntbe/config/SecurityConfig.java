@@ -39,24 +39,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(requests -> requests
-                    .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/admin/**").hasRole("ADMIN") // Expects ROLE_ADMIN
-                    .requestMatchers("/api/users/me").authenticated()
-                    .anyRequest().authenticated())
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling(exception -> exception
-                .authenticationEntryPoint((request, response, authException) -> {
-                    System.out.println("Authentication failed: " + authException.getMessage());
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-                })
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    System.out.println("Access denied: " + accessDeniedException.getMessage());
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-                })
-            );
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/departments").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Expects "ADMIN"
+                        .requestMatchers("/api/users/me").authenticated()
+                        .anyRequest().authenticated())
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            System.out.println("Authentication failed: " + authException.getMessage());
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            System.out.println("Access denied: " + accessDeniedException.getMessage());
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+                        }));
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -79,12 +79,15 @@ public class SecurityConfig {
         return username -> {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-            String role = user.getRole().equals(UserRole.ROLE_ADMIN) ? "ROLE_admin" : "ROLE_user";
+            String role = user.getRole().toString();
+            System.out.println("Role in UserDetailsService: " + role);
+            String authority = role.startsWith("ROLE_") ? role.substring(5) : role;
+            System.out.println("Authority in UserDetailsService: " + authority);
             return new org.springframework.security.core.userdetails.User(
                     user.getUsername(),
                     user.getPassword(),
-                    java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority(role))
-            );
+                    java.util.Collections.singletonList(
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority(authority)));
         };
     }
 
@@ -94,7 +97,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }

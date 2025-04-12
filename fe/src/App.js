@@ -74,7 +74,7 @@ const App = () => {
       return <Navigate to="/login" />;
     }
 
-    const userRole = auth.user?.roles?.[0]?.replace("ROLE_", "").toLowerCase();
+    const userRole = auth.user?.roles?.[0]?.toLowerCase(); // No need to replace "ROLE_"    
     const hasAccess = userRole === "admin" || allowedRoles.includes(userRole);
     if (!userRole || !hasAccess) {
       toast.warn(
@@ -126,8 +126,8 @@ const App = () => {
             <AuthContext.Consumer>
               {({ auth, logout }) => (
                 <Navbar
-                  userRole={auth.user?.roles?.[0]?.replace("ROLE_", "").toLowerCase()}
-                  language={language}
+                userRole={auth.user?.roles?.[0]?.toLowerCase()} // Removed replace("ROLE_", "")                  
+                language={language}
                   setLanguage={setLanguage}
                   handleLogout={() => {
                     logout();

@@ -7,14 +7,18 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
-// const API_URL = 'http://localhost:8082/api';
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user')); // Get the user object
+    const token = user?.token; // Extract the token
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+    } else {
+        console.warn('No token found in localStorage under "user" key');
     }
-    console.log('Request:', config); // Log để kiểm tra
+    console.log('Request:', config); // Log to verify
     return config;
+}, (error) => {
+    return Promise.reject(error);
 });
 
 export const login = (credentials) => api.post('/auth/login', credentials);

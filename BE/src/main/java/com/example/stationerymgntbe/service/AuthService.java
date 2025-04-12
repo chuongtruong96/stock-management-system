@@ -31,12 +31,12 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     
         User user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow();
-        // Pass the role in the correct format (e.g., "ROLE_ADMIN")
-        String role = user.getRole().toString(); // e.g., "ROLE_ADMIN"
+        String role = user.getRole().toString(); // e.g., "ADMIN"
+        System.out.println("Role being passed to JwtUtil: " + role);
         String token = jwtUtil.generateToken(user.getUsername(), role);
         LoginResponse response = new LoginResponse();
         response.setToken(token);
-        response.setRole(user.getRole().toString());
+        response.setRole(role); // Send "ADMIN" or "USER" to the frontend
         return response;
     }
 }

@@ -19,7 +19,7 @@ public class DepartmentController {
     private DepartmentService departmentService;
 
     @GetMapping
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DepartmentDTO>> getAllDepartments() {
         return ResponseEntity.ok(departmentService.getAllDepartments());
     }

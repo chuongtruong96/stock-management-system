@@ -45,6 +45,7 @@ public class UserService {
         User user = findByUsername(username);
         return toUserResponseDTO(user);
     }
+
     public User getCurrentUserEntity() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         if (username == null || username.isEmpty()) {
@@ -93,26 +94,24 @@ public class UserService {
             DepartmentDTO departmentDTO = null;
             if (user.getEmployee().getDepartment() != null) {
                 departmentDTO = new DepartmentDTO(
-                    user.getEmployee().getDepartment().getDepartmentId(),
-                    user.getEmployee().getDepartment().getName(),
-                    user.getEmployee().getDepartment().getResponsiblePerson(),
-                    user.getEmployee().getDepartment().getEmail()
-                );
+                        user.getEmployee().getDepartment().getDepartmentId(),
+                        user.getEmployee().getDepartment().getName(),
+                        user.getEmployee().getDepartment().getResponsiblePerson(),
+                        user.getEmployee().getDepartment().getEmail());
             }
             employeeDTO = new EmployeeDTO(
-                user.getEmployee().getEmployeeId(),
-                user.getEmployee().getFirstName(),
-                user.getEmployee().getLastName(),
-                user.getEmployee().getEmail(),
-                departmentDTO,
-                user.getEmployee().getPosition()
-            );
+                    user.getEmployee().getEmployeeId(),
+                    user.getEmployee().getFirstName(),
+                    user.getEmployee().getLastName(),
+                    user.getEmployee().getEmail(),
+                    departmentDTO,
+                    user.getEmployee().getPosition());
         }
         return new UserResponseDTO(
-            user.getUserId(),
-            user.getUsername(),
-            user.getRole().toString(), // Strip ROLE_ prefix and convert to lowercase            
-            employeeDTO
+                user.getUserId(),
+                user.getUsername(),
+                user.getRole().toString().toLowerCase(), // "USER" -> "user", "ADMIN" -> "admin"
+                employeeDTO
         );
     }
 }

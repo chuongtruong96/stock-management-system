@@ -33,7 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             token = authHeader.substring(7);
             try {
                 username = jwtUtil.getUsernameFromToken(token);
-                role = jwtUtil.getRoleFromToken(token); // e.g., "ROLE_admin"
+                role = jwtUtil.getRoleFromToken(token);
+                System.out.println("Role extracted from token in JwtAuthenticationFilter: " + role);
             } catch (Exception e) {
                 logger.error("Failed to parse JWT token: " + e.getMessage());
             }
@@ -41,12 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(token)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            Collections.singletonList(new SimpleGrantedAuthority(role))
-                        );
+                System.out.println("Role extracted from token: " + role);
+                // Strip "ROLE_" prefix to match hasAuthority("ADMIN")
+                String authority = role.startsWith("ROLE_") ? role.substring(5) : role;
+                System.out.println("Authority after stripping ROLE_: " + authority);
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        username,
+                        null,
+                        Collections.singletonList(new SimpleGrantedAuthority(authority)));
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }

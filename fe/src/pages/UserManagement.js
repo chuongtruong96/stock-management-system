@@ -17,10 +17,17 @@ import {
   MenuItem,
   CircularProgress,
   Fade,
-  IconButton,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { getUsers, addUser, updateUser, deleteUser, getDepartments, getEmployees, addEmployee } from "../services/api";
+import {
+  getUsers,
+  addUser,
+  updateUser,
+  deleteUser,
+  getDepartments,
+  getEmployees,
+  addEmployee,
+} from "../services/api";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
@@ -32,7 +39,12 @@ const UserManagement = ({ language }) => {
   const [employees, setEmployees] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [openEmployeeDialog, setOpenEmployeeDialog] = useState(false);
-  const [newUser, setNewUser] = useState({ username: "", password: "", role: "user", employeeId: "" });
+  const [newUser, setNewUser] = useState({
+    username: "",
+    password: "",
+    role: "user",
+    employeeId: "",
+  });
   const [newEmployee, setNewEmployee] = useState({
     firstName: "",
     lastName: "",
@@ -42,10 +54,10 @@ const UserManagement = ({ language }) => {
   });
   const [editUser, setEditUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null); // Thêm trạng thái lỗi
 
-  // Check authentication and role on mount
   useEffect(() => {
-    if (!auth.token || !hasRole("ROLE_admin")) {
+    if (!auth.token || !hasRole("ADMIN")) {
       toast.error(
         language === "vi"
           ? "Bạn cần đăng nhập với quyền admin để truy cập trang này."
@@ -58,23 +70,26 @@ const UserManagement = ({ language }) => {
 
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const [usersRes, departmentsRes, employeesRes] = await Promise.all([
           getUsers(),
           getDepartments(),
           getEmployees(),
         ]);
+        console.log("Users data:", usersRes.data); // Debug dữ liệu
+        console.log("Departments data:", departmentsRes.data);
+        console.log("Employees data:", employeesRes.data);
         setUsers(usersRes.data || []);
         setDepartments(departmentsRes.data || []);
         setEmployees(employeesRes.data || []);
       } catch (error) {
         console.error("Error fetching data:", error.response?.data || error.message);
-        toast.error(
-          language === "vi"
-            ? `Lỗi khi tải dữ liệu: ${error.response?.data || error.message}`
-            : `Error loading data: ${error.response?.data || error.message}`,
-          { position: "top-right", autoClose: 3000 }
-        );
+        const errorMessage = language === "vi"
+          ? `Lỗi khi tải dữ liệu: ${error.response?.data || error.message}`
+          : `Error loading data: ${error.response?.data || error.message}`;
+        setError(errorMessage);
+        toast.error(errorMessage, { position: "top-right", autoClose: 3000 });
       } finally {
         setLoading(false);
       }
@@ -82,59 +97,102 @@ const UserManagement = ({ language }) => {
     fetchData();
   }, [language, auth, hasRole, navigate]);
 
-  // Validate new user form
-  const validateUserForm = () => {
+  const validateUserForm = (isEdit = false) => {
     if (!newUser.username.trim()) {
-      toast.error(language === "vi" ? "Vui lòng nhập tên đăng nhập" : "Username is required");
+      toast.error(
+        language === "vi"
+          ? "Vui lòng nhập tên đăng nhập"
+          : "Username is required"
+      );
       return false;
     }
-    if (!newUser.password.trim()) {
-      toast.error(language === "vi" ? "Vui lòng nhập mật khẩu" : "Password is required");
+    if (!isEdit && !newUser.password.trim()) {
+      toast.error(
+        language === "vi" ? "Vui lòng nhập mật khẩu" : "Password is required"
+      );
       return false;
     }
     if (!newUser.employeeId) {
-      toast.error(language === "vi" ? "Vui lòng chọn nhân viên" : "Please select an employee");
+      toast.error(
+        language === "vi"
+          ? "Vui lòng chọn nhân viên"
+          : "Please select an employee"
+      );
       return false;
     }
     return true;
   };
 
-  // Validate new employee form
   const validateEmployeeForm = () => {
     if (!newEmployee.firstName.trim()) {
-      toast.error(language === "vi" ? "Vui lòng nhập họ" : "First name is required");
+      toast.error(
+        language === "vi" ? "Vui lòng nhập họ" : "First name is required"
+      );
       return false;
     }
     if (!newEmployee.lastName.trim()) {
-      toast.error(language === "vi" ? "Vui lòng nhập tên" : "Last name is required");
+      toast.error(
+        language === "vi" ? "Vui lòng nhập tên" : "Last name is required"
+      );
       return false;
     }
     if (!newEmployee.email.trim() || !/\S+@\S+\.\S+/.test(newEmployee.email)) {
-      toast.error(language === "vi" ? "Vui lòng nhập email hợp lệ" : "Please enter a valid email");
+      toast.error(
+        language === "vi"
+          ? "Vui lòng nhập email hợp lệ"
+          : "Please enter a valid email"
+      );
       return false;
     }
     if (!newEmployee.department.departmentId) {
-      toast.error(language === "vi" ? "Vui lòng chọn phòng ban" : "Please select a department");
+      toast.error(
+        language === "vi"
+          ? "Vui lòng chọn phòng ban"
+          : "Please select a department"
+      );
       return false;
     }
     if (!newEmployee.position.trim()) {
-      toast.error(language === "vi" ? "Vui lòng nhập vị trí" : "Position is required");
+      toast.error(
+        language === "vi" ? "Vui lòng nhập vị trí" : "Position is required"
+      );
       return false;
     }
     return true;
   };
 
-  // Handle adding a new employee
+  const handleEmployeeChange = (e) => {
+    const selectedEmployeeId = e.target.value;
+    const selectedEmployee = employees.find((emp) => emp.employeeId === selectedEmployeeId);
+
+    if (editUser) {
+      setEditUser({
+        ...editUser,
+        employee: selectedEmployee || { employeeId: selectedEmployeeId },
+      });
+    } else {
+      setNewUser({ ...newUser, employeeId: selectedEmployeeId });
+    }
+  };
+
   const handleAddEmployee = async () => {
     if (!validateEmployeeForm()) return;
 
     try {
       const response = await addEmployee(newEmployee);
       setEmployees([...employees, response.data]);
-      setNewEmployee({ firstName: "", lastName: "", email: "", department: { departmentId: "" }, position: "" });
+      setNewEmployee({
+        firstName: "",
+        lastName: "",
+        email: "",
+        department: { departmentId: "" },
+        position: "",
+      });
       setOpenEmployeeDialog(false);
       toast.success(
-        language === "vi" ? "Thêm nhân viên thành công!" : "Employee added successfully!",
+        language === "vi"
+          ? "Thêm nhân viên thành công!"
+          : "Employee added successfully!",
         { position: "top-right", autoClose: 2000 }
       );
     } catch (error) {
@@ -147,7 +205,6 @@ const UserManagement = ({ language }) => {
     }
   };
 
-  // Handle adding a new user
   const handleAddUser = async () => {
     if (!validateUserForm()) return;
 
@@ -157,7 +214,9 @@ const UserManagement = ({ language }) => {
       setOpenDialog(false);
       setNewUser({ username: "", password: "", role: "user", employeeId: "" });
       toast.success(
-        language === "vi" ? "Thêm người dùng thành công!" : "User added successfully!",
+        language === "vi"
+          ? "Thêm người dùng thành công!"
+          : "User added successfully!",
         { position: "top-right", autoClose: 2000 }
       );
     } catch (error) {
@@ -170,7 +229,6 @@ const UserManagement = ({ language }) => {
     }
   };
 
-  // Handle editing a user
   const handleEditUser = async () => {
     if (!editUser.username.trim() || !editUser.employee.employeeId) {
       toast.error(
@@ -181,7 +239,18 @@ const UserManagement = ({ language }) => {
       );
       return;
     }
-
+    const userToValidate = {
+      username: editUser.username,
+      password: editUser.password || "",
+      role: editUser.role,
+      employeeId: editUser.employee?.employeeId || "",
+    };
+    setNewUser(userToValidate);
+    if (!validateUserForm(true)) {
+      setNewUser({ username: "", password: "", role: "user", employeeId: "" });
+      return;
+    }
+    setNewUser({ username: "", password: "", role: "user", employeeId: "" });
     try {
       const response = await updateUser(editUser.userId, {
         username: editUser.username,
@@ -189,24 +258,31 @@ const UserManagement = ({ language }) => {
         role: editUser.role,
         employeeId: editUser.employee.employeeId,
       });
-      setUsers(users.map((user) => (user.userId === editUser.userId ? response.data : user)));
+      setUsers(
+        users.map((user) =>
+          user.userId === editUser.userId ? response.data : user
+        )
+      );
       setEditUser(null);
       setOpenDialog(false);
       toast.success(
-        language === "vi" ? "Cập nhật người dùng thành công!" : "User updated successfully!",
+        language === "vi"
+          ? "Cập nhật người dùng thành công!"
+          : "User updated successfully!",
         { position: "top-right", autoClose: 2000 }
       );
     } catch (error) {
       toast.error(
         language === "vi"
-          ? `Lỗi khi cập nhật người dùng: ${error.response?.data || error.message}`
+          ? `Lỗi khi cập nhật người dùng: ${
+              error.response?.data || error.message
+            }`
           : `Error updating user: ${error.response?.data || error.message}`,
         { position: "top-right", autoClose: 3000 }
       );
     }
   };
 
-  // Handle deleting a user
   const handleDeleteUser = async (userId) => {
     if (
       !window.confirm(
@@ -222,7 +298,9 @@ const UserManagement = ({ language }) => {
       await deleteUser(userId);
       setUsers(users.filter((user) => user.userId !== userId));
       toast.success(
-        language === "vi" ? "Xóa người dùng thành công!" : "User deleted successfully!",
+        language === "vi"
+          ? "Xóa người dùng thành công!"
+          : "User deleted successfully!",
         { position: "top-right", autoClose: 2000 }
       );
     } catch (error) {
@@ -235,7 +313,6 @@ const UserManagement = ({ language }) => {
     }
   };
 
-  // DataGrid columns
   const columns = [
     {
       field: "username",
@@ -243,7 +320,7 @@ const UserManagement = ({ language }) => {
       width: 150,
       renderCell: (params) => (
         <Typography sx={{ fontWeight: "medium", color: "#1976d2" }}>
-          {params.value}
+          {params.value || "N/A"}
         </Typography>
       ),
     },
@@ -253,7 +330,7 @@ const UserManagement = ({ language }) => {
       width: 100,
       renderCell: (params) => (
         <Typography sx={{ color: params.value === "admin" ? "#1976d2" : "#666" }}>
-          {params.value}
+          {params.value || "N/A"}
         </Typography>
       ),
     },
@@ -261,19 +338,31 @@ const UserManagement = ({ language }) => {
       field: "employee.firstName",
       headerName: language === "vi" ? "Họ" : "First Name",
       width: 150,
-      valueGetter: (params) => params.row.employee?.firstName || "N/A",
+      renderCell: (params) => (
+        <Typography>
+          {params.row?.employee?.firstName || "N/A"}
+        </Typography>
+      ),
     },
     {
       field: "employee.lastName",
       headerName: language === "vi" ? "Tên" : "Last Name",
       width: 150,
-      valueGetter: (params) => params.row.employee?.lastName || "N/A",
+      renderCell: (params) => (
+        <Typography>
+          {params.row?.employee?.lastName || "N/A"}
+        </Typography>
+      ),
     },
     {
       field: "employee.department.name",
       headerName: language === "vi" ? "Phòng Ban" : "Department",
       width: 200,
-      valueGetter: (params) => params.row.employee?.department?.name || "N/A",
+      renderCell: (params) => (
+        <Typography>
+          {params.row?.employee?.department?.name || "N/A"}
+        </Typography>
+      ),
     },
     {
       field: "action",
@@ -297,7 +386,7 @@ const UserManagement = ({ language }) => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => handleDeleteUser(params.row.userId)}
+            onClick={() => handleDeleteUser(params.row?.userId)}
             sx={{ textTransform: "none", px: 2 }}
           >
             {language === "vi" ? "Xóa" : "Delete"}
@@ -319,7 +408,6 @@ const UserManagement = ({ language }) => {
             {language === "vi" ? "Quản Lý Người Dùng" : "User Management"}
           </Typography>
 
-          {/* Action Buttons */}
           <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
             <Button
               variant="contained"
@@ -332,7 +420,10 @@ const UserManagement = ({ language }) => {
                 borderRadius: 2,
                 px: 3,
                 py: 1,
-                "&:hover": { transform: "scale(1.02)", transition: "all 0.3s ease" },
+                "&:hover": {
+                  transform: "scale(1.02)",
+                  transition: "all 0.3s ease",
+                },
               }}
             >
               {language === "vi" ? "Thêm Người Dùng" : "Add User"}
@@ -348,21 +439,37 @@ const UserManagement = ({ language }) => {
                 borderRadius: 2,
                 px: 3,
                 py: 1,
-                "&:hover": { transform: "scale(1.02)", transition: "all 0.3s ease" },
+                "&:hover": {
+                  transform: "scale(1.02)",
+                  transition: "all 0.3s ease",
+                },
               }}
             >
               {language === "vi" ? "Thêm Nhân Viên" : "Add Employee"}
             </Button>
           </Box>
 
-          {/* Data Grid */}
-          {loading ? (
+          {error ? (
+            <Typography
+              variant="h6"
+              color="error"
+              sx={{ mt: 4, textAlign: "center" }}
+            >
+              {error}
+            </Typography>
+          ) : loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
               <CircularProgress size={60} color="primary" />
             </Box>
           ) : users.length === 0 ? (
-            <Typography variant="h6" color="textSecondary" sx={{ mt: 4, textAlign: "center" }}>
-              {language === "vi" ? "Chưa có người dùng nào." : "No users available."}
+            <Typography
+              variant="h6"
+              color="textSecondary"
+              sx={{ mt: 4, textAlign: "center" }}
+            >
+              {language === "vi"
+                ? "Chưa có người dùng nào."
+                : "No users available."}
             </Typography>
           ) : (
             <Box
@@ -381,6 +488,7 @@ const UserManagement = ({ language }) => {
                 rowsPerPageOptions={[10, 25, 50]}
                 getRowId={(row) => row.userId}
                 disableSelectionOnClick
+                treeData={false} // Tắt tính năng nhóm
                 sx={{
                   "& .MuiDataGrid-columnHeaders": {
                     backgroundColor: "#1976d2",
@@ -397,7 +505,6 @@ const UserManagement = ({ language }) => {
         </Box>
       </Fade>
 
-      {/* Dialog to Add/Edit User */}
       <Dialog
         open={openDialog}
         onClose={() => {
@@ -457,22 +564,30 @@ const UserManagement = ({ language }) => {
                   : setNewUser({ ...newUser, role: e.target.value })
               }
             >
-              <MenuItem value="admin">{language === "vi" ? "Quản Trị" : "Admin"}</MenuItem>
-              <MenuItem value="user">{language === "vi" ? "Người Dùng" : "User"}</MenuItem>
+              <MenuItem value="ADMIN">
+                {language === "vi" ? "Quản Trị" : "ADMIN"}
+              </MenuItem>
+              <MenuItem value="USER">
+                {language === "vi" ? "Người Dùng" : "USER"}
+              </MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth margin="normal">
-            <InputLabel>{language === "vi" ? "Nhân Viên" : "Employee"}</InputLabel>
+            <InputLabel>
+              {language === "vi" ? "Nhân Viên" : "Employee"}
+            </InputLabel>
             <Select
-              value={editUser ? editUser.employee?.employeeId : newUser.employeeId}
-              onChange={(e) =>
+              value={
                 editUser
-                  ? setEditUser({ ...editUser, employee: { ...editUser.employee, employeeId: e.target.value } })
-                  : setNewUser({ ...newUser, employeeId: e.target.value })
+                  ? editUser.employee?.employeeId || ""
+                  : newUser.employeeId
               }
+              onChange={handleEmployeeChange}
             >
               <MenuItem value="">
-                <em>{language === "vi" ? "Chọn nhân viên" : "Select employee"}</em>
+                <em>
+                  {language === "vi" ? "Chọn nhân viên" : "Select employee"}
+                </em>
               </MenuItem>
               {employees.map((emp) => (
                 <MenuItem key={emp.employeeId} value={emp.employeeId}>
@@ -498,12 +613,17 @@ const UserManagement = ({ language }) => {
             variant="contained"
             sx={{ textTransform: "none", px: 3 }}
           >
-            {editUser ? (language === "vi" ? "Cập Nhật" : "Update") : (language === "vi" ? "Thêm" : "Add")}
+            {editUser
+              ? language === "vi"
+                ? "Cập Nhật"
+                : "Update"
+              : language === "vi"
+              ? "Thêm"
+              : "Add"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dialog to Add Employee */}
       <Dialog
         open={openEmployeeDialog}
         onClose={() => setOpenEmployeeDialog(false)}
@@ -521,7 +641,9 @@ const UserManagement = ({ language }) => {
             fullWidth
             margin="normal"
             value={newEmployee.firstName}
-            onChange={(e) => setNewEmployee({ ...newEmployee, firstName: e.target.value })}
+            onChange={(e) =>
+              setNewEmployee({ ...newEmployee, firstName: e.target.value })
+            }
             variant="outlined"
             autoFocus
             sx={{ "& .MuiInputLabel-root": { color: "#666" } }}
@@ -531,7 +653,9 @@ const UserManagement = ({ language }) => {
             fullWidth
             margin="normal"
             value={newEmployee.lastName}
-            onChange={(e) => setNewEmployee({ ...newEmployee, lastName: e.target.value })}
+            onChange={(e) =>
+              setNewEmployee({ ...newEmployee, lastName: e.target.value })
+            }
             variant="outlined"
             sx={{ "& .MuiInputLabel-root": { color: "#666" } }}
           />
@@ -540,20 +664,29 @@ const UserManagement = ({ language }) => {
             fullWidth
             margin="normal"
             value={newEmployee.email}
-            onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+            onChange={(e) =>
+              setNewEmployee({ ...newEmployee, email: e.target.value })
+            }
             variant="outlined"
             sx={{ "& .MuiInputLabel-root": { color: "#666" } }}
           />
           <FormControl fullWidth margin="normal">
-            <InputLabel>{language === "vi" ? "Phòng Ban" : "Department"}</InputLabel>
+            <InputLabel>
+              {language === "vi" ? "Phòng Ban" : "Department"}
+            </InputLabel>
             <Select
               value={newEmployee.department.departmentId}
               onChange={(e) =>
-                setNewEmployee({ ...newEmployee, department: { departmentId: e.target.value } })
+                setNewEmployee({
+                  ...newEmployee,
+                  department: { departmentId: e.target.value },
+                })
               }
             >
               <MenuItem value="">
-                <em>{language === "vi" ? "Chọn phòng ban" : "Select department"}</em>
+                <em>
+                  {language === "vi" ? "Chọn phòng ban" : "Select department"}
+                </em>
               </MenuItem>
               {departments.map((dept) => (
                 <MenuItem key={dept.departmentId} value={dept.departmentId}>
@@ -567,7 +700,9 @@ const UserManagement = ({ language }) => {
             fullWidth
             margin="normal"
             value={newEmployee.position}
-            onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })}
+            onChange={(e) =>
+              setNewEmployee({ ...newEmployee, position: e.target.value })
+            }
             variant="outlined"
             sx={{ "& .MuiInputLabel-root": { color: "#666" } }}
           />

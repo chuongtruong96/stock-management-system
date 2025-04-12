@@ -42,36 +42,37 @@ export const AuthProvider = ({ children }) => {
 
   const login = (user) => {
     try {
-      const decoded = jwtDecode(user.token);
-      const roles = decoded.roles || (decoded.role ? [decoded.role] : user.roles || []);
-      
-      // Case-insensitive role check
-      const validRoles = ['ROLE_ADMIN', 'ROLE_USER'].map(role => role.toUpperCase());
-      const hasValidRole = roles.some(role => validRoles.includes(role.toUpperCase()));
-      if (!hasValidRole) {
-        throw new Error('User does not have valid privileges');
-      }
+        const decoded = jwtDecode(user.token);
+        const roles = decoded.roles || (decoded.role ? [decoded.role] : user.roles || []);
+        // Strip "ROLE_" prefix from roles
+        const normalizedRoles = roles.map(role => role.startsWith("ROLE_") ? role.substring(5) : role);
+        
+        const validRoles = ['ADMIN', 'USER'].map(role => role.toUpperCase());
+        const hasValidRole = normalizedRoles.some(role => validRoles.includes(role.toUpperCase()));
+        if (!hasValidRole) {
+            throw new Error('User does not have valid privileges');
+        }
 
-      const userObject = {
-        token: user.token,
-        username: user.username,
-        roles,
-      };
-      localStorage.setItem('user', JSON.stringify(userObject));
-      setAuth({
-        token: user.token,
-        user: {
-          ...decoded,
-          username: user.username,
-          roles,
-        },
-      });
+        const userObject = {
+            token: user.token,
+            username: user.username,
+            roles: normalizedRoles,
+        };
+        localStorage.setItem('user', JSON.stringify(userObject));
+        setAuth({
+            token: user.token,
+            user: {
+                ...decoded,
+                username: user.username,
+                roles: normalizedRoles,
+            },
+        });
     } catch (error) {
-      console.error('Error during login:', error);
-      localStorage.removeItem('user');
-      throw error;
+        console.error('Error during login:', error);
+        localStorage.removeItem('user');
+        throw error;
     }
-  };
+};
 
   const logout = () => {
     localStorage.removeItem('user');
@@ -82,8 +83,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasRole = (role) => {
-    return auth.user?.roles?.some(r => r.toUpperCase() === role.toUpperCase()) || false;
-  };
+    if (!auth.user || !auth.user.roles) return false;
+    return auth.user.roles.some(r => r.toUpperCase() === role.toUpperCase());
+};
 
   if (authLoading) {
     return <p>Loading user information...</p>;

@@ -17,25 +17,25 @@ public class EmployeeController {
     private EmployeeService employeeService;
 
     @GetMapping
-    @PreAuthorize("hasRole('admin')")
-    public ResponseEntity<List<EmployeeDTO>> getAllEmployees() {
+    @PreAuthorize("hasAuthority('ADMIN')")
+        public ResponseEntity<List<EmployeeDTO>> getAllEmployees() {
         return ResponseEntity.ok(employeeService.getAllEmployees());
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<EmployeeDTO> createEmployee(@RequestBody EmployeeDTO employeeDTO) {
         return ResponseEntity.ok(employeeService.createEmployee(employeeDTO));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable Integer id, @RequestBody EmployeeDTO employeeDTO) {
         return ResponseEntity.ok(employeeService.updateEmployee(id, employeeDTO));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> deleteEmployee(@PathVariable Integer id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok("Employee deleted successfully");
