@@ -1,51 +1,61 @@
+// src/main/java/com/example/stationerymgntbe/controller/ReportController.java
 package com.example.stationerymgntbe.controller;
 
-import com.example.stationerymgntbe.dto.OrderDTO;
-import com.example.stationerymgntbe.dto.OrderItemDTO;
-import com.example.stationerymgntbe.dto.ReportDTO;
+import com.example.stationerymgntbe.dto.*;
 import com.example.stationerymgntbe.service.ReportService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports")
+@RequiredArgsConstructor
 public class ReportController {
 
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
 
-    @GetMapping("/monthly")
-    public ResponseEntity<List<OrderDTO>> getMonthlyReport(@RequestParam int year, @RequestParam int month) {
-        return ResponseEntity.ok(reportService.getMonthlyReport(year, month));
-    }
-
-    @GetMapping("/order-items/{orderId}")
-    public ResponseEntity<List<OrderItemDTO>> getOrderItems(@PathVariable Integer orderId) {
-        return ResponseEntity.ok(reportService.getOrderItems(orderId));
-    }
-
+    /* ----------  FE cũ: /reports?year&month  ---------- */
     @GetMapping
-    public ResponseEntity<List<ReportDTO>> getReport(@RequestParam String month) {
-        String[] parts = month.split("-");
-        int year = Integer.parseInt(parts[0]);
-        int monthValue = Integer.parseInt(parts[1]);
-        return ResponseEntity.ok(reportService.generateReport(year, monthValue));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> summary(@RequestParam int year,@RequestParam int month){
+        /* Trả về chỉ summary (List<ReportDTO>) để FE cũ dùng */
+        return ResponseEntity.ok(reportService.fetchMonthly(year,month).getSummary());
     }
 
+    /* ----------  FE cũ: /reports/export/excel ---------- */
     @GetMapping("/export/excel")
-    public ResponseEntity<byte[]> exportToExcel(@RequestParam String month) throws IOException {
-        String[] parts = month.split("-");
-        int year = Integer.parseInt(parts[0]);
-        int monthValue = Integer.parseInt(parts[1]);
-        byte[] excelBytes = reportService.exportToExcel(year, monthValue);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> excel(@RequestParam String month) throws Exception{
+        String[] p = month.split("-");
+        int y = Integer.parseInt(p[0]);
+        int m = Integer.parseInt(p[1]);
+        byte[] body = reportService.export(y,m,"excel");
+        String fn = "report_%d_%02d.xlsx".formatted(y,m);
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=Stationery_Report_" + month + ".xlsx")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(excelBytes);
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename="+fn)
+                .body(body);
+    }
+
+    /* ----------  (OPTIONAL) mới: /reports/full ---------- */
+    @GetMapping("/full")
+    @PreAuthorize("hasRole('ADMIN')")
+    public MonthlyReportDTO full(@RequestParam int year,@RequestParam int month){
+        return reportService.fetchMonthly(year,month);
+    }
+
+    /* ----------  (OPTIONAL) export PDF ---------- */
+    @GetMapping("/export/pdf")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> pdf(@RequestParam String month) throws Exception{
+        String[] p = month.split("-");
+        int y=Integer.parseInt(p[0]); int m=Integer.parseInt(p[1]);
+        byte[] body = reportService.export(y,m,"pdf");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=report_%d_%02d.pdf".formatted(y,m))
+                .body(body);
     }
 }

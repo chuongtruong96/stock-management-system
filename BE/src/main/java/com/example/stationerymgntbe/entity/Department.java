@@ -2,13 +2,13 @@ package com.example.stationerymgntbe.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+@Getter
+@Setter
 @Entity
 @Table(name = "departments")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Department {
+public class Department extends AbstractEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer departmentId;
@@ -16,7 +16,6 @@ public class Department {
     @Column(unique = true, nullable = false)
     private String name;
 
-    private String responsiblePerson;
-
+    @Column(nullable = false, unique = true)
     private String email;
 }

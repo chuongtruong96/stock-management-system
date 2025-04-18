@@ -29,11 +29,7 @@ const Sidebar = ({ open, toggleSidebar, userRole, language }) => {
       path: '/product-management',
       icon: <InventoryIcon />,
     },
-    {
-      label: language === 'vi' ? 'Quản Lý Kho' : 'Stock Management',
-      path: '/stock-management',
-      icon: <InventoryIcon />,
-    },
+   
     {
       label: language === 'vi' ? 'Quản Lý Đơn Vị' : 'Unit Management',
       path: '/unit-management',

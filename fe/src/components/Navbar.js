@@ -32,7 +32,7 @@ const Navbar = ({ userRole, language, setLanguage, handleLogout, toggleSidebar, 
     <AppBar
       position="fixed"
       sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1, // Ensure Navbar is above Sidebar
+        zIndex: (theme) => theme.zIndex.drawer + 1,
         background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
       }}
@@ -105,7 +105,7 @@ const Navbar = ({ userRole, language, setLanguage, handleLogout, toggleSidebar, 
                   transform: 'scale(1.1)',
                 },
               }}
-              onClick={() => navigate('/profile')} // Placeholder for profile page
+              onClick={() => navigate('/profile')}
             >
               {getInitials(username)}
             </Avatar>

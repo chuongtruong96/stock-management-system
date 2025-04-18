@@ -1,7 +1,9 @@
-import { useState, useContext, useEffect } from "react";
+// src/pages/Login.jsx
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
-import { jwtDecode } from "jwt-decode";
+// Nếu bạn muốn decode JWT client-side
+import {jwtDecode} from "jwt-decode";
 import {
   Box,
   TextField,
@@ -14,16 +16,16 @@ import {
   CircularProgress,
   Link,
   Fade,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
-  Tooltip,
+  Select,
+  MenuItem,
+  Tooltip
 } from "@mui/material";
 import { Visibility, VisibilityOff, Person, Lock } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { login } from "../services/api";
+import "../assets/styles/custom.css"; // <--- import custom CSS
 
 const Login = ({ language, setLanguage }) => {
   const { login: authLogin } = useContext(AuthContext);
@@ -35,7 +37,7 @@ const Login = ({ language, setLanguage }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ username: "", password: "" });
 
-  // Load "Remember Me" state and username from localStorage on mount
+  // Load saved username if 'rememberMe'
   useEffect(() => {
     const savedUsername = localStorage.getItem("rememberedUsername");
     const savedRememberMe = localStorage.getItem("rememberMe") === "true";
@@ -45,7 +47,6 @@ const Login = ({ language, setLanguage }) => {
     }
   }, []);
 
-  // Handle "Remember Me" checkbox change
   const handleRememberMeChange = (e) => {
     const isChecked = e.target.checked;
     setRememberMe(isChecked);
@@ -58,42 +59,36 @@ const Login = ({ language, setLanguage }) => {
     }
   };
 
-  // Toggle password visibility
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
-  // Validate form fields
   const validateForm = () => {
     let isValid = true;
     const newErrors = { username: "", password: "" };
-
     if (!username.trim()) {
-      newErrors.username = language === "vi" ? "Vui lòng nhập tên đăng nhập" : "Username is required";
+      newErrors.username =
+        language === "vi" ? "Vui lòng nhập tên đăng nhập" : "Username is required";
       isValid = false;
     }
-
     if (!password.trim()) {
-      newErrors.password = language === "vi" ? "Vui lòng nhập mật khẩu" : "Password is required";
+      newErrors.password =
+        language === "vi" ? "Vui lòng nhập mật khẩu" : "Password is required";
       isValid = false;
     }
-
     setErrors(newErrors);
     return isValid;
   };
 
-  // Handle login submission
   const handleLogin = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setLoading(true);
     try {
       const response = await login({ username, password });
       const token = response.data.token;
+      // decode
       const decoded = jwtDecode(token);
-      console.log('Decoded JWT:', decoded); // Debug: Inspect token structure
+      console.log("Decoded JWT:", decoded);
       const user = {
         token,
         username,
@@ -108,18 +103,16 @@ const Login = ({ language, setLanguage }) => {
         navigate("/dashboard");
       }, 2000);
     } catch (err) {
-      if (err.message === 'User does not have valid privileges') {
+      if (err.message === "User does not have valid privileges") {
         toast.error(
           language === "vi"
-            ? "Bạn không có quyền truy cập. Vui lòng liên hệ quản trị viên."
-            : "You do not have access. Please contact an administrator.",
+            ? "Bạn không có quyền truy cập."
+            : "You do not have access.",
           { position: "top-right", autoClose: 3000 }
         );
       } else {
         toast.error(
-          language === "vi"
-            ? "Tên đăng nhập hoặc mật khẩu không đúng"
-            : "Invalid username or password",
+          language === "vi" ? "Tên đăng nhập hoặc mật khẩu không đúng" : "Invalid username or password",
           { position: "top-right", autoClose: 3000 }
         );
       }
@@ -128,14 +121,12 @@ const Login = ({ language, setLanguage }) => {
     }
   };
 
-  // Handle form submission on Enter key press
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleLogin();
     }
   };
 
-  // Handle language change
   const handleLanguageChange = (e) => {
     setLanguage(e.target.value);
   };
@@ -167,8 +158,8 @@ const Login = ({ language, setLanguage }) => {
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
             position: "relative",
           }}
+          className="fade-in-up"
         >
-          {/* App Logo/Name */}
           <Typography
             variant="h4"
             align="center"
@@ -183,7 +174,6 @@ const Login = ({ language, setLanguage }) => {
             {language === "vi" ? "Đăng Nhập Hệ Thống" : "Stationery Management"}
           </Typography>
 
-          {/* Language Toggle */}
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel sx={{ color: "#666" }}>
               {language === "vi" ? "Ngôn Ngữ" : "Language"}
@@ -203,7 +193,6 @@ const Login = ({ language, setLanguage }) => {
             </Select>
           </FormControl>
 
-          {/* Username Field */}
           <TextField
             label={language === "vi" ? "Tên Đăng Nhập" : "Username"}
             fullWidth
@@ -224,17 +213,14 @@ const Login = ({ language, setLanguage }) => {
             autoComplete="username"
             autoFocus
             sx={{
-              "& .MuiInputLabel-root": { color: "#666" },
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#ddd" },
                 "&:hover fieldset": { borderColor: "#1976d2" },
                 "&.Mui-focused fieldset": { borderColor: "#1976d2" },
               },
             }}
-            inputProps={{ "aria-label": language === "vi" ? "Tên Đăng Nhập" : "Username" }}
           />
 
-          {/* Password Field */}
           <TextField
             label={language === "vi" ? "Mật Khẩu" : "Password"}
             type={showPassword ? "text" : "password"}
@@ -253,19 +239,7 @@ const Login = ({ language, setLanguage }) => {
               ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={handleTogglePasswordVisibility}
-                    edge="end"
-                    aria-label={
-                      language === "vi"
-                        ? showPassword
-                          ? "Ẩn mật khẩu"
-                          : "Hiện mật khẩu"
-                        : showPassword
-                        ? "Hide password"
-                        : "Show password"
-                    }
-                  >
+                  <IconButton onClick={handleTogglePasswordVisibility} edge="end">
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
@@ -274,18 +248,17 @@ const Login = ({ language, setLanguage }) => {
             variant="outlined"
             autoComplete="current-password"
             sx={{
-              "& .MuiInputLabel-root": { color: "#666" },
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: "#ddd" },
                 "&:hover fieldset": { borderColor: "#1976d2" },
                 "&.Mui-focused fieldset": { borderColor: "#1976d2" },
               },
             }}
-            inputProps={{ "aria-label": language === "vi" ? "Mật Khẩu" : "Password" }}
           />
 
-          {/* Remember Me and Forgot Password */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2, mb: 3 }}>
+          <Box
+            sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2, mb: 3 }}
+          >
             <FormControlLabel
               control={
                 <Checkbox
@@ -302,11 +275,7 @@ const Login = ({ language, setLanguage }) => {
               }
             />
             <Tooltip
-              title={
-                language === "vi"
-                  ? "Tính năng đang phát triển"
-                  : "Feature under development"
-              }
+              title={language === "vi" ? "Tính năng đang phát triển" : "Feature under development"}
               arrow
             >
               <span>
@@ -327,35 +296,14 @@ const Login = ({ language, setLanguage }) => {
             </Tooltip>
           </Box>
 
-          {/* Login Button */}
           <Button
-            variant="contained"
-            color="primary"
+            className="btn-primary fade-in-up"
             fullWidth
             onClick={handleLogin}
             disabled={loading}
-            sx={{
-              py: 1.5,
-              fontSize: "1.1rem",
-              fontWeight: "bold",
-              borderRadius: 2,
-              textTransform: "none",
-              backgroundColor: "#1976d2",
-              "&:hover": {
-                backgroundColor: "#1565c0",
-                transform: "scale(1.02)",
-                transition: "all 0.3s ease",
-              },
-              "&:disabled": {
-                backgroundColor: "#b0bec5",
-              },
-            }}
+            sx={{ py: 1.5, fontSize: "1.1rem", fontWeight: "bold", borderRadius: 2 }}
           >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              <>{language === "vi" ? "Đăng Nhập" : "Login"}</>
-            )}
+            {loading ? <CircularProgress size={24} color="inherit" /> : (language === "vi" ? "Đăng Nhập" : "Login")}
           </Button>
         </Box>
       </Fade>

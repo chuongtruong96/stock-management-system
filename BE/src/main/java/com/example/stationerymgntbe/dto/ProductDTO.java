@@ -1,10 +1,9 @@
 package com.example.stationerymgntbe.dto;
 
 import lombok.Data;
-
 @Data
 public class ProductDTO {
-    private Integer productId;
+    private Integer id;
     private String code;
     private String name;
     private String unit;

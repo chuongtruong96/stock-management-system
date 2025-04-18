@@ -1,9 +1,14 @@
 package com.example.stationerymgntbe.dto;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class ReportDTO {
+    private Long id;
     private String department;
     private String productCode;
     private String productNameVn;

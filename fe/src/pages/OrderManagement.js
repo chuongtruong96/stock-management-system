@@ -1,218 +1,169 @@
-import { useState, useEffect } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import { Button, Box, Typography, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { getOrders, getOrderItems, approveOrder, rejectOrder } from '../services/api';
+// src/pages/OrderManagement.jsx
+import { useState, useEffect } from "react";
+import { DataGrid } from "@mui/x-data-grid";
+import {
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Card,
+  CardContent
+} from "@mui/material";
+import { getOrders, updateOrder, deleteOrder } from "../services/api";
+import "../assets/styles/custom.css";
 
 const OrderManagement = ({ language }) => {
-    const [orders, setOrders] = useState([]);
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [orderItems, setOrderItems] = useState([]);
-    const [comment, setComment] = useState('');
-    const [error, setError] = useState(null);
-    const [openRejectDialog, setOpenRejectDialog] = useState(false);
-    const [orderIdToReject, setOrderIdToReject] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [adminComment, setAdminComment] = useState("");
 
-    useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                const response = await getOrders();
-                console.log('Orders response:', response.data);
-                const mappedOrders = response.data.map(order => ({
-                    ...order,
-                    departmentId: order.departmentId || 'N/A',
-                    employeeName: order.employeeName || 'N/A',
-                }));
-                setOrders(mappedOrders);
-                setError(null);
-            } catch (error) {
-                console.error('Error fetching orders:', error.response?.data || error.message);
-                setError(language === 'vi' ? 'Lỗi khi tải danh sách đơn hàng' : 'Error fetching orders');
-            }
-        };
-        fetchOrders();
-    }, [language]);
-
-    const handleViewDetails = async (orderId) => {
-        try {
-            const response = await getOrderItems(orderId);
-            console.log('Order items response:', response.data);
-            if (response.data && response.data.length > 0) {
-                const validOrderItems = response.data
-                    .filter(item => item && item.orderItemId && item.productId && item.productName && item.quantity)
-                    .map(item => ({
-                        ...item,
-                        unitNameVn: item.unitNameVn || 'N/A',
-                        unitNameEn: item.unitNameEn || 'N/A',
-                    }));
-                if (validOrderItems.length > 0) {
-                    setOrderItems(validOrderItems);
-                    setSelectedOrder(orders.find((order) => order.orderId === orderId));
-                } else {
-                    alert(
-                        language === 'vi'
-                            ? 'Không có chi tiết đơn hàng hợp lệ cho đơn hàng này.'
-                            : 'No valid order details available for this order.'
-                    );
-                    setOrderItems([]);
-                    setSelectedOrder(null);
-                }
-            } else {
-                alert(
-                    language === 'vi'
-                        ? 'Không có chi tiết đơn hàng cho đơn hàng này.'
-                        : 'No order details available for this order.'
-                );
-                setOrderItems([]);
-                setSelectedOrder(null);
-            }
-        } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message;
-            alert(
-                language === 'vi'
-                    ? `Lỗi khi lấy chi tiết đơn hàng: ${errorMessage}`
-                    : `Error fetching order details: ${errorMessage}`
-            );
-            setOrderItems([]);
-            setSelectedOrder(null);
-        }
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await getOrders();
+        setOrders(res.data || []);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
     };
+    fetchOrders();
+  }, [language]);
 
-    const handleApprove = async (orderId) => {
-        try {
-            await approveOrder(orderId);
-            setOrders(orders.map((order) => order.orderId === orderId ? { ...order, status: 'approved' } : order));
-        } catch (error) {
-            alert(language === 'vi' ? 'Lỗi khi phê duyệt đơn hàng' : 'Error approving order');
-        }
-    };
-
-    const handleReject = (orderId) => {
-        setOrderIdToReject(orderId);
-        setOpenRejectDialog(true);
-    };
-
-    const confirmReject = async () => {
-        try {
-            await rejectOrder(orderIdToReject, comment);
-            setOrders(orders.map((order) => order.orderId === orderIdToReject ? { ...order, status: 'rejected', adminComment: comment } : order));
-            setOpenRejectDialog(false);
-            setComment('');
-        } catch (error) {
-            alert(language === 'vi' ? 'Lỗi khi từ chối đơn hàng' : 'Error rejecting order');
-        }
-    };
-
-    const columns = [
-        { field: 'orderId', headerName: language === 'vi' ? 'Mã Đơn Hàng' : 'Order ID', width: 100 },
-        { field: 'departmentId', headerName: language === 'vi' ? 'Mã Phòng Ban' : 'Department ID', width: 150 },
-        { field: 'employeeName', headerName: language === 'vi' ? 'Nhân Viên' : 'Employee', width: 200 },
-        { field: 'status', headerName: language === 'vi' ? 'Trạng Thái' : 'Status', width: 120 },
-        { field: 'createdAt', headerName: language === 'vi' ? 'Ngày Tạo' : 'Created At', width: 200 },
-        {
-            field: 'actions',
-            headerName: language === 'vi' ? 'Hành Động' : 'Actions',
-            width: 250,
-            renderCell: (params) => (
-                <div>
-                    <Button onClick={() => handleViewDetails(params.row.orderId)}>
-                        {language === 'vi' ? 'Xem Chi Tiết' : 'View Details'}
-                    </Button>
-                    {params.row.status === 'pending' && (
-                        <>
-                            <Button onClick={() => handleApprove(params.row.orderId)} color="primary" sx={{ mx: 1 }}>
-                                {language === 'vi' ? 'Phê Duyệt' : 'Approve'}
-                            </Button>
-                            <Button onClick={() => handleReject(params.row.orderId)} color="secondary">
-                                {language === 'vi' ? 'Từ Chối' : 'Reject'}
-                            </Button>
-                        </>
-                    )}
-                </div>
-            ),
-        },
-    ];
-
-    const itemColumns = [
-        { field: 'productId', headerName: language === 'vi' ? 'Mã Sản Phẩm' : 'Product ID', width: 100 },
-        { field: 'productName', headerName: language === 'vi' ? 'Tên Sản Phẩm' : 'Product Name', width: 300 },
-        { field: 'quantity', headerName: language === 'vi' ? 'Số Lượng' : 'Quantity', width: 100 },
-        {
-            field: 'unit',
-            headerName: language === 'vi' ? 'Đơn Vị' : 'Unit',
-            width: 100,
-            renderCell: (params) => {
-                const value = language === 'vi' ? params.row.unitNameVn : params.row.unitNameEn;
-                return value || 'N/A';
-            },
-        },
-    ];
-
-    if (error) {
-        return (
-            <Box sx={{ p: 3 }}>
-                <Typography variant="h4" color="error">{error}</Typography>
-            </Box>
-        );
+  const handleUpdateOrder = async () => {
+    try {
+      const updated = {
+        ...selectedOrder,
+        adminComment,
+      };
+      const res = await updateOrder(selectedOrder.orderId, updated);
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.orderId === selectedOrder.orderId ? res.data : order
+        )
+      );
+      setSelectedOrder(null);
+      setAdminComment("");
+    } catch (error) {
+      alert(language === "vi" ? "Lỗi cập nhật đơn hàng" : "Error updating order");
     }
+  };
 
-    return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                {language === 'vi' ? 'Quản Lý Đơn Hàng' : 'Order Management'}
-            </Typography>
-            <Box sx={{ height: 400, width: '100%' }}>
-                <DataGrid
-                    rows={orders}
-                    columns={columns}
-                    pageSize={10}
-                    rowsPerPageOptions={[10, 25, 50]}
-                    getRowId={(row) => row.orderId}
-                    disableSelectionOnClick
-                />
-            </Box>
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm(language === "vi" ? "Xác nhận xóa?" : "Delete confirm?"))
+      return;
+    try {
+      await deleteOrder(orderId);
+      setOrders((prev) => prev.filter((o) => o.orderId !== orderId));
+    } catch (error) {
+      alert(language === "vi" ? "Lỗi xóa đơn hàng" : "Error deleting order");
+    }
+  };
 
-            {selectedOrder && (
-                <>
-                    <Typography variant="h5" sx={{ mt: 4, mb: 2 }}>
-                        {language === 'vi' ? 'Chi Tiết Đơn Hàng' : 'Order Details'} #{selectedOrder.orderId}
-                    </Typography>
-                    <Box sx={{ height: 300, width: '100%' }}>
-                        <DataGrid
-                            rows={orderItems}
-                            columns={itemColumns}
-                            pageSize={5}
-                            rowsPerPageOptions={[5, 10]}
-                            getRowId={(row) => row.orderItemId}
-                            disableSelectionOnClick
-                        />
-                    </Box>
-                </>
-            )}
+  const columns = [
+    { field: "orderId", headerName: "ID", width: 80 },
+    {
+      field: "createdAt",
+      headerName: language === "vi" ? "Ngày tạo" : "Created At",
+      width: 180,
+    },
+    {
+      field: "status",
+      headerName: language === "vi" ? "Trạng Thái" : "Status",
+      width: 120,
+    },
+    {
+      field: "adminComment",
+      headerName: language === "vi" ? "Ghi chú Quản Trị" : "Admin Comment",
+      width: 200,
+    },
+    {
+      field: "action",
+      headerName: language === "vi" ? "Hành Động" : "Action",
+      width: 200,
+      renderCell: (params) => (
+        <>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => {
+              setSelectedOrder(params.row);
+              setAdminComment(params.row.adminComment || "");
+            }}
+            sx={{ mr: 1 }}
+          >
+            {language === "vi" ? "Sửa" : "Edit"}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => handleDeleteOrder(params.row.orderId)}
+          >
+            {language === "vi" ? "Xóa" : "Delete"}
+          </Button>
+        </>
+      ),
+    },
+  ];
 
-            <Dialog open={openRejectDialog} onClose={() => setOpenRejectDialog(false)}>
-                <DialogTitle>{language === 'vi' ? 'Từ Chối Đơn Hàng' : 'Reject Order'}</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        label={language === 'vi' ? 'Lý Do Từ Chối' : 'Reason for Rejection'}
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        fullWidth
-                        margin="normal"
-                        multiline
-                        rows={4}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenRejectDialog(false)}>
-                        {language === 'vi' ? 'Hủy' : 'Cancel'}
-                    </Button>
-                    <Button onClick={confirmReject} color="secondary">
-                        {language === 'vi' ? 'Xác Nhận' : 'Confirm'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
-    );
+  return (
+    <Box sx={{ p: 3 }} className="fade-in-up">
+      <Card className="mui-card" sx={{ p: 2 }}>
+        <CardContent>
+          <Typography variant="h4" gutterBottom>
+            {language === "vi" ? "Quản lý đơn hàng" : "Order Management"}
+          </Typography>
+          <Box className="custom-datagrid">
+            <DataGrid
+              rows={orders}
+              columns={columns}
+              pageSize={10}
+              rowsPerPageOptions={[10, 25, 50]}
+              getRowId={(row) => row.orderId}
+              disableSelectionOnClick
+              autoHeight
+            />
+          </Box>
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={!!selectedOrder}
+        onClose={() => {
+          setSelectedOrder(null);
+          setAdminComment("");
+        }}
+      >
+        <DialogTitle>
+          {language === "vi" ? "Sửa Ghi Chú" : "Edit Admin Comment"}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            label={language === "vi" ? "Ghi chú" : "Comment"}
+            fullWidth
+            multiline
+            minRows={3}
+            margin="normal"
+            value={adminComment}
+            onChange={(e) => setAdminComment(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedOrder(null)}>
+            {language === "vi" ? "Hủy" : "Cancel"}
+          </Button>
+          <Button onClick={handleUpdateOrder} variant="contained">
+            {language === "vi" ? "Cập Nhật" : "Update"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
 };
 
 export default OrderManagement;

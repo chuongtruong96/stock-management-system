@@ -17,9 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.example.stationerymgntbe.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletResponse;
-
 import com.example.stationerymgntbe.entity.User;
-import com.example.stationerymgntbe.enums.UserRole;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;

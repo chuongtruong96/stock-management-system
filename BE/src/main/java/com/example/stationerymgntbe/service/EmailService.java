@@ -1,10 +1,8 @@
 package com.example.stationerymgntbe.service;
 
 import com.example.stationerymgntbe.dto.OrderDTO;
-import com.example.stationerymgntbe.entity.Department;
 import com.example.stationerymgntbe.entity.Order;
-import com.example.stationerymgntbe.repository.DepartmentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -12,13 +10,10 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
-
-    @Autowired
-    private DepartmentRepository departmentRepository;
+    private final JavaMailSender mailSender;
 
     @Value("${email.admin:admin@company.com}")
     private String adminEmail;
@@ -26,6 +21,9 @@ public class EmailService {
     @Value("${email.from:noreply@company.com}")
     private String fromEmail;
 
+    /**
+     * Generic method to send an email via JavaMailSender
+     */
     public void sendEmail(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -39,38 +37,34 @@ public class EmailService {
         }
     }
 
-    // Gửi email thông báo cho admin khi có đơn hàng mới
+    /**
+     * Notify the admin that a new order was created
+     */
     public void sendOrderNotificationToAdmin(OrderDTO orderDTO) {
-        Department department = departmentRepository.findById(orderDTO.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department not found with ID: " + orderDTO.getDepartmentId()));
-
-        String subject = "New Stationery Order from " + department.getName();
-        String body = "A new order has been placed by " + department.getName() + ".\n" +
-                      "Order ID: " + orderDTO.getOrderId() + "\n" +
-                      "Please review the order in the system.";
+        String subject = "New Stationery Order - Order ID: " + orderDTO.getOrderId();
+        String body = "A new order has been submitted by Department ID: " + orderDTO.getDepartmentId() +
+                ".\nPlease review it in the admin portal.";
         sendEmail(adminEmail, subject, body);
     }
 
-    // Gửi email thông báo cho phòng ban khi đơn hàng được phê duyệt
+    /**
+     * Notify department that their order was approved
+     */
     public void sendOrderApprovalNotification(Order order) {
-        Department department = order.getEmployee().getDepartment();
-        String subject = "Your Stationery Order Has Been Approved";
-        String body = "Dear " + department.getName() + ",\n\n" +
-                      "Your order (ID: " + order.getOrderId() + ") has been approved.\n" +
-                      "You can check the details in the system.\n\n" +
-                      "Best regards,\nStationery System";
-        sendEmail(department.getEmail(), subject, body);
+        String deptEmail = order.getDepartment().getEmail();
+        String subject = "Your Order Has Been Approved - Order ID: " + order.getOrderId();
+        String body = "Dear Department,\n\nYour order has been approved.\n\nBest regards,\nStationery System";
+        sendEmail(deptEmail, subject, body);
     }
 
-    // Gửi email thông báo cho phòng ban khi đơn hàng bị từ chối
+    /**
+     * Notify department that their order was rejected, including reason
+     */
     public void sendOrderRejectionNotification(Order order, String reason) {
-        Department department = order.getEmployee().getDepartment();
-        String subject = "Your Stationery Order Has Been Rejected";
-        String body = "Dear " + department.getName() + ",\n\n" +
-                      "Your order (ID: " + order.getOrderId() + ") has been rejected.\n" +
-                      "Reason: " + reason + "\n" +
-                      "Please review and resubmit if necessary.\n\n" +
-                      "Best regards,\nStationery System";
-        sendEmail(department.getEmail(), subject, body);
+        String deptEmail = order.getDepartment().getEmail();
+        String subject = "Your Order Has Been Rejected - Order ID: " + order.getOrderId();
+        String body = "Dear Department,\n\nYour order has been rejected.\nReason: " + reason +
+                "\n\nPlease review and adjust your order.\n\nBest regards,\nStationery System";
+        sendEmail(deptEmail, subject, body);
     }
 }

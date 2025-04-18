@@ -3,27 +3,21 @@ package com.example.stationerymgntbe.entity;
 import com.example.stationerymgntbe.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 import java.util.List;
-
+@Getter
+@Setter
 @Entity
 @Table(name = "orders")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
+public class Order extends AbstractEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderId;
 
     @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee employee;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -38,3 +32,4 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> items;
 }
+

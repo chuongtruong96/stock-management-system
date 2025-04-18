@@ -5,15 +5,12 @@ import lombok.Data;
 
 @Data
 public class UserResponseDTO {
-    private Integer userId;
+    private Integer id;
     private String username;
     private String role;
-    private EmployeeDTO employee; // Replace employeeId with the full employee object
-
-    public UserResponseDTO(Integer userId, String username, String role, EmployeeDTO employee) {
-        this.userId = userId;
-        this.username = username;
-        this.role = role;
-        this.employee = employee;
-    }
+    // private DepartmentDTO department;
+    /* thêm trường phẳng */
+    private Integer departmentId;
+    private String departmentName;
+    private String departmentEmail;
 }

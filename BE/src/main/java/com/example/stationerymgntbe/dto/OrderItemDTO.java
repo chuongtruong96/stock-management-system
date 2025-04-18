@@ -12,13 +12,4 @@ public class OrderItemDTO {
     private Integer quantity;
     private String unitNameVn;
     private String unitNameEn;
-    public OrderItemDTO(Integer orderItemId, Integer orderId, Integer productId, String productName, Integer quantity, String unitNameVn,String unitNameEn) {
-        this.orderItemId = orderItemId;
-        this.orderId = orderId;
-        this.productId = productId;
-        this.productName = productName;
-        this.quantity = quantity;
-        this.unitNameVn = unitNameVn;
-        this.unitNameEn = unitNameEn;
-    }
 }

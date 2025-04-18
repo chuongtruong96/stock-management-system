@@ -1,8 +1,9 @@
+// src/main/java/com/example/stationerymgntbe/controller/DepartmentController.java
 package com.example.stationerymgntbe.controller;
 
 import com.example.stationerymgntbe.dto.DepartmentDTO;
 import com.example.stationerymgntbe.service.DepartmentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +14,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/departments")
+@RequiredArgsConstructor
 public class DepartmentController {
 
-    @Autowired
-    private DepartmentService departmentService;
+    private final DepartmentService departmentService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")

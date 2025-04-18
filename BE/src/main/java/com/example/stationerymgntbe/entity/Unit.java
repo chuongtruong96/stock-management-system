@@ -3,12 +3,13 @@ package com.example.stationerymgntbe.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "units")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Unit {
+public class Unit extends AbstractEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer unitId;

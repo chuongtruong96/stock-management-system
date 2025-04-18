@@ -39,6 +39,11 @@ export const getPendingOrdersCount = () => api.get('/orders/pending-count');
 export const getMonthlyOrdersCount = () => api.get('/orders/monthly-count');
 export const getLatestOrder = () => api.get('/orders/latest');
 export const checkOrderPeriod = () => api.get('/orders/check-period');
+export const updateOrder = (orderId, data) => api.put(`/orders/${orderId}`, data);
+export const deleteOrder = (orderId) => api.delete(`/orders/${orderId}`);
+export const getOrderHistory = () => api.get('/orders/history');
+export const getOrderHistoryByDepartment = (departmentId) => api.get(`/orders/history?departmentId=${departmentId}`);
+
 export const getUnits = () => api.get('/units');
 export const addUnit = (unit) => api.post('/units', unit);
 export const updateUnit = (unitId, unit) => api.put(`/units/${unitId}`, unit);
