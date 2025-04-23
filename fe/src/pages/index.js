@@ -10,3 +10,6 @@ export { default as ProductManagement } from './ProductManagement';
 export { default as UnitManagement } from './UnitManagement';
 export { default as UserManagement } from './UserManagement';
 export { default as Reports } from './Reports';
+export { default as NotificationsPage } from './NotificationsPage';
+export { default as SummaryDashboard } from './SummaryDashboard';
+export { default as ResetPassword } from './ResetPassword';

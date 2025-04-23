@@ -42,4 +42,6 @@ public class AdminUserController {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted successfully");
     }
+
+    
 }

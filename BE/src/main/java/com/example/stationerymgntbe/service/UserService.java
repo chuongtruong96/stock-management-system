@@ -9,6 +9,8 @@ import com.example.stationerymgntbe.exception.ResourceNotFoundException;
 import com.example.stationerymgntbe.mapper.UserMapper;
 import com.example.stationerymgntbe.repository.DepartmentRepository;
 import com.example.stationerymgntbe.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,7 +49,8 @@ public class UserService {
 
     public UserResponseDTO createUser(UserInputDTO dto) {
         Department dept = departmentRepository.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + dto.getDepartmentId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Department not found with id: " + dto.getDepartmentId()));
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -60,32 +63,36 @@ public class UserService {
     public UserResponseDTO updateUser(Integer id, UserInputDTO dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                    "User not found with id: " + id));
-    
+                        "User not found with id: " + id));
+
         Department dept = departmentRepository.findById(dto.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                    "Department not found with id: " + dto.getDepartmentId()));
-    
+                        "Department not found with id: " + dto.getDepartmentId()));
+
         user.setUsername(dto.getUsername());
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         user.setRole(dto.getRole());
         user.setDepartment(dept);
-    
+
         // Save the user
         userRepository.save(user);
-    
+
         // Return the updated user as a DTO
-        return userMapper.toDto(user); 
+        return userMapper.toDto(user);
     }
-    
-    
 
     public void deleteUser(Integer id) {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void updatePassword(User u, String rawPw, PasswordEncoder encoder) {
+        u.setPassword(encoder.encode(rawPw));
+        userRepository.save(u);
     }
 }

@@ -67,4 +67,11 @@ public class EmailService {
                 "\n\nPlease review and adjust your order.\n\nBest regards,\nStationery System";
         sendEmail(deptEmail, subject, body);
     }
+
+    public void sendResetLink(String toEmail, String token) {
+        String link = "http://localhost:3000/reset/" + token;
+        String subject = "Reset your password";
+        String body = "Click the link below within 15 minutes:\n" + link;
+        sendEmail(toEmail, subject, body);
+    }
 }

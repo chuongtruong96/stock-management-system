@@ -1,9 +1,8 @@
-// src/pages/Login.jsx
-import React, { useState, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+/*  src/pages/Login.jsx  */
+import { useState, useContext } from "react";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
-// Nếu bạn muốn decode JWT client-side
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import {
   Box,
   TextField,
@@ -15,298 +14,206 @@ import {
   InputAdornment,
   CircularProgress,
   Link,
-  Fade,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Tooltip
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { Visibility, VisibilityOff, Person, Lock } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { login } from "../services/api";
-import "../assets/styles/custom.css"; // <--- import custom CSS
+import {
+  login as apiLogin,
+  forgotPassword as apiForgot,     // ⬅ you’ll add this in api.js
+} from "../services/api";
 
 const Login = ({ language, setLanguage }) => {
   const { login: authLogin } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const navigate              = useNavigate();
+
+  /* ---------------- state ---------------- */
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(
+    localStorage.getItem("rememberMe") === "true"
+  );
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({ username: "", password: "" });
+  const [errors, setErrors]   = useState({});
 
-  // Load saved username if 'rememberMe'
-  useEffect(() => {
-    const savedUsername = localStorage.getItem("rememberedUsername");
-    const savedRememberMe = localStorage.getItem("rememberMe") === "true";
-    if (savedRememberMe && savedUsername) {
-      setUsername(savedUsername);
-      setRememberMe(true);
-    }
-  }, []);
+  /* forgot‑pw dialog */
+  const [openForgot, setOpenForgot] = useState(false);
+  const [fpEmail, setFpEmail] = useState("");
 
-  const handleRememberMeChange = (e) => {
-    const isChecked = e.target.checked;
-    setRememberMe(isChecked);
-    if (isChecked) {
-      localStorage.setItem("rememberedUsername", username);
-      localStorage.setItem("rememberMe", "true");
-    } else {
-      localStorage.removeItem("rememberedUsername");
-      localStorage.setItem("rememberMe", "false");
-    }
-  };
-
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  const validateForm = () => {
-    let isValid = true;
-    const newErrors = { username: "", password: "" };
-    if (!username.trim()) {
-      newErrors.username =
-        language === "vi" ? "Vui lòng nhập tên đăng nhập" : "Username is required";
-      isValid = false;
-    }
-    if (!password.trim()) {
-      newErrors.password =
-        language === "vi" ? "Vui lòng nhập mật khẩu" : "Password is required";
-      isValid = false;
-    }
-    setErrors(newErrors);
-    return isValid;
+  /* ---------------- helpers ---------------- */
+  const validate = () => {
+    const e = {};
+    if (!username.trim()) e.username = "Required";
+    if (!password.trim()) e.password = "Required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
   const handleLogin = async () => {
-    if (!validateForm()) return;
+    if (!validate()) return;
     setLoading(true);
     try {
-      const response = await login({ username, password });
-      const token = response.data.token;
-      // decode
-      const decoded = jwtDecode(token);
-      console.log("Decoded JWT:", decoded);
-      const user = {
+      const { data } = await apiLogin({ username, password });
+      const token    = data.token;
+      const decoded  = jwtDecode(token);
+
+      authLogin({
         token,
         username,
-        roles: decoded.role ? [decoded.role] : decoded.roles || [],
-      };
-      authLogin(user);
-      toast.success(language === "vi" ? "Đăng nhập thành công!" : "Login successful!", {
-        position: "top-right",
-        autoClose: 2000,
+        roles: decoded.role ? [decoded.role] : decoded.roles,
       });
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
+      toast.success("Logged in");
+      navigate("/dashboard");
     } catch (err) {
-      if (err.message === "User does not have valid privileges") {
-        toast.error(
-          language === "vi"
-            ? "Bạn không có quyền truy cập."
-            : "You do not have access.",
-          { position: "top-right", autoClose: 3000 }
-        );
-      } else {
-        toast.error(
-          language === "vi" ? "Tên đăng nhập hoặc mật khẩu không đúng" : "Invalid username or password",
-          { position: "top-right", autoClose: 3000 }
-        );
-      }
+      toast.error(err.response?.data || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleLogin();
+  /* ---------- forgot password ---------- */
+  const handleForgot = async () => {
+    if (!fpEmail.trim()) {
+      toast.error("Enter e‑mail");
+      return;
+    }
+    try {
+      await apiForgot({ email: fpEmail });
+      toast.success("Check your inbox for a reset link");
+      setOpenForgot(false);
+      setFpEmail("");
+    } catch (err) {
+      toast.error(err.response?.data || "Request failed");
     }
   };
 
-  const handleLanguageChange = (e) => {
-    setLanguage(e.target.value);
-  };
-
+  /* ---------------- render ---------------- */
   return (
     <Box
       sx={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "linear-gradient(135deg, #6e8efb, #a777e3)",
-        animation: "gradient 15s ease infinite",
-        backgroundSize: "400% 400%",
-        "@keyframes gradient": {
-          "0%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-          "100%": { backgroundPosition: "0% 50%" },
-        },
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        bgcolor: "linear-gradient(135deg,#6e8efb,#a777e3)",
+        p: 2,
       }}
     >
-      <Fade in timeout={1000}>
-        <Box
-          sx={{
-            width: { xs: "90%", sm: 450 },
-            p: { xs: 3, sm: 4 },
-            backgroundColor: "white",
-            borderRadius: 3,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-            position: "relative",
+      <Box
+        sx={{
+          width: 420,
+          bgcolor: "#fff",
+          p: 4,
+          borderRadius: 2,
+          boxShadow: 3,
+        }}
+      >
+        <Typography variant="h4" align="center" gutterBottom>
+          Stationery Management
+        </Typography>
+
+        {/* username */}
+        <TextField
+          label="Username"
+          fullWidth
+          margin="normal"
+          value={username}
+          error={!!errors.username}
+          helperText={errors.username}
+          onChange={(e) => setUsername(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Person />
+              </InputAdornment>
+            ),
           }}
-          className="fade-in-up"
+        />
+
+        {/* password */}
+        <TextField
+          label="Password"
+          type={showPw ? "text" : "password"}
+          fullWidth
+          margin="normal"
+          value={password}
+          error={!!errors.password}
+          helperText={errors.password}
+          onChange={(e) => setPassword(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Lock />
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setShowPw((p) => !p)} edge="end">
+                  {showPw ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <Box
+          sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}
         >
-          <Typography
-            variant="h4"
-            align="center"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              color: "#1976d2",
-              mb: 4,
-              fontSize: { xs: "1.8rem", sm: "2.2rem" },
-            }}
-          >
-            {language === "vi" ? "Đăng Nhập Hệ Thống" : "Stationery Management"}
-          </Typography>
-
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel sx={{ color: "#666" }}>
-              {language === "vi" ? "Ngôn Ngữ" : "Language"}
-            </InputLabel>
-            <Select
-              value={language}
-              onChange={handleLanguageChange}
-              label={language === "vi" ? "Ngôn Ngữ" : "Language"}
-              sx={{
-                "& .MuiSelect-select": { py: 1.5 },
-                "& .MuiOutlinedInput-notchedOutline": { borderColor: "#ddd" },
-                "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#1976d2" },
-              }}
-            >
-              <MenuItem value="en">English</MenuItem>
-              <MenuItem value="vi">Tiếng Việt</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            label={language === "vi" ? "Tên Đăng Nhập" : "Username"}
-            fullWidth
-            margin="normal"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyPress={handleKeyPress}
-            error={!!errors.username}
-            helperText={errors.username}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Person sx={{ color: "action.active" }} />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-            autoComplete="username"
-            autoFocus
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: "#ddd" },
-                "&:hover fieldset": { borderColor: "#1976d2" },
-                "&.Mui-focused fieldset": { borderColor: "#1976d2" },
-              },
-            }}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={rememberMe}
+                onChange={(e) => {
+                  setRememberMe(e.target.checked);
+                  localStorage.setItem("rememberMe", e.target.checked);
+                }}
+              />
+            }
+            label="Remember me"
           />
 
-          <TextField
-            label={language === "vi" ? "Mật Khẩu" : "Password"}
-            type={showPassword ? "text" : "password"}
-            fullWidth
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={handleKeyPress}
-            error={!!errors.password}
-            helperText={errors.password}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock sx={{ color: "action.active" }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={handleTogglePasswordVisibility} edge="end">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-            autoComplete="current-password"
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: "#ddd" },
-                "&:hover fieldset": { borderColor: "#1976d2" },
-                "&.Mui-focused fieldset": { borderColor: "#1976d2" },
-              },
-            }}
-          />
-
-          <Box
-            sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2, mb: 3 }}
+          <Link
+            component="button"
+            underline="hover"
+            onClick={() => setOpenForgot(true)}
           >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={handleRememberMeChange}
-                  color="primary"
-                  sx={{ "& .MuiSvgIcon-root": { fontSize: 20 } }}
-                />
-              }
-              label={
-                <Typography sx={{ fontSize: "0.9rem", color: "#666" }}>
-                  {language === "vi" ? "Ghi Nhớ Tôi" : "Remember Me"}
-                </Typography>
-              }
-            />
-            <Tooltip
-              title={language === "vi" ? "Tính năng đang phát triển" : "Feature under development"}
-              arrow
-            >
-              <span>
-                <Link
-                  href="#"
-                  onClick={(e) => e.preventDefault()}
-                  sx={{
-                    fontSize: "0.9rem",
-                    color: "#1976d2",
-                    textDecoration: "none",
-                    "&:hover": { textDecoration: "underline" },
-                  }}
-                  aria-disabled="true"
-                >
-                  {language === "vi" ? "Quên Mật Khẩu?" : "Forgot Password?"}
-                </Link>
-              </span>
-            </Tooltip>
-          </Box>
-
-          <Button
-            className="btn-primary fade-in-up"
-            fullWidth
-            onClick={handleLogin}
-            disabled={loading}
-            sx={{ py: 1.5, fontSize: "1.1rem", fontWeight: "bold", borderRadius: 2 }}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : (language === "vi" ? "Đăng Nhập" : "Login")}
-          </Button>
+            Forgot password?
+          </Link>
         </Box>
-      </Fade>
+
+        <Button
+          variant="contained"
+          fullWidth
+          sx={{ mt: 3 }}
+          disabled={loading}
+          onClick={handleLogin}
+        >
+          {loading ? <CircularProgress size={22} /> : "Login"}
+        </Button>
+      </Box>
+
+      {/* ------------- Forgot‑pw dialog ------------- */}
+      <Dialog open={openForgot} onClose={() => setOpenForgot(false)}>
+        <DialogTitle>Reset password</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Department e‑mail"
+            fullWidth
+            margin="dense"
+            value={fpEmail}
+            onChange={(e) => setFpEmail(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenForgot(false)}>Cancel</Button>
+          <Button onClick={handleForgot} variant="contained">
+            Send link
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

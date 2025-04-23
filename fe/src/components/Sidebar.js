@@ -10,7 +10,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import HistoryIcon from '@mui/icons-material/History';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-
+import NotificationsIcon from '@mui/icons-material/Notifications';
 const Sidebar = ({ open, toggleSidebar, userRole, language }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,6 +40,9 @@ const Sidebar = ({ open, toggleSidebar, userRole, language }) => {
       path: '/user-management',
       icon: <PeopleIcon />,
     },
+
+    { label: language==='vi'? 'Thông báo':'Notifications', path:'/notifications', icon:<NotificationsIcon/> },
+    { label: language==='vi'? 'Báo cáo tổng kết':'Summaries', path:'/summaries', icon:<AssessmentIcon/> },
     { label: language === 'vi' ? 'Nhập Đơn Hàng' : 'Import Orders', path: '/import-order', icon: <ShoppingCartIcon /> },
     { label: language === 'vi' ? 'Báo Cáo' : 'Reports', path: '/reports', icon: <AssessmentIcon /> },
   ];

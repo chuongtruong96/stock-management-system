@@ -1,56 +1,105 @@
-// src/pages/UserDashboard.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { Box, Typography, Card, CardContent } from "@mui/material";
-import { getLatestOrder, checkOrderPeriod } from "../services/api";
+import { getLatestOrder, getWindowStatus } from "../services/api"; // bỏ checkOrderPeriod
+import { WsContext } from "../contexts/WsContext";
+import { toast } from "react-toastify";
 import "../assets/styles/custom.css";
 
 const UserDashboard = ({ language }) => {
   const [latestOrder, setLatestOrder] = useState(null);
-  const [daysRemaining, setDaysRemaining] = useState(null);
+  const [daysRemaining, setDaysRemaining] = useState(0); // -1  =  “vô thời hạn”
+  const [winOpen, setWinOpen] = useState(true);
+  const { subscribe } = useContext(WsContext);
 
+  /* ---------- helper ---------- */
+  const computeDays = useCallback((openFlag) => {
+    const today = new Date().getDate();
+    const inFirstWeek = today <= 7;
+
+    if (!openFlag && !inFirstWeek) {
+      // đóng hoàn toàn
+      setDaysRemaining(0);
+      return;
+    }
+    if (inFirstWeek) {
+      setDaysRemaining(7 - today); // số ngày còn lại của tuần đầu
+    } else {
+      setDaysRemaining(-1); // vô thời hạn (admin mở KHẨN)
+    }
+  }, []);
+
+  /* ---------- first load + realtime ---------- */
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    (async () => {
       try {
-        const [orderRes, periodRes] = await Promise.all([
+        const [orderRes, winRes] = await Promise.all([
           getLatestOrder(),
-          checkOrderPeriod(),
+          getWindowStatus(),
         ]);
         setLatestOrder(orderRes.data);
-        if (periodRes.data.canOrder) {
-          const today = new Date().getDate();
-          const daysLeft = 31 - today;
-          setDaysRemaining(daysLeft > 0 ? daysLeft : 0);
-        } else {
-          setDaysRemaining(0);
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        setWinOpen(winRes.data.open);
+        computeDays(winRes.data.open);
+      } catch (e) {
+        console.error(e);
       }
-    };
-    fetchDashboardData();
-  }, [language]);
+    })();
 
+    const unsubs = [];
+    // Subscribe to order updates for this dept
+    subscribe(`/topic/orders/${latestOrder?.departmentId ?? 0}`, (o) => {
+      setLatestOrder(o);
+      toast.info(
+        language === "vi"
+          ? `Đơn #${o.orderId} đã ${o.status}`
+          : `Order #${o.orderId} ${o.status}`
+      );
+    }).then((off) => unsubs.push(off));
+    // Subscribe to window‑open events
+    subscribe("/topic/order-window", ({ open }) => {
+      setWinOpen(open);
+      computeDays(open);
+    }).then((off) => unsubs.push(off));
+
+    return () => unsubs.forEach((off) => off());
+  }, [language, subscribe, computeDays]);
+
+  /* ---------- helpers để hiển thị ---------- */
+  const windowReallyOpen = winOpen || daysRemaining > 0 || daysRemaining === -1;
+  const message = () => {
+    if (!windowReallyOpen) {
+      return language === "vi"
+        ? "Đã đóng cửa sổ đặt hàng."
+        : "Ordering window is closed.";
+    }
+    if (daysRemaining === -1) {
+      return language === "vi"
+        ? "Cửa sổ đang mở do quản trị viên."
+        : "Ordering window is OPEN by admin.";
+    }
+    return language === "vi"
+      ? `Còn ${daysRemaining} ngày để đặt.`
+      : `${daysRemaining} day(s) left for ordering.`;
+  };
+
+  /* ---------- UI ---------- */
   return (
     <Box sx={{ pt: 8, p: 3 }} className="fade-in-up">
       <Typography variant="h4" gutterBottom>
-        {language === "vi"
-          ? "Bảng Điều Khiển Người Dùng"
-          : "User Dashboard"}
+        {language === "vi" ? "Bảng Điều Khiển Người Dùng" : "User Dashboard"}
       </Typography>
+
+      {/* ---- Latest order ---- */}
       <Card className="mui-card" sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6">
-            {language === "vi" ? "Đơn Hàng Gần Nhất" : "Latest Order"}
+            {language === "vi" ? "Đơn Gần Nhất" : "Latest Order"}
           </Typography>
+
           {latestOrder ? (
             <>
               <Typography>
-                {language === "vi" ? "Mã Đơn Hàng" : "Order ID"}:{" "}
-                {latestOrder.orderId}
-              </Typography>
-              <Typography>
-                {language === "vi" ? "Ngày Tạo" : "Date"}:{" "}
-                {latestOrder.createdAt}
+                ID: {latestOrder.orderId} —{" "}
+                {new Date(latestOrder.createdAt).toLocaleString()}
               </Typography>
               <Typography>
                 {language === "vi" ? "Trạng Thái" : "Status"}:{" "}
@@ -58,36 +107,28 @@ const UserDashboard = ({ language }) => {
               </Typography>
               {latestOrder.adminComment && (
                 <Typography>
-                  {language === "vi" ? "Bình Luận Quản Trị" : "Admin Comment"}:{" "}
+                  {language === "vi" ? "Ghi Chú" : "Admin Comment"}:{" "}
                   {latestOrder.adminComment}
                 </Typography>
               )}
             </>
           ) : (
             <Typography>
-              {language === "vi" ? "Chưa có đơn hàng nào." : "No orders yet."}
+              {language === "vi" ? "Chưa có đơn." : "No order yet."}
             </Typography>
           )}
         </CardContent>
       </Card>
+
+      {/* ---- Order window ---- */}
       <Card className="mui-card">
         <CardContent>
           <Typography variant="h6">
-            {language === "vi" ? "Thời Gian Đặt Hàng" : "Order Period"}
+            {language === "vi" ? "Cửa Sổ Đặt Hàng" : "Order Window"}
           </Typography>
-          {daysRemaining > 0 ? (
-            <Typography>
-              {language === "vi"
-                ? `Bạn còn ${daysRemaining} ngày để đặt hàng.`
-                : `You have ${daysRemaining} day(s) left to place an order.`}
-            </Typography>
-          ) : (
-            <Typography>
-              {language === "vi"
-                ? "Thời gian đặt hàng đã đóng."
-                : "Ordering is closed for this month."}
-            </Typography>
-          )}
+          <Typography color={windowReallyOpen ? "success.main" : "error"}>
+            {message()}
+          </Typography>
         </CardContent>
       </Card>
     </Box>

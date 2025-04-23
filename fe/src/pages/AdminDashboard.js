@@ -1,5 +1,4 @@
-// src/pages/AdminDashboard.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -21,410 +20,357 @@ import {
   approveOrder,
   rejectOrder,
   getProducts,
+  getWindowStatus,
+  toggleWindow,
 } from "../services/api";
 import { toast } from "react-toastify";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  Tooltip,
   Legend,
+  ResponsiveContainer,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Bar,
 } from "recharts";
+import { WsContext } from "../contexts/WsContext";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 
-/**
- * Giả lập dữ liệu top sản phẩm được order.
- * Thực tế, bạn cần backend trả về thống kê: { productName, totalOrdered }.
- */
 const MOCK_TOP_ORDERED = [
   { productName: "Bút Bi Thiên Long", total: 120 },
-  { productName: "Giấy A4 Double A", total: 95 },
-  { productName: "Bìa Kẹp Hồ Sơ", total: 80 },
-  { productName: "Bút Chì 2B", total: 74 },
-  { productName: "Sổ Tay Mini", total: 62 },
-  { productName: "Băng Keo Trong", total: 59 },
-  { productName: "File 13 Ngăn", total: 50 },
-  { productName: "Kẹp Giấy 2cm", total: 45 },
-  { productName: "Bút Lông Dầu", total: 39 },
-  { productName: "Gôm/Tẩy Thiên Long", total: 32 },
-  { productName: "Bút Dạ Quang", total: 29 },
-  { productName: "Bút Lông Bảng", total: 25 },
-  // ... etc
+  // … (giữ nguyên)
 ];
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8E44AD"];
 
 const AdminDashboard = ({ language }) => {
   const [pendingOrders, setPendingOrders] = useState(0);
   const [monthlyOrders, setMonthlyOrders] = useState(0);
-  const [lowStockProducts, setLowStockProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
   const [products, setProducts] = useState([]);
-  const [error, setError] = useState(null);
-
-  // state: user chọn top N sp
   const [topRange, setTopRange] = useState(10);
+  const [winOpen, setWinOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const { subscribe } = useContext(WsContext);
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8E44AD"];
+  const handleStock = useCallback((p) => {
+    setLowStockProducts((prev) => {
+      const idx = prev.findIndex((x) => x.productId === p.productId);
+      if (p.stock >= 5 && idx > -1)
+        return prev.filter((x) => x.productId !== p.productId);
+      if (p.stock < 5 && idx === -1) return [...prev, p];
+      return prev.map((x) =>
+        x.productId === p.productId ? { ...x, stock: p.stock } : x
+      );
+    });
+  }, []);
+
+  const handleAdminOrders = useCallback((o) => {
+    setOrders((prev) => [o, ...prev]);
+    if (o.status === "pending") setPendingOrders((c) => c + 1);
+  }, []);
+
+  const fetchAll = async () => {
+    try {
+      const [
+        ordersRes,
+        pendingRes,
+        monthlyRes,
+        lowStockRes,
+        productsRes,
+        winRes,
+      ] = await Promise.all([
+        getOrders(),
+        getPendingOrdersCount(),
+        getMonthlyOrdersCount(),
+        getLowStockProducts(),
+        getProducts(),
+        getWindowStatus(),
+      ]);
+
+      setOrders(ordersRes.data);
+      setPendingOrders(pendingRes.data.count);
+      setMonthlyOrders(monthlyRes.data);
+      setLowStockProducts(lowStockRes.data);
+      setProducts(productsRes.data);
+      setWinOpen(winRes.data.open);
+    } catch (e) {
+      console.error(e);
+      setError(language === "vi" ? "Lỗi tải dữ liệu" : "Load failed");
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [ordersRes, pendingRes, monthlyRes, lowStockRes, productsRes] =
-          await Promise.all([
-            getOrders(),
-            getPendingOrdersCount(),
-            getMonthlyOrdersCount(),
-            getLowStockProducts(),
-            getProducts(),
-          ]);
-
-        setOrders(ordersRes.data);
-        setPendingOrders(pendingRes.data.count);
-        setMonthlyOrders(monthlyRes.data);
-        setLowStockProducts(lowStockRes.data);
-        setProducts(productsRes.data);
-        setError(null);
-      } catch (err) {
-        console.error("Error:", err);
-        setError(language === "vi" ? "Lỗi tải dữ liệu" : "Failed to load data");
-      }
-    };
-    fetchData();
-  }, [language]);
-
-  // Thay vì department / approve vs. reject => Bỏ
-
-  const handleApprove = async (orderId) => {
-    try {
-      await approveOrder(orderId);
-      toast.success(
-        language === "vi" ? "Đã duyệt đơn hàng!" : "Order approved!"
-      );
-      refreshOrders();
-    } catch {
-      toast.error(
-        language === "vi" ? "Lỗi khi duyệt đơn hàng" : "Approve failed"
-      );
-    }
-  };
-
-  const handleReject = async (orderId) => {
-    const comment = prompt(
-      language === "vi" ? "Lý do từ chối:" : "Rejection reason:"
+    fetchAll();
+    const unsubs = [];
+    // mỗi subscribe sẽ tự gọi connectStomp() bên trong
+    subscribe("/topic/stock", handleStock).then((off) => unsubs.push(off));
+    subscribe("/topic/orders/admin", handleAdminOrders).then((off) =>
+      unsubs.push(off)
     );
-    if (!comment) return;
-    try {
-      await rejectOrder(orderId, comment);
-      toast.success(language === "vi" ? "Đã từ chối đơn hàng" : "Order rejected");
-      refreshOrders();
-    } catch {
-      toast.error(
-        language === "vi" ? "Lỗi từ chối đơn hàng" : "Reject failed"
-      );
-    }
-  };
-
-  const refreshOrders = async () => {
-    try {
-      const res = await getOrders();
-      setOrders(res.data);
-    } catch {}
-  };
-
-  // Tính top N sp order
-  const topOrderedProductsData = MOCK_TOP_ORDERED.slice(0, topRange);
-
-  const lowStockColumns = [
-    {
-      field: "id",
-      headerName: "ID",
-      width: 80,
-    },
-    {
-      field: "code",
-      headerName: language === "vi" ? "Mã SP" : "Code",
-      width: 120,
-    },
-    {
-      field: "name",
-      headerName: language === "vi" ? "Tên SP" : "Name",
-      width: 200,
-    },
-    {
-      field: "unit",
-      headerName: language === "vi" ? "Đơn Vị" : "Unit",
-      width: 120,
-    },
-    {
-      field: "stock",
-      headerName: language === "vi" ? "Tồn Kho" : "Stock",
-      width: 120,
-    },
-  ];
-
-  const orderColumns = [
-    { field: "orderId", headerName: "ID", width: 80 },
-    {
-      field: "createdAt",
-      headerName: language === "vi" ? "Ngày tạo" : "Created At",
-      width: 200,
-    },
-    {
-      field: "status",
-      headerName: language === "vi" ? "Trạng thái" : "Status",
-      width: 150,
-    },
-    {
-      field: "adminComment",
-      headerName: language === "vi" ? "Ghi chú" : "Comment",
-      width: 200,
-    },
-    {
-      field: "action",
-      headerName: language === "vi" ? "Hành động" : "Action",
-      width: 200,
-      renderCell: (params) =>
-        params.row.status === "pending" && (
-          <>
-            <Button
-              variant="contained"
-              size="small"
-              color="success"
-              sx={{ mr: 1 }}
-              onClick={() => handleApprove(params.row.orderId)}
-            >
-              {language === "vi" ? "Duyệt" : "Approve"}
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              color="error"
-              onClick={() => handleReject(params.row.orderId)}
-            >
-              {language === "vi" ? "Từ chối" : "Reject"}
-            </Button>
-          </>
-        ),
-    },
-  ];
+    subscribe("/topic/order-window", ({ open }) => setWinOpen(open)).then(
+      (off) => unsubs.push(off)
+    );
+    return () => unsubs.forEach((off) => off());
+  }, [language, subscribe, handleStock, handleAdminOrders]);
 
   if (error) {
     return (
-      <Box
-        sx={{
-          pt: 8,
-          p: 3,
-          backgroundColor: "#fafafa",
-          borderRadius: "10px",
-          minHeight: "80vh",
-        }}
-      >
-        <Typography variant="h4" color="error">
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h5" color="error">
           {error}
         </Typography>
       </Box>
     );
   }
 
+  const handleApprove = async (id) => {
+    try {
+      await approveOrder(id);
+      toast.success(language === "vi" ? "Đã duyệt" : "Approved");
+      fetchAll();
+    } catch {
+      toast.error(language === "vi" ? "Duyệt thất bại" : "Approve failed");
+    }
+  };
+
+  const handleReject = async (id) => {
+    const reason = prompt(
+      language === "vi" ? "Lý do từ chối:" : "Rejection reason:"
+    );
+    if (!reason) return;
+    try {
+      await rejectOrder(id, reason);
+      toast.success(language === "vi" ? "Đã từ chối" : "Rejected");
+      fetchAll();
+    } catch {
+      toast.error(language === "vi" ? "Từ chối thất bại" : "Reject failed");
+    }
+  };
+
   return (
-    <Box
-      sx={{
-        pt: 8,
-        p: 3,
-        backgroundColor: "#f9f9f9",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      }}
-    >
+    <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         {language === "vi" ? "Bảng Điều Khiển Quản Trị" : "Admin Dashboard"}
       </Typography>
 
-      {/* Thông tin tổng quát */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6} lg={3}>
-          <Card
-            sx={{
-              backgroundColor: "#fff",
-              boxShadow: "0 1px 5px rgba(0,0,0,0.1)",
-            }}
-          >
-            <CardContent>
-              <Typography variant="h6">
-                {language === "vi" ? "Đơn hàng đang chờ" : "Pending Orders"}
-              </Typography>
-              <Typography variant="h4">{pendingOrders}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+        {[
+          {
+            label: language === "vi" ? "Đang chờ" : "Pending",
+            value: pendingOrders,
+          },
+          {
+            label: language === "vi" ? "Tháng này" : "This month",
+            value: monthlyOrders,
+          },
+          {
+            label: language === "vi" ? "Tổng SP" : "Products",
+            value: products.length,
+          },
+          {
+            label: language === "vi" ? "Tổng đơn" : "Orders",
+            value: orders.length,
+          },
+        ].map((card, i) => (
+          <Grid item xs={12} md={6} lg={3} key={i}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">{card.label}</Typography>
+                <Typography variant="h4">{card.value}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
 
+        {/* Order‑Window card */}
         <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ backgroundColor: "#fff", boxShadow: "0 1px 5px rgba(0,0,0,0.1)" }}>
+          <Card>
             <CardContent>
               <Typography variant="h6">
-                {language === "vi" ? "Đơn hàng tháng này" : "Orders This Month"}
+                {language === "vi" ? "Cửa Sổ Đặt Hàng" : "Order Window"}
               </Typography>
-              <Typography variant="h4">{monthlyOrders}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Số lượng sản phẩm tổng */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ backgroundColor: "#fff", boxShadow: "0 1px 5px rgba(0,0,0,0.1)" }}>
-            <CardContent>
-              <Typography variant="h6">
-                {language === "vi" ? "Tổng sản phẩm" : "Total Products"}
+              <Typography
+                variant="h4"
+                color={winOpen ? "green" : "error"}
+                sx={{ mb: 1 }}
+              >
+                {winOpen
+                  ? language === "vi"
+                    ? "Mở"
+                    : "Open"
+                  : language === "vi"
+                  ? "Đóng"
+                  : "Closed"}
               </Typography>
-              <Typography variant="h4">{products.length}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Ở đây thay vì hiển thị đơn hàng đã duyệt / từ chối, ta bỏ vì chắc chắn được duyệt */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ backgroundColor: "#fff", boxShadow: "0 1px 5px rgba(0,0,0,0.1)" }}>
-            <CardContent>
-              <Typography variant="h6">
-                {language === "vi" ? "Tổng Đơn Hàng" : "Total Orders"}
-              </Typography>
-              <Typography variant="h4">{orders.length}</Typography>
+              <Button
+                size="small"
+                onClick={async () => {
+                  const res = await toggleWindow();
+                  setWinOpen(res.data.open);
+                }}
+              >
+                {language === "vi" ? "Bật/Tắt" : "Toggle"}
+              </Button>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Bảng đơn hàng gần đây */}
-      <Box sx={{ mt: 4, backgroundColor: "#fff", p: 2, borderRadius: "8px", boxShadow: "0 1px 5px rgba(0,0,0,0.1)" }}>
+      {/* Recent Orders */}
+      <Box sx={{ mt: 4 }}>
         <Typography variant="h5" gutterBottom>
-          {language === "vi" ? "Đơn hàng gần đây" : "Recent Orders"}
+          {language === "vi" ? "Đơn gần đây" : "Recent Orders"}
         </Typography>
         <DataGrid
           rows={orders}
-          columns={orderColumns}
-          pageSize={5}
-          getRowId={(row) => row.orderId}
-          rowsPerPageOptions={[5, 10]}
-          disableSelectionOnClick
+          columns={[
+            { field: "orderId", headerName: "ID", width: 80 },
+            {
+              field: "createdAt",
+              headerName: language === "vi" ? "Ngày" : "Date",
+              width: 170,
+              valueFormatter: ({ value }) =>
+                value ? new Date(value).toLocaleString() : "",
+            },
+            {
+              field: "status",
+              headerName: language === "vi" ? "Trạng thái" : "Status",
+              width: 110,
+            },
+            {
+              field: "adminComment",
+              headerName: language === "vi" ? "Ghi chú" : "Comment",
+              width: 220,
+            },
+            {
+              field: "action",
+              headerName: language === "vi" ? "Hành động" : "Actions",
+              width: 190,
+              renderCell: ({ row }) =>
+                row.status === "pending" && (
+                  <>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      sx={{ mr: 1 }}
+                      onClick={() => handleApprove(row.orderId)}
+                    >
+                      {language === "vi" ? "Duyệt" : "Approve"}
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleReject(row.orderId)}
+                    >
+                      {language === "vi" ? "Từ chối" : "Reject"}
+                    </Button>
+                  </>
+                ),
+            },
+          ]}
           autoHeight
+          pageSize={5}
+          rowsPerPageOptions={[5, 10]}
+          getRowId={(r) => r.orderId}
+          disableSelectionOnClick
         />
       </Box>
 
-      {/* Bảng sản phẩm tồn kho thấp */}
-      <Box sx={{ mt: 4, backgroundColor: "#fff", p: 2, borderRadius: "8px", boxShadow: "0 1px 5px rgba(0,0,0,0.1)" }}>
+      {/* Low‑Stock */}
+      <Box sx={{ mt: 4 }}>
         <Typography variant="h5" gutterBottom>
-          {language === "vi" ? "Sản phẩm tồn kho thấp" : "Low Stock Products"}
+          {language === "vi" ? "Tồn kho thấp" : "Low Stock"}
         </Typography>
         <DataGrid
           rows={lowStockProducts}
-          columns={lowStockColumns}
-          pageSize={5}
-          getRowId={(row) => row.id}
-          rowsPerPageOptions={[5, 10]}
-          disableSelectionOnClick
+          columns={[
+            { field: "productId", headerName: "ID", width: 80 },
+            { field: "code", headerName: "Code", width: 110 },
+            {
+              field: "name",
+              headerName: language === "vi" ? "Tên" : "Name",
+              width: 230,
+            },
+            {
+              field: "unit",
+              headerName: language === "vi" ? "Đơn vị" : "Unit",
+              width: 90,
+            },
+            { field: "stock", headerName: "Stock", width: 90 },
+          ]}
           autoHeight
+          pageSize={5}
+          rowsPerPageOptions={[5, 10]}
+          getRowId={(r) => r.productId}
+          disableSelectionOnClick
         />
       </Box>
 
+      {/* Charts */}
       <Grid container spacing={4} sx={{ mt: 4 }}>
-        {/* Pie: top 5 sản phẩm còn nhiều hàng */}
         <Grid item xs={12} md={6}>
-          <Box
-            sx={{
-              backgroundColor: "#fff",
-              p: 2,
-              borderRadius: "8px",
-              boxShadow: "0 1px 5px rgba(0,0,0,0.1)",
-            }}
-          >
+          <Card sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              {language === "vi" ? "Sản phẩm nhiều nhất (Top 5)" : "Top 5 Most Available Products"}
+              Top 5 {language === "vi" ? "Tồn Kho" : "In Stock"}
             </Typography>
-            {products.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                {language === "vi" ? "Chưa có dữ liệu" : "No data yet"}
-              </Typography>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={products.slice(0, 5).map((p) => ({
-                      name: p.name,
-                      value: p.stock,
-                    }))}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {products.slice(0, 5).map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </Box>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={products
+                    .slice(0, 5)
+                    .map((p) => ({ name: p.name, value: p.stock }))}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={100}
+                  label
+                >
+                  {products.slice(0, 5).map((_, idx) => (
+                    <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </Card>
         </Grid>
-
-        {/* Bar: top sp được order (range 10, 20) */}
-        <Grid item xs={12} md={4}>
-          <Box
-            sx={{
-              backgroundColor: "#fff",
-              p: 2,
-              borderRadius: "8px",
-              boxShadow: "0 1px 5px rgba(0,0,0,0.1)",
-            }}
-          >
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              {language === "vi"
-                ? "Top Sản Phẩm Được Order Nhiều Nhất"
-                : "Top Most Ordered Products"}
+              Top {topRange} {language === "vi" ? "Đặt Nhiều" : "Ordered"}
             </Typography>
-            {/* Chọn top N */}
-            <FormControl size="small" sx={{ mb: 2, width: 120 }}>
-              <InputLabel>
-                {language === "vi" ? "Chọn Top" : "Select Top"}
-              </InputLabel>
+            <FormControl size="small" sx={{ width: 120, mb: 2 }}>
+              <InputLabel>{language === "vi" ? "Chọn" : "Select"}</InputLabel>
               <Select
                 value={topRange}
-                label={language === "vi" ? "Chọn Top" : "Select Top"}
+                label={language === "vi" ? "Chọn" : "Select"}
                 onChange={(e) => setTopRange(e.target.value)}
               >
-                <MenuItem value={5}>Top 5</MenuItem>
-                <MenuItem value={10}>Top 10</MenuItem>
-                <MenuItem value={20}>Top 20</MenuItem>
+                {[5, 10, 20].map((n) => (
+                  <MenuItem key={n} value={n}>{`Top ${n}`}</MenuItem>
+                ))}
               </Select>
             </FormControl>
-
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={MOCK_TOP_ORDERED.slice(0, topRange).map((item) => ({
-                  name: item.productName,
-                  total: item.total,
-                }))}
-              >
+              <BarChart data={MOCK_TOP_ORDERED.slice(0, topRange)}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+                <XAxis dataKey="productName" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="total" fill="#1976d2" radius={[5, 5, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </Box>
+          </Card>
         </Grid>
       </Grid>
     </Box>
@@ -432,4 +378,3 @@ const AdminDashboard = ({ language }) => {
 };
 
 export default AdminDashboard;
-

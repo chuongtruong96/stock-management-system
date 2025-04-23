@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import LanguageIcon from '@mui/icons-material/Language';
 import LogoutIcon from '@mui/icons-material/Logout';
+import NotificationBell from '../components/NotificationBell';
 
 const Navbar = ({ userRole, language, setLanguage, handleLogout, toggleSidebar, username }) => {
   const [languageAnchorEl, setLanguageAnchorEl] = useState(null);
@@ -63,6 +64,7 @@ const Navbar = ({ userRole, language, setLanguage, handleLogout, toggleSidebar, 
         {/* Right Side: User Settings */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {/* Language Toggle */}
+          <NotificationBell />
           <Tooltip title={language === 'vi' ? 'Chọn Ngôn Ngữ' : 'Select Language'}>
             <IconButton
               color="inherit"

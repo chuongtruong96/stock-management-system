@@ -216,6 +216,7 @@ const UserManagement = ({ language }) => {
               });
               setOpenDialog(true);
             }}
+            sx={{ mt: 1 }}
           >
             {language === "vi" ? "Sửa" : "Edit"}
           </Button>
@@ -224,6 +225,7 @@ const UserManagement = ({ language }) => {
             color="error"
             size="small"
             onClick={() => handleDeleteUser(params.row.id)}
+            sx={{ mt: 1 }}
           >
             {language === "vi" ? "Xóa" : "Delete"}
           </Button>

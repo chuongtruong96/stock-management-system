@@ -1,165 +1,326 @@
-// src/pages/OrderManagement.jsx
-import { useState, useEffect } from "react";
-import { DataGrid } from "@mui/x-data-grid";
+// src/pages/OrderManagement.js
+import React, { useState, useEffect } from "react";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import {
   Box,
   Typography,
+  Card,
+  CardContent,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  Card,
-  CardContent
+  TextField,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Divider,
 } from "@mui/material";
-import { getOrders, updateOrder, deleteOrder } from "../services/api";
-import "../assets/styles/custom.css";
+import {
+  getOrders,
+  getOrderItems,
+  approveOrder,
+  rejectOrder,
+  deleteOrder,
+} from "../services/api";
+import InfoIcon from "@mui/icons-material/Info";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+const REJECT_REASONS = ["Out of budget", "Incorrect items", "Other"];
 
 const OrderManagement = ({ language }) => {
   const [orders, setOrders] = useState([]);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [adminComment, setAdminComment] = useState("");
+  const [detailOrder, setDetailOrder] = useState(null);
+  const [detailItems, setDetailItems] = useState([]);
+  const [actionType, setActionType] = useState(null); // 'view','approve','reject'
+  const [commentText, setCommentText] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
+  const [customReason, setCustomReason] = useState("");
 
+  const fetchOrders = async () => {
+    try {
+      const res = await getOrders();
+      setOrders(res.data || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
   useEffect(() => {
-    const fetchOrders = async () => {
+    async function load() {
       try {
-        const res = await getOrders();
-        setOrders(res.data || []);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
+        const { data } = await getOrders();
+        // map the ISO‐strings to actual Dates
+        const withDates = data.map(o => ({
+          ...o,
+          createdAt: new Date(o.createdAt.split('.')[0]),
+          updatedAt: new Date(o.updatedAt.split('.')[0]),
+        }));
+        setOrders(withDates);
+      } catch (e) {
+        console.error(e);
       }
-    };
-    fetchOrders();
+    }
+    load();
   }, [language]);
 
-  const handleUpdateOrder = async () => {
-    try {
-      const updated = {
-        ...selectedOrder,
-        adminComment,
-      };
-      const res = await updateOrder(selectedOrder.orderId, updated);
-      setOrders((prev) =>
-        prev.map((order) =>
-          order.orderId === selectedOrder.orderId ? res.data : order
-        )
-      );
-      setSelectedOrder(null);
-      setAdminComment("");
-    } catch (error) {
-      alert(language === "vi" ? "Lỗi cập nhật đơn hàng" : "Error updating order");
+  const openDialog = async (order, type) => {
+    setActionType(type);
+    setDetailOrder(order);
+    setCommentText(order.adminComment || "");
+    if (type === "view") {
+      const res = await getOrderItems(order.orderId);
+      setDetailItems(res.data);
+    }
+    if (type === "reject") {
+      setRejectReason(REJECT_REASONS[0]);
+      setCustomReason("");
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm(language === "vi" ? "Xác nhận xóa?" : "Delete confirm?"))
+  const closeDialog = () => {
+    setActionType(null);
+    setDetailOrder(null);
+    setDetailItems([]);
+    setCommentText("");
+  };
+
+  const handleApprove = async () => {
+    try {
+      await approveOrder(detailOrder.orderId, commentText);
+      closeDialog();
+      fetchOrders();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleReject = async () => {
+    const reason = rejectReason === "Other" ? customReason : rejectReason;
+    try {
+      await rejectOrder(detailOrder.orderId, reason);
+      closeDialog();
+      fetchOrders();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDelete = async (orderId) => {
+    if (
+      !window.confirm(
+        language === "vi" ? "Xác nhận hủy đơn?" : "Confirm cancel?"
+      )
+    )
       return;
     try {
       await deleteOrder(orderId);
-      setOrders((prev) => prev.filter((o) => o.orderId !== orderId));
-    } catch (error) {
-      alert(language === "vi" ? "Lỗi xóa đơn hàng" : "Error deleting order");
+      fetchOrders();
+    } catch (e) {
+      console.error(e);
     }
   };
 
   const columns = [
     { field: "orderId", headerName: "ID", width: 80 },
     {
-      field: "createdAt",
-      headerName: language === "vi" ? "Ngày tạo" : "Created At",
+      field: 'createdAt',
+      headerName: language === 'vi' ? 'Ngày tạo' : 'Created',
       width: 180,
+      type: 'dateTime',       // now the cell value is an actual Date
+      // no valueFormatter needed — DataGrid will render the Date
     },
     {
       field: "status",
-      headerName: language === "vi" ? "Trạng Thái" : "Status",
+      headerName: language === "vi" ? "Trạng thái" : "Status",
       width: 120,
     },
     {
       field: "adminComment",
-      headerName: language === "vi" ? "Ghi chú Quản Trị" : "Admin Comment",
-      width: 200,
+      headerName: language === "vi" ? "Ghi chú" : "Comment",
+      flex: 1,
+      minWidth: 150,
+      renderCell: ({ value }) => value || "–",
     },
     {
-      field: "action",
-      headerName: language === "vi" ? "Hành Động" : "Action",
-      width: 200,
-      renderCell: (params) => (
-        <>
-          <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            onClick={() => {
-              setSelectedOrder(params.row);
-              setAdminComment(params.row.adminComment || "");
-            }}
-            sx={{ mr: 1 }}
-          >
-            {language === "vi" ? "Sửa" : "Edit"}
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => handleDeleteOrder(params.row.orderId)}
-          >
-            {language === "vi" ? "Xóa" : "Delete"}
-          </Button>
-        </>
-      ),
+      field: "actions",
+      type: "actions",
+      headerName: language === "vi" ? "Hành động" : "Actions",
+      width: 160,
+      getActions: (params) => {
+        const row = params.row;
+        return [
+          <GridActionsCellItem
+            icon={<InfoIcon />}
+            label="View"
+            onClick={() => openDialog(row, "view")}
+          />,
+          row.status === "pending" && (
+            <GridActionsCellItem
+              icon={<CheckIcon color="success" />}
+              label="Approve"
+              onClick={() => openDialog(row, "approve")}
+            />
+          ),
+          row.status === "pending" && (
+            <GridActionsCellItem
+              icon={<CloseIcon color="error" />}
+              label="Reject"
+              onClick={() => openDialog(row, "reject")}
+            />
+          ),
+          <GridActionsCellItem
+            icon={<DeleteIcon />}
+            label="Cancel"
+            onClick={() => handleDelete(row.orderId)}
+            showInMenu
+          />,
+        ].filter(Boolean);
+      },
     },
   ];
 
   return (
-    <Box sx={{ p: 3 }} className="fade-in-up">
-      <Card className="mui-card" sx={{ p: 2 }}>
+    <Box sx={{ p: 3 }}>
+      <Card className="mui-card">
         <CardContent>
           <Typography variant="h4" gutterBottom>
             {language === "vi" ? "Quản lý đơn hàng" : "Order Management"}
           </Typography>
-          <Box className="custom-datagrid">
-            <DataGrid
-              rows={orders}
-              columns={columns}
-              pageSize={10}
-              rowsPerPageOptions={[10, 25, 50]}
-              getRowId={(row) => row.orderId}
-              disableSelectionOnClick
-              autoHeight
-            />
-          </Box>
+          <DataGrid
+            rows={orders}
+            columns={columns}
+            autoHeight // ← required so grid can clean up safely
+            density="compact"
+            hideFooterRowCount
+            hideFooterSelectedRowCount
+            pageSize={10}
+            rowsPerPageOptions={[10, 25, 50]}
+            getRowId={(r) => r.orderId}
+            disableSelectionOnClick
+          />
         </CardContent>
       </Card>
 
-      <Dialog
-        open={!!selectedOrder}
-        onClose={() => {
-          setSelectedOrder(null);
-          setAdminComment("");
-        }}
-      >
+      {/* Dialog for view / approve / reject */}
+      <Dialog open={!!actionType} onClose={closeDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {language === "vi" ? "Sửa Ghi Chú" : "Edit Admin Comment"}
+          {actionType === "view" &&
+            (language === "vi" ? "Chi tiết đơn hàng" : "Order Details")}
+          {actionType === "approve" &&
+            (language === "vi" ? "Duyệt đơn hàng" : "Approve Order")}
+          {actionType === "reject" &&
+            (language === "vi" ? "Từ chối đơn hàng" : "Reject Order")}
         </DialogTitle>
-        <DialogContent>
-          <TextField
-            label={language === "vi" ? "Ghi chú" : "Comment"}
-            fullWidth
-            multiline
-            minRows={3}
-            margin="normal"
-            value={adminComment}
-            onChange={(e) => setAdminComment(e.target.value)}
-          />
+        <DialogContent dividers>
+          {actionType === "view" && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                {language === "vi" ? "Các mặt hàng:" : "Line Items:"}
+              </Typography>
+              <DataGrid
+                rows={detailItems}
+                columns={[
+                  { field: "orderItemId", headerName: "ID", width: 80 },
+                  {
+                    field: "productId",
+                    headerName: language === "vi" ? "Mã SP" : "Product ID",
+                    width: 100,
+                  },
+                  {
+                    field: "productName",
+                    headerName: language === "vi" ? "Tên SP" : "Name",
+                    width: 200,
+                  },
+                  {
+                    field: "quantity",
+                    headerName: language === "vi" ? "Số lượng" : "Qty",
+                    width: 90,
+                  },
+                  {
+                    field: "unitNameVn",
+                    headerName: language === "vi" ? "Đơn vị" : "Unit",
+                    width: 100,
+                  },
+                ]}
+                autoHeight // ← again, so it tears down correctly
+                hideFooterSelectedRowCount
+                pageSize={5}
+                rowsPerPageOptions={[5, 10]}
+                getRowId={(r) => r.orderItemId}
+              />
+            </Box>
+          )}
+
+          {(actionType === "approve" || actionType === "reject") && (
+            <Box sx={{ mt: 1 }}>
+              <TextField
+                label={
+                  language === "vi"
+                    ? "Ghi chú (tùy chọn)"
+                    : "Comment (optional)"
+                }
+                fullWidth
+                multiline
+                minRows={3}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                margin="normal"
+              />
+            </Box>
+          )}
+
+          {actionType === "reject" && (
+            <Box sx={{ mt: 2 }}>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">
+                  {language === "vi" ? "Lý do từ chối" : "Rejection Reason"}
+                </FormLabel>
+                <RadioGroup
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                >
+                  {REJECT_REASONS.map((reason) => (
+                    <FormControlLabel
+                      key={reason}
+                      value={reason}
+                      control={<Radio />}
+                      label={reason}
+                    />
+                  ))}
+                </RadioGroup>
+                {rejectReason === "Other" && (
+                  <TextField
+                    label={language === "vi" ? "Khác" : "Other reason"}
+                    fullWidth
+                    margin="normal"
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value)}
+                  />
+                )}
+              </FormControl>
+            </Box>
+          )}
         </DialogContent>
+        <Divider />
         <DialogActions>
-          <Button onClick={() => setSelectedOrder(null)}>
+          <Button onClick={closeDialog}>
             {language === "vi" ? "Hủy" : "Cancel"}
           </Button>
-          <Button onClick={handleUpdateOrder} variant="contained">
-            {language === "vi" ? "Cập Nhật" : "Update"}
-          </Button>
+          {actionType === "approve" && (
+            <Button variant="contained" color="success" onClick={handleApprove}>
+              {language === "vi" ? "Duyệt" : "Approve"}
+            </Button>
+          )}
+          {actionType === "reject" && (
+            <Button variant="contained" color="error" onClick={handleReject}>
+              {language === "vi" ? "Từ chối" : "Reject"}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

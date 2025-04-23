@@ -22,12 +22,14 @@ api.interceptors.request.use((config) => {
 });
 
 export const login = (credentials) => api.post('/auth/login', credentials);
+export const forgotPassword = (payload) => api.post("/auth/forgot", payload);
+
 export const getUserInfo = () => api.get('/users/me');
 export const getProducts = () => api.get('/products');
 export const addProduct = (product) => api.post('/products', product);
 export const updateProduct = (productId, product) => api.put(`/products/${productId}`, product);
 export const deleteProduct = (productId) => api.delete(`/products/${productId}`);
-export const updateProductStock = (productId, stock) => api.put(`/products/${productId}/stock`, { stock });
+export const updateStock = (productId, stock) => api.put(`/products/${productId}/stock`, { stock });
 export const getLowStockProducts = () => api.get('/low-stock');
 export const getOrders = () => api.get('/orders');
 export const getOrdersByDepartment = (departmentId) => api.get(`/orders?departmentId=${departmentId}`);
@@ -39,7 +41,6 @@ export const getPendingOrdersCount = () => api.get('/orders/pending-count');
 export const getMonthlyOrdersCount = () => api.get('/orders/monthly-count');
 export const getLatestOrder = () => api.get('/orders/latest');
 export const checkOrderPeriod = () => api.get('/orders/check-period');
-export const updateOrder = (orderId, data) => api.put(`/orders/${orderId}`, data);
 export const deleteOrder = (orderId) => api.delete(`/orders/${orderId}`);
 export const getOrderHistory = () => api.get('/orders/history');
 export const getOrderHistoryByDepartment = (departmentId) => api.get(`/orders/history?departmentId=${departmentId}`);
@@ -62,4 +63,11 @@ export const importOrders = (formData) => api.post('/orders/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
 });
 
+export const getWindowStatus = () => api.get('/orders/order-window/status');
+export const toggleWindow    = () => api.post('/orders/order-window/toggle');
+export const updateOrder = (orderId, data) => api.put(`/orders/${orderId}`, data);
+
+export const fetchNotifications = () => api.get('/notifications');
+export const markRead = id => api.put(`/notifications/${id}/read`);
+export const announce = ({ title, message, link }) => api.post('/notifications/announce', null, { params: { title, message, link } });
 export default api;

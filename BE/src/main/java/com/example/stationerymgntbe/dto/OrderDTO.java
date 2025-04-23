@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class OrderDTO {
     private Integer orderId;
     private Integer departmentId;
-    private String departmentName;
+    // private String departmentName;
     private OrderStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

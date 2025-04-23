@@ -1,4 +1,3 @@
-// src/pages/OrderHistory.jsx
 import { useState, useEffect } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import {
@@ -11,7 +10,11 @@ import {
   Card,
   CardContent,
 } from "@mui/material";
-import { getOrdersByDepartment, getOrderItems, getUserInfo } from "../services/api";
+import {
+  getOrdersByDepartment,
+  getOrderItems,
+  getUserInfo,
+} from "../services/api";
 import "../assets/styles/custom.css";
 
 const OrderHistory = ({ language }) => {
@@ -19,30 +22,34 @@ const OrderHistory = ({ language }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderItems, setOrderItems] = useState([]);
 
+  /* -------------------------------------------------
+     FETCH tất cả đơn của phòng ban hiện tại
+     ------------------------------------------------- */
   useEffect(() => {
-    const fetchOrders = async () => {
+    (async () => {
       try {
-        const userInfo = await getUserInfo();
-        const departmentId = userInfo.data.department?.id;
-        if (!departmentId) {
-          console.error("No department found for current user");
+        /* userInfo trả về { departmentId, … }  */
+        const { data: user } = await getUserInfo();
+        const deptId = user.departmentId ?? user.department?.id;
+        if (!deptId) {
+          console.error("User has no department!");
           return;
         }
-        const response = await getOrdersByDepartment(departmentId);
-        setOrders(response.data);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
+        const res = await getOrdersByDepartment(deptId);
+        setOrders(res.data);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
       }
-    };
-    fetchOrders();
+    })();
   }, [language]);
 
+  /* ------------------------------------------------- */
   const handleViewDetails = async (orderId) => {
     try {
-      const response = await getOrderItems(orderId);
-      setOrderItems(response.data);
-      setSelectedOrder(orders.find((order) => order.orderId === orderId));
-    } catch (error) {
+      const res = await getOrderItems(orderId);
+      setOrderItems(res.data);
+      setSelectedOrder(orders.find((o) => o.orderId === orderId));
+    } catch {
       alert(
         language === "vi"
           ? "Lỗi khi lấy chi tiết đơn hàng"
@@ -51,26 +58,27 @@ const OrderHistory = ({ language }) => {
     }
   };
 
+  /* ------------------------------------------------- */
   const orderColumns = [
     {
       field: "orderId",
-      headerName: language === "vi" ? "Mã Đơn Hàng" : "Order ID",
+      headerName: language === "vi" ? "Mã Đơn" : "Order ID",
       width: 100,
     },
     {
       field: "createdAt",
       headerName: language === "vi" ? "Ngày Tạo" : "Date",
-      width: 200,
+      width: 190,
     },
     {
       field: "status",
       headerName: language === "vi" ? "Trạng Thái" : "Status",
-      width: 150,
+      width: 140,
     },
     {
       field: "adminComment",
-      headerName: language === "vi" ? "Bình Luận Quản Trị" : "Admin Comment",
-      width: 300,
+      headerName: language === "vi" ? "Bình Luận" : "Admin Comment",
+      width: 280,
     },
     {
       field: "action",
@@ -79,10 +87,10 @@ const OrderHistory = ({ language }) => {
       renderCell: (params) => (
         <Button
           variant="contained"
-          color="primary"
+          size="small"
           onClick={() => handleViewDetails(params.row.orderId)}
         >
-          {language === "vi" ? "Xem Chi Tiết" : "View Details"}
+          {language === "vi" ? "Chi Tiết" : "Details"}
         </Button>
       ),
     },
@@ -90,20 +98,16 @@ const OrderHistory = ({ language }) => {
 
   const itemColumns = [
     { field: "orderItemId", headerName: "ID", width: 80 },
-    {
-      field: "productId",
-      headerName: language === "vi" ? "Mã SP" : "Product ID",
-      width: 100,
-    },
+    { field: "productId", headerName: "SP", width: 90 },
     {
       field: "productName",
-      headerName: language === "vi" ? "Tên Sản Phẩm" : "Product Name",
-      width: 300,
+      headerName: language === "vi" ? "Tên Sản Phẩm" : "Product",
+      width: 250,
     },
     {
       field: "quantity",
-      headerName: language === "vi" ? "Số Lượng" : "Quantity",
-      width: 100,
+      headerName: language === "vi" ? "Số Lượng" : "Qty",
+      width: 90,
     },
     {
       field: "unitNameVn",
@@ -112,56 +116,72 @@ const OrderHistory = ({ language }) => {
     },
   ];
 
+  /* ------------------------------------------------- */
   return (
     <Box sx={{ p: 3 }} className="fade-in-up">
       <Card className="mui-card" sx={{ p: 2 }}>
         <CardContent>
           <Typography variant="h4" gutterBottom>
-            {language === "vi" ? "Lịch Sử Đơn Hàng" : "Order History"}
+            {language === "vi" ? "Lịch Sử Đơn Hàng" : "Order History"}
           </Typography>
+
           <Box className="custom-datagrid">
             <DataGrid
               rows={orders}
               columns={orderColumns}
+              autoHeight
               pageSize={10}
               rowsPerPageOptions={[10, 25, 50]}
-              getRowId={(row) => row.orderId}
+              getRowId={(r) => r.orderId}
               disableSelectionOnClick
-              autoHeight
             />
           </Box>
         </CardContent>
       </Card>
 
-      <Dialog open={!!selectedOrder} onClose={() => setSelectedOrder(null)}>
+      {/* ---------- Dialog chi tiết ---------- */}
+      <Dialog
+        open={Boolean(selectedOrder)}
+        onClose={() => setSelectedOrder(null)}
+        fullWidth
+        maxWidth="md"
+      >
         <DialogTitle>
           {language === "vi"
-            ? `Chi Tiết Đơn Hàng (Mã: ${selectedOrder?.orderId})`
-            : `Order Details (ID: ${selectedOrder?.orderId})`}
+            ? `Chi Tiết Đơn #${selectedOrder?.orderId}`
+            : `Order #${selectedOrder?.orderId} Details`}
         </DialogTitle>
-        <DialogContent>
-          <Typography>
-            {language === "vi" ? "Trạng Thái" : "Status"}: {selectedOrder?.status}
-          </Typography>
-          <Typography>
-            {language === "vi" ? "Ngày Tạo" : "Date"}: {selectedOrder?.createdAt}
-          </Typography>
-          {selectedOrder?.adminComment && (
-            <Typography>
-              {language === "vi" ? "Bình Luận Quản Trị" : "Admin Comment"}:{" "}
-              {selectedOrder.adminComment}
-            </Typography>
+
+        <DialogContent dividers>
+          {selectedOrder && (
+            <>
+              <Typography>
+                {language === "vi" ? "Trạng Thái" : "Status"}:{" "}
+                {selectedOrder.status}
+              </Typography>
+              <Typography>
+                {language === "vi" ? "Ngày Tạo" : "Date"}:{" "}
+                {new Date(selectedOrder.createdAt).toLocaleString()}
+              </Typography>
+              {selectedOrder.adminComment && (
+                <Typography>
+                  {language === "vi" ? "Bình Luận" : "Admin Comment"}:{" "}
+                  {selectedOrder.adminComment}
+                </Typography>
+              )}
+
+              <Box sx={{ height: 300, mt: 2 }}>
+                <DataGrid
+                  rows={orderItems}
+                  columns={itemColumns}
+                  pageSize={5}
+                  rowsPerPageOptions={[5, 10]}
+                  getRowId={(r) => r.orderItemId}
+                  disableSelectionOnClick
+                />
+              </Box>
+            </>
           )}
-          <Box sx={{ height: 300, width: "100%", mt: 2 }}>
-            <DataGrid
-              rows={orderItems}
-              columns={itemColumns}
-              pageSize={5}
-              rowsPerPageOptions={[5, 10]}
-              getRowId={(row) => row.orderItemId}
-              disableSelectionOnClick
-            />
-          </Box>
         </DialogContent>
       </Dialog>
     </Box>

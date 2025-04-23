@@ -9,6 +9,7 @@ import com.example.stationerymgntbe.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,8 @@ public class OrderController {
 
     private final OrderService orderService;
     private final UserService userService;
+    private final SimpMessagingTemplate broker;
+
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -84,4 +87,31 @@ public class OrderController {
     public ResponseEntity<List<OrderDTO>> getMonthlyReport(@RequestParam Integer month, @RequestParam Integer year) {
         return ResponseEntity.ok(orderService.getOrdersByMonthAndYear(month, year));
     }
+
+    private boolean open = false;
+
+    @PostMapping("/order-window/toggle")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String,Boolean>> toggleWindow() {
+        boolean open = orderService.toggleWindow();      // 👉 ADD – trả về trạng thái mới
+        broker.convertAndSend("/topic/order-window", Map.of("open", open)); // realtime
+        return ResponseEntity.ok( Map.of("open", open) );
+    }
+
+    /** public – mọi client cần biết cửa sổ đang mở hay không */
+    @GetMapping("/order-window/status")
+    public ResponseEntity<Map<String,Boolean>> windowStatus() {
+        return ResponseEntity.ok( Map.of("open", orderService.isWindowOpen()) );
+    }
+    @PutMapping("/{orderId}")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<OrderDTO> updateOrderComment(
+        @PathVariable Integer orderId,
+        @RequestBody Map<String, String> body
+) {
+    String comment = body.get("adminComment");
+    OrderDTO updated = orderService.updateComment(orderId, comment);
+    broker.convertAndSend("/topic/orders/admin", updated);
+    return ResponseEntity.ok(updated);
+}
 }

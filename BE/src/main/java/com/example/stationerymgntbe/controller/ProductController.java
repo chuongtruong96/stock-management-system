@@ -58,7 +58,7 @@ public class ProductController {
         }
     }
 
-    @PutMapping("/{id}/stock")
+    @PutMapping("/products/{id}/stock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> updateStock(@PathVariable Integer id, @RequestBody Map<String, Integer> request) {
         return ResponseEntity.ok(productService.updateStock(id, request.get("stock")));

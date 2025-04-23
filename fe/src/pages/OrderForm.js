@@ -25,7 +25,7 @@ const OrderForm = ({ language }) => {
         const response = await getUserInfo();
         const userData = response.data;
         setCurrentUser(userData);
-        setDepartmentName(userData.department?.name || "N/A");
+        setDepartmentName(userData.departmentName || "N/A");
       } catch (error) {
         console.error("Error fetching user info:", error);
         setCurrentUser(null);
