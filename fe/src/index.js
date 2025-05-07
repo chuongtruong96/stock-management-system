@@ -1,20 +1,32 @@
-// src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom"; // Import BrowserRouter
-import App from "./App";
-import "./index.css";
-import { NotificationProvider } from "./contexts/NotificationContext";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import WsProvider  from "./context/WsContext"; // WebSocket Provider
+
+// ThemeProvider của Material-UI
 import { ThemeProvider, CssBaseline } from "@mui/material";
-import theme from "./mui-dashboard/scr/assets/theme";
+
+// Context cấp toàn cục của template
+import { MaterialUIControllerProvider } from "./context";
+
+// Chọn theme light/dark từ template
+import theme from "./assets/theme";
+
+import App from "./App";
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <ThemeProvider theme={theme}>
-    <CssBaseline />
-    <BrowserRouter>
-      <NotificationProvider>
-        <App />
-      </NotificationProvider>
-    </BrowserRouter>
-  </ThemeProvider>
+    <MaterialUIControllerProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <BrowserRouter>
+          <WsProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </WsProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </MaterialUIControllerProvider>
 );

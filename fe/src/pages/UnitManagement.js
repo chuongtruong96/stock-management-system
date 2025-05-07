@@ -12,7 +12,6 @@ import {
   TextField,
 } from "@mui/material";
 import { getUnits, addUnit, updateUnit, deleteUnit } from "../services/api";
-import "../assets/styles/custom.css";
 
 const UnitManagement = ({ language }) => {
   const [units, setUnits] = useState([]);

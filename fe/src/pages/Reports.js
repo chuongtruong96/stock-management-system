@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import api from "../services/api";
-import "../assets/styles/custom.css";
 
 const Reports = ({ language }) => {
   const [month, setMonth] = useState(new Date().getMonth() + 1);

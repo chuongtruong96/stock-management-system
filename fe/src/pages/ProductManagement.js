@@ -23,7 +23,7 @@ import {
   updateStock,
   getUnits,
 } from "../services/api";
-import { WsContext } from "../contexts/WsContext";
+import { WsContext } from "../context/WsContext";
 
 const ProductManagement = ({ language }) => {
   const [products, setProducts] = useState([]);

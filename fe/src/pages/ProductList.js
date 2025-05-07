@@ -5,7 +5,6 @@ import { Box, Typography, TextField, Button, Card, CardContent } from "@mui/mate
 import { getProducts } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "../assets/styles/custom.css";
 
 const ProductList = ({ language }) => {
   const [products, setProducts] = useState([]);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Badge, IconButton, Menu, MenuItem, ListItemText } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useNotifications } from '../context/NotificationContext';
 import { markRead } from '../services/notificationApi';
 
 export default function NotificationBell() {

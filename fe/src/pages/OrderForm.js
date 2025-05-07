@@ -1,17 +1,14 @@
-// src/pages/OrderForm.jsx
 import { useState, useEffect } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import {
-  Button,
-  Box,
-  Typography,
-  TextField,
-  Card,
-  CardContent,
-} from "@mui/material";
+import { Button, Box, Typography, TextField, Card, CardContent } from "@mui/material";
 import { createOrder, getUserInfo } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import "../assets/styles/custom.css";
+
+// Template components
+import MDBox from "components/MDBox";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import Footer from "examples/Footer";
 
 const OrderForm = ({ language }) => {
   const [orderItems, setOrderItems] = useState([]);
@@ -60,53 +57,26 @@ const OrderForm = ({ language }) => {
           quantity: item.quantity,
         })),
       };
-      console.log(orderData);
       await createOrder(orderData);
-      alert(
-        language === "vi"
-          ? "Đơn hàng đã được gửi thành công!"
-          : "Order submitted successfully!"
-      );
+      alert(language === "vi" ? "Đơn hàng đã được gửi thành công!" : "Order submitted successfully!");
       localStorage.removeItem("orderItems");
       navigate("/dashboard");
     } catch (error) {
       console.error("Error submitting order:", error);
-      alert(
-        language === "vi"
-          ? "Lỗi: " + (error.response?.data?.message || error.message)
-          : "Error: " + (error.response?.data?.message || error.message)
-      );
+      alert(language === "vi" ? "Lỗi: " + (error.response?.data?.message || error.message) : "Error: " + (error.response?.data?.message || error.message));
     }
   };
 
   const columns = [
-    {
-      field: "code",
-      headerName: language === "vi" ? "Mã SP" : "Code",
-      width: 100,
-    },
-    {
-      field: "name",
-      headerName: language === "vi" ? "Tên Sản Phẩm" : "Name",
-      width: 200,
-    },
-    {
-      field: "unit",
-      headerName: language === "vi" ? "Đơn Vị" : "Unit",
-      width: 100,
-    },
+    { field: "code", headerName: language === "vi" ? "Mã SP" : "Code", width: 100 },
+    { field: "name", headerName: language === "vi" ? "Tên Sản Phẩm" : "Name", width: 200 },
+    { field: "unit", headerName: language === "vi" ? "Đơn Vị" : "Unit", width: 100 },
     {
       field: "quantity",
       headerName: language === "vi" ? "Số Lượng" : "Quantity",
       width: 150,
       renderCell: (params) => (
-        <TextField
-          type="number"
-          value={params.row.quantity}
-          onChange={(e) => handleQuantityChange(params.row.id, e.target.value)}
-          inputProps={{ min: 1 }}
-          size="small"
-        />
+        <TextField type="number" value={params.row.quantity} onChange={(e) => handleQuantityChange(params.row.id, e.target.value)} inputProps={{ min: 1 }} size="small" />
       ),
     },
     {
@@ -114,11 +84,7 @@ const OrderForm = ({ language }) => {
       headerName: language === "vi" ? "Hành Động" : "Action",
       width: 150,
       renderCell: (params) => (
-        <Button
-          variant="contained"
-          color="error"
-          onClick={() => handleRemoveItem(params.row.id)}
-        >
+        <Button variant="contained" color="error" onClick={() => handleRemoveItem(params.row.id)}>
           {language === "vi" ? "Xóa" : "Remove"}
         </Button>
       ),
@@ -128,48 +94,28 @@ const OrderForm = ({ language }) => {
   const date = new Date().toISOString().split("T")[0];
 
   return (
-    <Box sx={{ p: 3 }} className="fade-in-up">
-      <Card className="mui-card" sx={{ p: 2 }}>
-        <CardContent>
-          <Typography variant="h4" gutterBottom>
-            {language === "vi" ? "Mẫu Đơn Hàng" : "Order Form"}
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            <Typography>
-              {language === "vi" ? "Phòng Ban" : "Department"}: {departmentName}
+    <DashboardLayout>
+      <DashboardNavbar />
+      <MDBox sx={{ p: 3 }}>
+        <Card className="mui-card" sx={{ p: 2 }}>
+          <CardContent>
+            <Typography variant="h4" gutterBottom>
+              {language === "vi" ? "Mẫu Đơn Hàng" : "Order Form"}
             </Typography>
-            <Typography>
-              {language === "vi" ? "Người Dùng" : "User"}:{" "}
-              {currentUser ? currentUser.username : "Loading..."}
-            </Typography>
-            <Typography>
-              {language === "vi" ? "Ngày" : "Date"}: {date}
-            </Typography>
-          </Box>
-          <Box className="custom-datagrid">
-            <DataGrid
-              rows={orderItems}
-              columns={columns}
-              pageSize={10}
-              rowsPerPageOptions={[10]}
-              getRowId={(row) => row.id ?? row.code}
-              disableSelectionOnClick
-              autoHeight
-            />
-          </Box>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-            onClick={handleSubmitOrder}
-            disabled={orderItems.length === 0}
-            className="btn-primary"
-          >
-            {language === "vi" ? "Gửi Đơn Hàng" : "Submit Order"}
-          </Button>
-        </CardContent>
-      </Card>
-    </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography>{language === "vi" ? "Phòng Ban" : "Department"}: {departmentName}</Typography>
+              <Typography>{language === "vi" ? "Người Dùng" : "User"}: {currentUser ? currentUser.username : "Loading..."}</Typography>
+              <Typography>{language === "vi" ? "Ngày" : "Date"}: {date}</Typography>
+            </Box>
+            <DataGrid rows={orderItems} columns={columns} pageSize={10} rowsPerPageOptions={[10]} autoHeight />
+            <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleSubmitOrder} disabled={orderItems.length === 0}>
+              {language === "vi" ? "Gửi Đơn Hàng" : "Submit Order"}
+            </Button>
+          </CardContent>
+        </Card>
+      </MDBox>
+      <Footer />
+    </DashboardLayout>
   );
 };
 

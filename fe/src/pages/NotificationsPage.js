@@ -1,6 +1,6 @@
 import React from 'react';
 import { List, ListItem, ListItemText, Divider, Typography } from '@mui/material';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useNotifications } from '../context/NotificationContext';
 
 export default function NotificationsPage() {
   const { items, markAsRead } = useNotifications();

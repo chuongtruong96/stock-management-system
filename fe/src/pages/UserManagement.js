@@ -1,7 +1,7 @@
 // src/pages/UserManagement.jsx
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../contexts/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Button,
@@ -26,7 +26,6 @@ import {
   getDepartments,
 } from "../services/api";
 import AddIcon from "@mui/icons-material/Add";
-import "../assets/styles/custom.css";
 
 const UserManagement = ({ language }) => {
   const { auth, hasRole } = useContext(AuthContext);
