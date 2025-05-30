@@ -41,10 +41,9 @@ public class OrderController {
     }
 
     @GetMapping("/mine")
-public Page<OrderDTO> myOrders(@PageableDefault(size = 20) Pageable pg){
-    return orderService.findByCreator(userService.getCurrentUser().getId(), pg);
-}
-
+    public Page<OrderDTO> myOrders(@PageableDefault(size = 20) Pageable pg){
+        return orderService.findByCreator(userService.getCurrentUser().getId(), pg);
+    }
 
     @GetMapping("/{id}/items")
     public ResponseEntity<List<OrderItemDTO>> items(@PathVariable Integer id) {
@@ -69,10 +68,12 @@ public Page<OrderDTO> myOrders(@PageableDefault(size = 20) Pageable pg){
     public ResponseEntity<Map<String,Boolean>> windowStatus() {
         return ResponseEntity.ok(Map.of("open", orderService.isWindowOpen()));
     }
+    
     @GetMapping("/check-period")
     public ResponseEntity<Map<String, Boolean>> checkOrderPeriod() {
         return ResponseEntity.ok(orderService.checkOrderPeriod());
     }
+    
     /* ──────────── ADMIN ACTIONS ──────────── */
 
     @PutMapping("/{id}/comment") @PreAuthorize("hasRole('ADMIN')")
@@ -100,13 +101,13 @@ public Page<OrderDTO> myOrders(@PageableDefault(size = 20) Pageable pg){
     /* B1 – export PDF (chuyển pending → exported) */
     @PostMapping("/{id}/export")
     public ResponseEntity<byte[]> export(@PathVariable Integer id) throws IOException{
-    byte[] pdf = orderService.exportPdf(id);
-    return ResponseEntity.ok()
-          .contentType(MediaType.APPLICATION_PDF)
-          .header(HttpHeaders.CONTENT_DISPOSITION,
-                 "attachment; filename=order-"+id+".pdf")
-          .body(pdf);
-}
+        byte[] pdf = orderService.exportPdf(id);
+        return ResponseEntity.ok()
+              .contentType(MediaType.APPLICATION_PDF)
+              .header(HttpHeaders.CONTENT_DISPOSITION,
+                     "attachment; filename=order-"+id+".pdf")
+              .body(pdf);
+    }
 
     /* B2 – upload PDF đã ký + confirm (exported → submitted) */
     @PutMapping(value="/{id}/submit-signed",
@@ -150,6 +151,4 @@ public Page<OrderDTO> myOrders(@PageableDefault(size = 20) Pageable pg){
     public ResponseEntity<List<OrderDTO>> report(@RequestParam Integer month,@RequestParam Integer year){
         return ResponseEntity.ok(orderService.getOrdersByMonthAndYear(month, year));
     }
-    
-    
 }

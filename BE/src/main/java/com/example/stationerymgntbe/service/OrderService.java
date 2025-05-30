@@ -25,66 +25,69 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OrderService {
 
-    /* ========== DEPENDENCIES ========== */
+    /* ===== DEPENDENCIES ===== */
     private final OrderRepository orderRepo;
     private final OrderItemRepository itemRepo;
     private final ProductRepository productRepo;
-    private final UserService userService;
     private final EmailService mail;
+    private final UserService userService;
     private final BroadcastService broadcast;
-    private final NotificationService notification;
     private final OrderMapper orderMapper;
     private final OrderItemMapper itemMapper;
     private final ReportService reportService;
-    /* ========== CONFIG ========== */
+    private final FileStorageService storage;
+    
     @Value("${upload.dir:uploads}")
     private String uploadDir; // ./uploads by default
+    
     private boolean windowOpen = true;
 
-    /* ========== WINDOW ========== */
-    public boolean toggleWindow() {
-        return windowOpen = !windowOpen;
-    }
-
-    public boolean isWindowOpen() {
-        return windowOpen;
-    }
-
-    /* ========== CREATE ========== */
+    /* ------------------------------------------------- */
+    public boolean toggleWindow() { windowOpen = !windowOpen; return windowOpen; }
+    public boolean isWindowOpen() { return windowOpen; }
+    /*
+     * ─────────────────────────────
+     * CREATE ORDER
+     * ─────────────────────────────
+     */
     @Transactional
     public OrderDTO createOrder(OrderInput input) {
         validateOrderWindow();
 
         User current = userService.getCurrentUserEntity();
         Department dept = Optional.ofNullable(current.getDepartment())
-                .orElseThrow(() -> new IllegalStateException("User has no department"));
+                                  .orElseThrow(() -> new IllegalStateException("User has no department"));
 
-        Order o = new Order();
-        o.setDepartment(dept);
-        o.setStatus(OrderStatus.pending);
-        o.setCreatedBy(current);
-        o = orderRepo.save(o);
+        Order order = new Order();
+        order.setDepartment(dept);
+        order.setStatus(OrderStatus.pending);
+        order.setCreatedBy(current);
+        order = orderRepo.save(order);
 
         for (OrderItemInput it : input.getItems()) {
             Product p = productRepo.findById(it.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product " + it.getProductId()));
-            OrderItem row = OrderItem.builder()
-                    .order(o)
-                    .product(p)
-                    .quantity(it.getQuantity())
-                    .build();
-            itemRepo.save(row);
+                                   .orElseThrow(() -> new ResourceNotFoundException("Product "+ it.getProductId()));
+
+            OrderItem oi = OrderItem.builder()
+                .order(order)
+                .product(p)
+                .quantity(it.getQuantity())
+                .build();
+            itemRepo.save(oi);
         }
 
-        /* notify admin */
-        mail.sendOrderNotificationToAdmin(orderMapper.toOrderDTO(o));
-        broadcast.orderStatusChanged(new OrderStatusDTO(o.getOrderId(), "pending",
+        mail.sendOrderNotificationToAdmin(orderMapper.toOrderDTO(order));
+        broadcast.orderStatusChanged(new OrderStatusDTO(order.getOrderId(),"pending",
                 dept.getDepartmentId(), dept.getName()));
 
-        return orderMapper.toOrderDTO(o);
+        return orderMapper.toOrderDTO(order);
     }
 
-    /* ========== USER FLOW ========== */
+    /*
+     * ─────────────────────────────
+     * USER FLOW
+     * ─────────────────────────────
+     */
 
     /** pending → exported */
     @Transactional
@@ -117,52 +120,119 @@ public class OrderService {
         return orderMapper.toOrderDTO(o);
     }
 
-    /* ========== ADMIN ACTIONS ========== */
-
-    /** submitted → approved */
+    /*
+     * ─────────────────────────────
+     * APPROVE ORDER
+     * ─────────────────────────────
+     */
     @Transactional
     public OrderDTO approveOrder(Integer id, String comment) {
-        Order o = require(id, OrderStatus.submitted);
+        Order order = require(id, OrderStatus.submitted);
 
-        o.setStatus(OrderStatus.approved);
-        o.setApprovedBy(userService.getCurrentUserEntity());
-        o.setAdminComment(comment);
-        o.setUpdatedAt(LocalDateTime.now());
-        orderRepo.save(o);
+        order.setStatus(OrderStatus.approved);
+        order.setUpdatedAt(LocalDateTime.now());
+        order.setApprovedBy(userService.getCurrentUserEntity());
+        order.setAdminComment(comment);
+        orderRepo.save(order);
 
-        /* trừ kho + cảnh báo thiếu */
-        itemRepo.findByOrderOrderId(id).forEach(item -> {
-            Product p = item.getProduct();
-            productRepo.save(p);
-        });
+        mail.sendOrderApprovalNotification(order);
+        broadcast.orderStatusChanged(statusDTO(order, "approved"));
 
-        /* notify creator */
-        notifyCreator(o, "approved", "Your stationery order has been approved!");
-        mail.sendOrderApprovalNotification(o);
-        broadcast.orderStatusChanged(statusDTO(o, "approved"));
-
-        return orderMapper.toOrderDTO(o);
+        return orderMapper.toOrderDTO(order);
     }
 
-    /** submitted → rejected */
+    /*
+     * ─────────────────────────────
+     * REJECT ORDER
+     * ─────────────────────────────
+     */
     @Transactional
-    public OrderDTO rejectOrder(Integer id, String reason) {
-        Order o = require(id, OrderStatus.submitted);
+    public OrderDTO rejectOrder(Integer id, String comment) {
+        Order order = require(id, OrderStatus.submitted);
 
-        o.setStatus(OrderStatus.rejected);
-        o.setAdminComment(reason);
-        o.setApprovedBy(userService.getCurrentUserEntity());
-        o.setUpdatedAt(LocalDateTime.now());
-        orderRepo.save(o);
+        order.setStatus(OrderStatus.rejected);
+        order.setUpdatedAt(LocalDateTime.now());
+        order.setAdminComment(comment);
+        order.setApprovedBy(userService.getCurrentUserEntity());
+        orderRepo.save(order);
 
-        notifyCreator(o, "rejected", "Your stationery order has been rejected!");
-        mail.sendOrderRejectionNotification(o, reason);
-        broadcast.orderStatusChanged(statusDTO(o, "rejected"));
+        mail.sendOrderRejectionNotification(order, comment);
+        broadcast.orderStatusChanged(statusDTO(order, "rejected"));
 
-        return orderMapper.toOrderDTO(o);
+        return orderMapper.toOrderDTO(order);
     }
 
-    /* ========== HELPERS ========== */
+    /*
+     * ─────────────────────────────
+     * QUERY HELPERS
+     * ─────────────────────────────
+     */
+
+    public List<OrderDTO> getAllOrders() {
+        return orderRepo.findAll().stream()
+                .map(orderMapper::toOrderDTO).toList();
+    }
+
+    public List<OrderDTO> getPendingOrders() {
+        return map(orderRepo.findByStatus(OrderStatus.pending));
+    }
+
+    public List<OrderDTO> getSubmittedOrders() {
+        return map(orderRepo.findByStatus(OrderStatus.submitted));
+    }
+
+    public List<OrderDTO> getOrdersByDepartment(int deptId) {
+        return map(orderRepo.findByDepartment_DepartmentId(deptId));
+    }
+
+    public List<OrderItemDTO> getOrderItems(int orderId) {
+        if (!orderRepo.existsById(orderId))
+            throw new ResourceNotFoundException("Order " + orderId);
+        return itemRepo.findByOrderOrderId(orderId).stream()
+                .map(itemMapper::toOrderItemDTO).toList();
+    }
+
+    public int getPendingOrdersCount() {
+        return (int) orderRepo.countByStatus(OrderStatus.pending);
+    }
+
+    public int getMonthlyOrdersCount(int year, int month) {
+        var start = LocalDateTime.of(year, month, 1, 0, 0);
+        return (int) orderRepo.countByCreatedAtBetween(start, start.plusMonths(1));
+    }
+
+    public OrderDTO getLatestOrder(int deptId) {
+        return orderRepo.findTopByDepartmentDepartmentIdOrderByCreatedAtDesc(deptId)
+                .map(orderMapper::toOrderDTO).orElse(null);
+    }
+
+    public List<OrderDTO> getOrdersByMonthAndYear(Integer month, Integer year) {
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.plusMonths(1);
+        return map(orderRepo.findByCreatedAtBetween(start, end));
+    }
+
+    public List<ProductOrderSummaryDTO> getTopOrderedProducts(int top) {
+        return itemRepo.findTopProducts(PageRequest.of(0, top));
+    }
+
+    public Order findById(Integer id) {
+        return orderRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order " + id));
+    }
+
+    private boolean isWithinFirstWeek() {
+        return LocalDate.now().getDayOfMonth() <= 7;
+    }
+    
+    public Map<String, Boolean> checkOrderPeriod() {
+        boolean canOrder = windowOpen || isWithinFirstWeek();
+        return Collections.singletonMap("canOrder", canOrder);
+    }
+    
+    private void validateOrderWindow() {
+        if (!windowOpen && !isWithinFirstWeek())
+            throw new IllegalStateException("Ordering window is closed.");
+    }
 
     private Order require(Integer id, OrderStatus expected) {
         Order o = orderRepo.findByIdWithDetails(id)
@@ -170,20 +240,6 @@ public class OrderService {
         if (o.getStatus() != expected)
             throw new IllegalStateException("Required status: " + expected + "; current: " + o.getStatus());
         return o;
-    }
-
-    public Map<String, Boolean> checkOrderPeriod() {
-        boolean canOrder = windowOpen || isWithinFirstWeek();
-        return Collections.singletonMap("canOrder", canOrder);
-    }
-
-    private boolean isWithinFirstWeek() {
-        return LocalDate.now().getDayOfMonth() <= 7;
-    }
-
-    private void validateOrderWindow() {
-        if (!windowOpen && !isWithinFirstWeek())
-            throw new IllegalStateException("Ordering window is closed.");
     }
 
     private void notifyAdminsOrderExported(Order o) {
@@ -211,62 +267,14 @@ public class OrderService {
         return new OrderStatusDTO(o.getOrderId(), s, d.getDepartmentId(), d.getName());
     }
 
-    /* ========== SIMPLE GETTERS / REPORTS (giữ nguyên) ========== */
-    public List<OrderDTO> getAllOrders() {
-        return orderRepo.findAll().stream().map(orderMapper::toOrderDTO).toList();
-    }
-
-    public List<OrderDTO> getPendingOrders() {
-        return map(orderRepo.findByStatus(OrderStatus.pending));
-    }
-
-    public List<OrderDTO> getSubmittedOrders() {
-        return map(orderRepo.findByStatus(OrderStatus.submitted));
-    }
-
-    public List<OrderDTO> getOrdersByDepartment(int d) {
-        return map(orderRepo.findByDepartment_DepartmentId(d));
-    }
-
-    public OrderDTO getLatestOrder(int d) {
-        return orderRepo.findTopByDepartmentDepartmentIdOrderByCreatedAtDesc(d).map(orderMapper::toOrderDTO)
-                .orElse(null);
-    }
-
-    public int getPendingOrdersCount() {
-        return (int) orderRepo.countByStatus(OrderStatus.pending);
-    }
-
-    public int getMonthlyOrdersCount(int y, int m) {
-        LocalDateTime s = LocalDateTime.of(y, m, 1, 0, 0);
-        return (int) orderRepo.countByCreatedAtBetween(s, s.plusMonths(1));
-    }
-
-    public List<OrderDTO> getOrdersByMonthAndYear(Integer m, Integer y) {
-        LocalDateTime s = LocalDateTime.of(y, m, 1, 0, 0);
-        return map(orderRepo.findByCreatedAtBetween(s, s.plusMonths(1)));
-    }
-
-    public List<OrderItemDTO> getOrderItems(int id) {
-        return itemRepo.findByOrderOrderId(id).stream().map(itemMapper::toOrderItemDTO).toList();
-    }
-
-    public List<ProductOrderSummaryDTO> getTopOrderedProducts(int top) {
-        return itemRepo.findTopProducts(PageRequest.of(0, top));
-    }
-
-    public Order findById(Integer id) {
-        return orderRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order " + id));
-    }
-
     private List<OrderDTO> map(List<Order> list) {
         return list.stream().map(orderMapper::toOrderDTO).toList();
     }
 
     public Page<OrderDTO> findByCreator(Integer uid, Pageable pg){
-    return orderRepo.findByCreatedByUserIdOrderByCreatedAtDesc(uid,pg)
-                    .map(orderMapper::toOrderDTO);
-}
+        return orderRepo.findByCreatedByUserIdOrderByCreatedAtDesc(uid,pg)
+                        .map(orderMapper::toOrderDTO);
+    }
 
     @Transactional
     public OrderDTO updateComment(Integer id, String comment) {
@@ -283,15 +291,15 @@ public class OrderService {
         return orderMapper.toOrderDTO(order);
     }
 
-    private final FileStorageService storage;
-public byte[] exportPdf(Integer id) throws IOException {
-    Order o = require(id, OrderStatus.pending);
-    // generate PDF bytes via ReportService (reuse)
-    byte[] pdf = reportService.exportSingleOrder(o); // create helper
-    storage.savePdf(id,pdf);
-    o.setStatus(OrderStatus.exported);
-    orderRepo.save(o);
-    return pdf;
-}
+    public byte[] exportPdf(Integer id) throws IOException {
+        Order o = require(id, OrderStatus.pending);
+        // generate PDF bytes via ReportService (reuse)
+        byte[] pdf = reportService.exportSingleOrder(o); // create helper
+        storage.savePdf(id,pdf);
+        o.setStatus(OrderStatus.exported);
+        orderRepo.save(o);
+        return pdf;
+    }
 
+    private final NotificationService notification;
 }

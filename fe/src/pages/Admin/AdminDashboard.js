@@ -1,11 +1,17 @@
+// src/pages/Admin/AdminDashboard.jsx
 import { useEffect, useMemo, useState } from "react";
-import { Grid, Card, CircularProgress } from "@mui/material";
+import {
+  Grid,
+  Card,
+  CircularProgress,
+} from "@mui/material";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
+import HorizontalBarChart from "examples/Charts/BarCharts/HorizontalBarChart";
 import DataTable from "examples/Tables/DataTable";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -46,17 +52,22 @@ export default function AdminDashboard() {
       });
   }, []);
 
-  const orderedChart = useMemo(
+  /* ---------- charts data ---------- */
+  const topProductsChart = useMemo(
     () => ({
       labels: topProducts.map((p) => p.productName),
-      datasets: {
-        label: t("orderedQty"),
-        data: topProducts.map((p) => p.totalQuantity),
-      },
+      datasets: [
+        {
+          label: t("orderedQty"),
+          data: topProducts.map((p) => p.totalQuantity),
+          color: "info",
+        },
+      ],
     }),
     [topProducts, t]
   );
 
+  /* ---------- summary cards ---------- */
   const summaryCards = [
     {
       color: "dark",
@@ -64,13 +75,14 @@ export default function AdminDashboard() {
       title: t("pendingOrders"),
       count: pendingCount || "—",
       route: pendingCount ? "/order-management" : null,
-      percentage: { color: "secondary", amount: `${avgPendingAge} d`, label: t("avgAge") },
+      percentage: { color:"secondary", amount:`${avgPendingAge} d`, label:t("avgAge") },
     },
-    { icon: "leaderboard", title: t("ordersThisMonth"), count: monthlyOrders },
-    { color: "success", icon: "store", title: t("totalProducts"), count: products.length },
-    { color: "primary", icon: "inventory_2", title: t("totalOrders"), count: orders.length },
+    { icon:"leaderboard", title:t("ordersThisMonth"), count:monthlyOrders },
+    { color:"success", icon:"store", title:t("totalProducts"), count:products.length },
+    { color:"primary", icon:"inventory_2", title:t("totalOrders"), count:orders.length },
   ];
 
+  /* ---------- table columns ---------- */
   const tableColumns = useMemo(
     () => [
       { Header: t("id"), accessor: "orderId" },
@@ -123,6 +135,8 @@ export default function AdminDashboard() {
           </Card>
         </Grid>
       </Grid>
+
+      {/* ===== SUMMARY CARDS ===== */}
       <Grid container columnSpacing={3} rowSpacing={5} justifyContent="space-between">
         {summaryCards.map((cfg) => {
           const body = (
@@ -132,11 +146,15 @@ export default function AdminDashboard() {
           );
           return (
             <Grid key={cfg.title} item xs={12} sm={6} md={4} lg={4} sx={{ flexGrow: 1 }}>
-              {cfg.route ? <Link to={cfg.route} style={{ textDecoration: "none" }}>{body}</Link> : body}
+              {cfg.route ? (
+                <Link to={cfg.route} style={{ textDecoration: "none" }}>{body}</Link>
+              ) : body}
             </Grid>
           );
         })}
       </Grid>
+
+      {/* ===== RECENT ORDERS ===== */}
       <MDBox mt={4}>
         <MDTypography variant="h5" gutterBottom>{t("recentOrders")}</MDTypography>
         <DataTable
@@ -145,15 +163,16 @@ export default function AdminDashboard() {
           entriesPerPage={{ defaultValue: 5, entries: [5, 10, 15] }}
         />
       </MDBox>
+
+      {/* ===== CHARTS ===== */}
       <MDBox p={2} sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
         <Card sx={{ flex: 1, minWidth: 300, maxWidth: "48%", borderRadius: 2, boxShadow: 3 }}>
           <MDBox p={2}>
-            <ReportsBarChart
-              color="info"
+            <HorizontalBarChart
+              icon={{ color: "info", component: "inventory" }}
               title={t("topOrderedProducts")}
-              date={new Date().toLocaleDateString()}
               description=""
-              chart={orderedChart}
+              chart={topProductsChart}
             />
             <MDBox mt={1} display="flex" alignItems="center">
               <MDButton
@@ -162,6 +181,7 @@ export default function AdminDashboard() {
                 size="small"
                 onClick={() => {
                   fetchAll();
+                  summaryApi.topProducts(5).then((response) => setTopProducts(response));
                   toast.success(t("refreshed"));
                 }}
               >
@@ -171,6 +191,8 @@ export default function AdminDashboard() {
           </MDBox>
         </Card>
       </MDBox>
+
+      {/* ----- Reject dialog ----- */}
       <RejectDialog
         open={Boolean(rejectingId)}
         onClose={() => setRejectingId(null)}

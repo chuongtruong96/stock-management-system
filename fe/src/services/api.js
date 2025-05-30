@@ -163,6 +163,10 @@ export const notificationApi = {
 export const summaryApi = {
   fetch: (deptId, from, to) =>
     api.get("/summaries", { params: { deptId, from, to } }).then(unwrap),
+  run: (from, to) =>
+    api.post("/summaries/run", null, { params: { from, to } }).then(unwrap),
+  topProducts: (limit = 10) =>
+    api.get("/summaries/top-products", { params: { limit } }).then(unwrap),
 };
 
 export default api;
