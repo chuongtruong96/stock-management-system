@@ -12,3 +12,4 @@ fe/dist/
 
 # Hệ điều hành
 .DS_Store
+.env
