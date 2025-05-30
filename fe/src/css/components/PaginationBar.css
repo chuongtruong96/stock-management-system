@@ -1,0 +1,37 @@
+/* src/components/shop/PaginationBar.css */
+.pagination-bar {
+  margin-top: 24px;
+}
+
+.pagination-bar .MuiPagination-root {
+  display: flex;
+  justify-content: center;
+}
+
+.pagination-bar .MuiPaginationItem-root {
+  border-radius: 6px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.pagination-bar .MuiPaginationItem-root:hover {
+  background-color: #e0e0e0;
+}
+
+.pagination-bar .MuiPaginationItem-root.Mui-selected {
+  background-color: #1976d2;
+  color: #ffffff;
+}
+
+.pagination-bar .MuiSelect-root {
+  background-color: #ffffff;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.pagination-bar .MuiBox-root {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #212121;
+}

@@ -1,0 +1,45 @@
+{
+  "adminDashboard"   : "Admin Dashboard",
+  "dashboard"        : "Dashboard",
+
+  "pendingOrders"    : "Pending Orders",
+  "ordersThisMonth"  : "Orders (This Month)",
+  "totalProducts"    : "Total Products",
+  "totalOrders"      : "Total Orders",
+
+  "id"               : "ID",
+  "date"             : "Date",
+  "status"           : "Status",
+  "comment"          : "Comment",
+  "actions"          : "Actions",
+
+  "approve"          : "Approve",
+  "reject"           : "Reject",
+  "orderRejected"    : "Order rejected",
+
+  "orderWindow"      : "Order Window",
+  "open"             : "Open",
+  "closed"           : "Closed",
+
+  "recentOrders"       : "Recent Orders",
+  "topOrderedProducts" : "Top Ordered Products",
+
+  "orderedQty"  : "Ordered Qty",
+
+  "refresh"     : "Refresh",
+  "refreshed"   : "Data refreshed",
+
+  "latestOrder"     : "Latest Order",
+  "recentActivity"  : "Recent Activity",
+
+  "timeline": {
+    "orderStatus" : "Order #{{id}} {{status}}"
+  },
+
+  "window": {
+    "closed"       : "Ordering window is closed.",
+    "openByAdmin"  : "Ordering window is OPEN by admin.",
+    "daysLeft"     : "{{count}} day(s) left for ordering."
+  }
+
+}

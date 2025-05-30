@@ -2,6 +2,7 @@ package com.example.stationerymgntbe.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.example.stationerymgntbe.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,6 +26,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -37,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/api/auth/**").permitAll()
@@ -45,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/departments").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Expects "ADMIN"
                         .requestMatchers("/api/users/me").authenticated()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
@@ -61,16 +66,20 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+    // @Bean
+    // public CorsConfigurationSource corsConfigurationSource(){
+    //     return corsConfigurationSource("${cors.allowed-origins}");
+    // }
+    
+    public CorsConfigurationSource corsConfigurationSource(){
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        cfg.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
+        src.registerCorsConfiguration("/**",cfg);
+        return src;
     }
 
     @Bean
@@ -79,9 +88,9 @@ public class SecurityConfig {
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
             String role = user.getRole().toString();
-            System.out.println("Role in UserDetailsService: " + role);
+            // System.out.println("Role in UserDetailsService: " + role);
             String authority = role.startsWith("ROLE_") ? role.substring(5) : role;
-            System.out.println("Authority in UserDetailsService: " + authority);
+            // System.out.println("Authority in UserDetailsService: " + authority);
             return new org.springframework.security.core.userdetails.User(
                     user.getUsername(),
                     user.getPassword(),

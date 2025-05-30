@@ -1,0 +1,32 @@
+/* === Category card – hover nhẹ, bo góc lớn === */
+.category-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:140px;
+  padding:12px;
+  border-radius:12px;
+  cursor:pointer;
+
+  transition:box-shadow .25s, background .25s;
+}
+
+.category-card:hover{
+  background:#f6f7f8;                /* sáng hơn 1 chút */
+  box-shadow:0 4px 12px rgba(0,0,0,.07);
+}
+
+/* === Product card – full-height, bo góc, bóng khi hover === */
+.product-card{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  border-radius:12px;
+
+  transition:box-shadow .25s;
+}
+
+.product-card:hover{
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+}

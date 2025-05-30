@@ -1,0 +1,23 @@
+/* src/css/components/CategoryGridCompact.css */
+.category-grid-compact {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.category-grid-compact .MuiBox-root {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 600px) {
+  .category-grid-compact .MuiBox-root {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .category-grid-compact .MuiBox-root {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}

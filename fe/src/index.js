@@ -1,32 +1,40 @@
-import React from "react";
+//  src/index.js
+import "./i18n";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import WsProvider  from "./context/WsContext"; // WebSocket Provider
 
-// ThemeProvider của Material-UI
-import { ThemeProvider, CssBaseline } from "@mui/material";
-
-// Context cấp toàn cục của template
-import { MaterialUIControllerProvider } from "./context";
-
-// Chọn theme light/dark từ template
-import theme from "./assets/theme";
+import { QueryProvider } from "./providers/QueryProvider"; // ⬅️  lên trước
+import { MaterialUIControllerProvider } from "context";
+import { AuthProvider } from "context/AuthContext";
+import WsProvider from "context/WsContext";
+import { NotificationProvider } from "context/NotificationContext";
+import { CartProvider } from "context/CartContext";
+import { OrderWindowProvider } from "./context/OrderWindowContext";
 
 import App from "./App";
+import Loading from "components/Loading";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <QueryProvider>
+    {" "}
+    {/* NEW OUTERMOST */}
     <MaterialUIControllerProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <WsProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </WsProvider>
-        </BrowserRouter>
-      </ThemeProvider>
+      <BrowserRouter>
+        <WsProvider>
+          <AuthProvider>
+            <OrderWindowProvider>
+              <NotificationProvider>
+                <Suspense fallback={<Loading />}>
+                  <CartProvider>
+                    <App />
+                  </CartProvider>
+                </Suspense>
+              </NotificationProvider>
+            </OrderWindowProvider>
+          </AuthProvider>
+        </WsProvider>
+      </BrowserRouter>
     </MaterialUIControllerProvider>
+  </QueryProvider>
 );

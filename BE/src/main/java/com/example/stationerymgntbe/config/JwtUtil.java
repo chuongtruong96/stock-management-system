@@ -22,16 +22,13 @@ public class JwtUtil {
     private Long expiration;
 
     private SecretKey getSigningKey() {
-        System.out.println("JWT Secret: " + secret); // Add logging
+        // System.out.println("JWT Secret: " + secret); // Add logging
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String generateToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
         String roleName = role.toUpperCase();
-        System.out.println("Original role: " + role);
-        System.out.println("Role after toUpperCase: " + roleName);
-    
         if (roleName.startsWith("ROLE_")) {
             roleName = roleName.substring(5);
         }
@@ -73,7 +70,7 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
         String role = (String) claims.get("role");
-        System.out.println("Role from token: " + role); // Add logging
+        // System.out.println("Role from token: " + role); // Add logging
         return role;
     }
 

@@ -32,7 +32,7 @@ public class AuthService {
     
         User user = userRepository.findByUsername(loginRequest.getUsername()).orElseThrow();
         String role = user.getRole().toString(); // e.g., "ADMIN"
-        System.out.println("Role being passed to JwtUtil: " + role);
+        // System.out.println("Role being passed to JwtUtil: " + role);
         String token = jwtUtil.generateToken(user.getUsername(), role);
         LoginResponse response = new LoginResponse();
         response.setToken(token);

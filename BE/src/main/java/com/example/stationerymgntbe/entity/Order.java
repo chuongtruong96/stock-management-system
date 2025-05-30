@@ -4,6 +4,7 @@ import com.example.stationerymgntbe.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -31,5 +32,11 @@ public class Order extends AbstractEntity {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> items;
-}
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
+
+    @Column(name = "signed_pdf_path")
+    private String signedPdfPath;
+}

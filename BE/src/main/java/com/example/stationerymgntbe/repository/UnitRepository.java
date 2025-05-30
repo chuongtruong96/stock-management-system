@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UnitRepository extends JpaRepository<Unit, Integer> {
-    Optional<Unit> findByNameVn(String nameVn);
-    Optional<Unit> findByNameEn(String nameEn);
+    Optional<Unit> findByNameVnIgnoreCase(String nameVn);
+    Optional<Unit> findByNameEnIgnoreCase(String nameEn);
+
 }

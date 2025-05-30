@@ -1,160 +1,154 @@
 /*  src/App.js  */
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { useMemo, useContext, useEffect, useState } from "react";
+import {
+  ThemeProvider,
+  CssBaseline,
+  createTheme,
+  Box,
+  CircularProgress,
+  Icon,
+} from "@mui/material";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { Icon, Box, CircularProgress } from "@mui/material";
 
-/* template helpers */
-import Sidenav from "examples/Sidenav";
-import Configurator from "examples/Configurator";
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import PageLayout from "examples/LayoutContainers/PageLayout";
-import MDBox from "components/MDBox";
 import {
   useMaterialUIController,
   setMiniSidenav,
   setOpenConfigurator,
   setLayout,
 } from "context";
+import { AuthContext }  from "context/AuthContext";
+import ProtectedRoute   from "components/ProtectedRoute";
 
-import routes from "./routes";
-import ProtectedRoute from "components/ProtectedRoute";
+import Sidenav          from "examples/Sidenav";
+import Configurator     from "examples/Configurator";
+import DashboardLayout  from "examples/LayoutContainers/DashboardLayout";
+import PageLayout       from "examples/LayoutContainers/PageLayout";
+import MDBox            from "components/MDBox";
 
-import brandWhite from "assets/images/logo-ct.png";
-import brandDark from "assets/images/logo-ct-dark.png";
+import lightTheme   from "assets/theme";
+import darkTheme    from "assets/theme-dark";
+import themeRTL     from "assets/theme/theme-rtl";
+import themeDarkRTL from "assets/theme-dark/theme-rtl";
+import routes       from "./routes";
+
+import brandWhite   from "assets/images/logo-ct.png";
+import brandDark    from "assets/images/logo-ct-dark.png";
 
 import { ToastContainer } from "react-toastify";
-import { AuthContext } from "context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 
-/* ------------ Splash while checking login ------------- */
-function LoadingScreen() {
-  return (
-    <Box
-      sx={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <CircularProgress size={60} />
-    </Box>
-  );
-}
+/* ---------- tiny helpers ---------- */
+const Loading = () => (
+  <Box sx={{ height:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
+    <CircularProgress size={60}/>
+  </Box>
+);
 
+/* ==================================================================== */
 export default function App() {
-  /* ---------- global UI controller ---------- */
+  /* ------------------ global ui controller ------------------ */
   const [controller, dispatch] = useMaterialUIController();
   const {
-    miniSidenav,
-    sidenavColor,
-    transparentSidenav,
-    whiteSidenav,
-    darkMode,
-    layout,
-    openConfigurator,
+    miniSidenav, transparentSidenav, whiteSidenav,
+    sidenavColor, darkMode, direction, layout, openConfigurator,
   } = controller;
 
-  /* ---------- auth ---------- */
-  const { auth, authLoading } = useContext(AuthContext);
+  /* ------------------ theme ------------------ */
+  const baseTheme =
+    direction === "rtl"
+      ? darkMode ? themeDarkRTL : themeRTL
+      : darkMode ? darkTheme    : lightTheme;
 
-  /* ---------- router ---------- */
+  const theme = useMemo(() => createTheme({
+    ...baseTheme,
+    palette:{ ...baseTheme.palette, transparent:{ main:"rgba(0,0,0,0)" } },
+  }), [baseTheme]);
+
+  /* ------------------ auth & location ------------------ */
+  const { auth, authLoading } = useContext(AuthContext);
   const { pathname } = useLocation();
   const isAuthScreen = pathname.startsWith("/auth");
 
-  /* ---------- keep layout type ---------- */
+  /* page / dashboard layout flag */
   useEffect(() => {
-    setLayout(dispatch, isAuthScreen ? "page" : "dashboard");
-  }, [isAuthScreen, dispatch]);
+    const next = isAuthScreen ? "page" : "dashboard";
+    if (layout !== next) setLayout(dispatch, next);
+  }, [isAuthScreen, layout, dispatch]);
 
-  /* ---------- sidenav hover ---------- */
-  const [hovered, setHovered] = useState(false);
-  const handleEnter = () => {
-    if (miniSidenav && !hovered) {
-      setMiniSidenav(dispatch, false);
-      setHovered(true);
-    }
-  };
-  const handleLeave = () => {
-    if (hovered) {
-      setMiniSidenav(dispatch, true);
-      setHovered(false);
-    }
-  };
-  const toggleConfigurator = () =>
-    setOpenConfigurator(dispatch, !openConfigurator);
-
-  /* ---------- filter routes theo quyền ---------- */
-  const filteredRoutes = useMemo(() => {
-    if (!auth?.token) return routes; // chưa login → chỉ các route public
-    const roles = (auth.user?.roles || []).map((r) =>
-      r.toLowerCase().replace(/^role_/, "")
-    );
+  /* ------------------ build & memo routes ------------------ */
+  const allowedRoutes = useMemo(() => {
+    if (!auth?.token) return routes;                // chưa đăng nhập
+    const roles = (auth.user?.roles||[]).map(r=>r.toLowerCase().replace(/^role_/,""));
     return routes.filter(
-      (r) =>
-        !r.allowedRoles ||
-        r.allowedRoles.some((ar) => roles.includes(ar.toLowerCase()))
+      r => !r.allowedRoles || r.allowedRoles.some(ar=>roles.includes(ar.toLowerCase()))
     );
   }, [auth?.token, auth?.user?.roles]);
 
-  /* ---------- helper render <Route/> ---------- */
-  const renderRoutes = (list) =>
-    list.map((r) => {
-      if (!r.route || !r.component) return null;
+  /* bọc element nếu route có ràng buộc quyền */
+  const wrap = (node) =>
+    node.allowedRoles
+      ? <ProtectedRoute allowedRoles={node.allowedRoles}>{node.element}</ProtectedRoute>
+      : node.element;
 
-      const element = r.allowedRoles ? (
-        <ProtectedRoute allowedRoles={r.allowedRoles}>
-          {r.component}
-        </ProtectedRoute>
-      ) : (
-        r.component
-      );
+  /* đệ quy dựng <Route/>; truyền thêm prefix để bảo đảm key unique */
+  const buildRoutes = (nodes, prefix="") =>
+    nodes.flatMap((n) => {
+      const key  = `${prefix}${n.key || Math.random()}`;
 
-      return <Route key={r.key} path={r.route} element={element} />;
+      // Index-route
+      if (n.index) return <Route key={key} index element={wrap(n)} />;
+
+      // Lấy path ("" nếu không có, để route lồng path trống)
+      const path = n.path ?? "";
+
+      // Có children → route lồng
+      if (n.children?.length)
+        return (
+          <Route key={key} path={path} element={wrap(n)}>
+            {buildRoutes(n.children, `${key}-`)}
+          </Route>
+        );
+
+      // Route thường
+      return <Route key={key} path={path} element={wrap(n)} />;
     });
 
-  /* ---------- loading while checking localStorage ---------- */
-  if (authLoading) return <LoadingScreen />;
+  const routeElements = useMemo(() => buildRoutes(allowedRoutes), [allowedRoutes]);
 
-  /* ---------- UI ---------- */
+  /* ------------------ hover mở rộng mini-sidenav ------------------ */
+  const [hovered, setHovered] = useState(false);
+  const handleEnter = () => { if (miniSidenav && !hovered){ setMiniSidenav(dispatch,false); setHovered(true);} };
+  const handleLeave = () => { if (hovered){ setMiniSidenav(dispatch,true); setHovered(false);} };
+
+  const toggleConfigurator = () => setOpenConfigurator(dispatch, !openConfigurator);
+
+  /* ------------------ loading until auth ready ------------------ */
+  if (authLoading) return <Loading/>;
+
+  /* ================================================================= */
   return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} theme="light" />
+    <ThemeProvider theme={theme}>
+      <CssBaseline/>
+      <ToastContainer position="top-right" autoClose={3000} theme="light"/>
 
-      {/* ---------- S I D E N A V ---------- */}
-      {!isAuthScreen && auth?.token && layout === "dashboard" && (
+      {/* ---------- SIDENAV chỉ admin ---------- */}
+      {!isAuthScreen && auth?.user?.roles?.includes("ADMIN") && layout==="dashboard" && (
         <>
           <Sidenav
             color={sidenavColor}
-            brand={
-              (transparentSidenav && !darkMode) || whiteSidenav
-                ? brandDark
-                : brandWhite
-            }
+            brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
             brandName="Stationery Management"
-            routes={routes}
+            routes={allowedRoutes}
             onMouseEnter={handleEnter}
             onMouseLeave={handleLeave}
           />
+          <Configurator/>
 
-          <Configurator />
-
-          {/* floating button mở configurator */}
           <MDBox
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="3.25rem"
-            height="3.25rem"
-            bgColor="white"
-            shadow="sm"
-            borderRadius="50%"
-            position="fixed"
-            right="2rem"
-            bottom="2rem"
-            zIndex={99}
-            color="dark"
-            sx={{ cursor: "pointer" }}
+            display="flex" justifyContent="center" alignItems="center"
+            width="3.25rem" height="3.25rem" bgColor="white" shadow="sm"
+            borderRadius="50%" position="fixed" right="2rem" bottom="2rem"
+            zIndex={99} color="dark" sx={{ cursor:"pointer" }}
             onClick={toggleConfigurator}
           >
             <Icon fontSize="small">settings</Icon>
@@ -165,13 +159,16 @@ export default function App() {
       {/* ---------- MAIN ---------- */}
       {isAuthScreen ? (
         <PageLayout>
-          <Routes>{renderRoutes(filteredRoutes)}</Routes>
+          <Routes>{routeElements}</Routes>
         </PageLayout>
-      ) : (
+      ) : auth?.user?.roles?.includes("ADMIN") ? (
         <DashboardLayout>
-          <Routes>{renderRoutes(filteredRoutes)}</Routes>
+          <Routes>{routeElements}</Routes>
         </DashboardLayout>
+      ) : (
+        /* UserLayout đã được định nghĩa trong cây route */
+        <Routes>{routeElements}</Routes>
       )}
-    </>
+    </ThemeProvider>
   );
 }

@@ -1,26 +1,18 @@
-// src/hooks/useAdminData.js
 import { useState, useEffect, useCallback, useMemo, useContext } from "react";
 import { WsContext } from "context/WsContext";
-import {
-  getOrders,
-  getPendingOrdersCount,
-  getMonthlyOrdersCount,
-  getProducts,
-  getWindowStatus,
-} from "services/api";
+import { orderApi, productApi, orderWindowApi } from "services/api"; // Updated import
 
 export default function useAdminData() {
-  const [orders,        setOrders]        = useState([]);
-  const [pendingCount,  setPendingCount]  = useState(0);
+  const [orders, setOrders] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const [monthlyOrders, setMonthlyOrders] = useState(0);
-  const [products,      setProducts]      = useState([]);
-  const [winOpen,       setWinOpen]       = useState(false);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState(null);
+  const [products, setProducts] = useState([]);
+  const [winOpen, setWinOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const { subscribe } = useContext(WsContext);
 
-  /* ---------------- fetch all ---------------- */
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
@@ -31,18 +23,18 @@ export default function useAdminData() {
         productsRes,
         winRes,
       ] = await Promise.all([
-        getOrders(),
-        getPendingOrdersCount(),
-        getMonthlyOrdersCount(),
-        getProducts(),
-        getWindowStatus(),
+        orderApi.getAll(), // Updated to orderApi.getAll
+        orderApi.getPendingCount(), // Updated to orderApi.getPendingCount
+        orderApi.getMonthlyCount(), // Updated to orderApi.getMonthlyCount
+        productApi.getAll(), // Updated to productApi.getAll
+        orderWindowApi.status(), // Updated to orderWindowApi.status
       ]);
 
-      setOrders(ordersRes.data);
-      setPendingCount(pendingRes.data.count);
-      setMonthlyOrders(monthlyRes.data);
-      setProducts(productsRes.data);
-      setWinOpen(winRes.data.open);
+      setOrders(ordersRes);
+      setPendingCount(pendingRes.count);
+      setMonthlyOrders(monthlyRes);
+      setProducts(productsRes);
+      setWinOpen(winRes.open);
       setError(null);
     } catch (e) {
       console.error(e);
@@ -52,7 +44,6 @@ export default function useAdminData() {
     }
   }, []);
 
-  /* ---------------- sockets ------------------ */
   const handleAdminOrders = useCallback((o) => {
     setOrders((prev) => [o, ...prev]);
     if (o.status === "pending") setPendingCount((c) => c + 1);
@@ -70,12 +61,14 @@ export default function useAdminData() {
     return () => unsubs.forEach((off) => off());
   }, [subscribe, handleAdminOrders, fetchAll]);
 
-  /* ---------------- derived ------------------ */
-  const pendingList   = useMemo(() => orders.filter(o => o.status === "pending"), [orders]);
+  const pendingList = useMemo(
+    () => orders.filter((o) => o.status === "pending"),
+    [orders]
+  );
   const avgPendingAge = useMemo(() => {
     if (!pendingList.length) return 0;
     const sumDays = pendingList.reduce(
-      (s,o) => s + (Date.now() - new Date(o.createdAt)) / 86_400_000,
+      (s, o) => s + (Date.now() - new Date(o.createdAt)) / 86_400_000,
       0
     );
     return Math.round(sumDays / pendingList.length);

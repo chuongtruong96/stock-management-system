@@ -23,11 +23,6 @@ public class BroadcastService {
         }
     }
 
-    /* ---- STOCK UPDATE (chỉ cho admin kho) ---- */
-    public void stockChanged(StockUpdateDTO dto) {
-        template.convertAndSend("/topic/stock", dto);
-    }
-
     /* ---- Mở / đóng cửa sổ đặt hàng ---- */
     public void orderWindow(boolean open) {
         template.convertAndSend("/topic/order-window",

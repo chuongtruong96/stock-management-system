@@ -1,0 +1,27 @@
+/* src/components/shop/ProductGrid.css */
+.product-grid {
+  margin-top: 16px;
+}
+
+.product-grid .MuiGrid-item {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.product-grid .MuiGrid-item:hover {
+  transform: translateY(-5px);
+}
+
+.product-grid .MuiSkeleton-root {
+  border-radius: 8px;
+}
+
+.product-grid .MuiAlert-root {
+  border-radius: 8px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.product-grid .MuiStack-root {
+  gap: 16px;
+}

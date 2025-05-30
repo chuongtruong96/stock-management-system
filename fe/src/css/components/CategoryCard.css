@@ -1,0 +1,45 @@
+/* src/css/components/CategoryCard.css */
+.category-card {
+  height: 220px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.category-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.category-card .MuiCardMedia-root {
+  height: 140px;
+  object-fit: cover;
+  background-color: #f5f5f5;
+}
+
+.category-card .MuiCardContent-root {
+  background-color: #fafafa;
+  text-align: center;
+  padding: 8px;
+}
+
+.category-card .MuiTypography-subtitle2 {
+  font-weight: 600;
+  color: #212121;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-card .MuiTypography-caption {
+  color: #757575;
+}
+
+.category-card.Mui-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

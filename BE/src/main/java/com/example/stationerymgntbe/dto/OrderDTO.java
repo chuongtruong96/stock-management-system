@@ -1,5 +1,6 @@
 package com.example.stationerymgntbe.dto;
 
+import com.example.stationerymgntbe.entity.Order;
 import com.example.stationerymgntbe.enums.OrderStatus;
 import lombok.*;
 

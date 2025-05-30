@@ -95,4 +95,11 @@ public class UserService {
         u.setPassword(encoder.encode(rawPw));
         userRepository.save(u);
     }
+
+    public List<String> getAdminUsernames() {
+    return userRepository.findAll().stream()
+            .filter(u -> u.getRole() == UserRole.ADMIN)
+            .map(User::getUsername)
+            .toList();
+}
 }

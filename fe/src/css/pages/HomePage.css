@@ -1,0 +1,94 @@
+/* src/css/pages/HomePage.css */
+.container {
+  padding: 0 16px;
+}
+
+.search-bar {
+  background-color: #ffffff;
+  padding: 16px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar .MuiTextField-root {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.search-bar .MuiOutlinedInput-root {
+  border-color: #e0e0e0;
+}
+
+.search-bar .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #757575;
+}
+
+.category-section,
+.popular-section {
+  background-color: #ffffff;
+  padding: 16px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.category-grid {
+  margin-top: 24px;
+}
+
+.section-title {
+  text-align: center;
+}
+
+.section-title .MuiTypography-overline {
+  color: #757575;
+  letter-spacing: 1.5px;
+}
+
+.section-title .MuiTypography-h4 {
+  color: #212121;
+  margin-bottom: 8px;
+}
+
+.view-all-button {
+  color: #212121;
+  border-color: #757575;
+  border-radius: 8px;
+}
+
+.view-all-button:hover {
+  color: #ffffff;
+  background-color: #757575;
+  border-color: #757575;
+}
+
+.popular-section .MuiPaper-root {
+  background-color: #fafafa;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.popular-section .MuiStack-root {
+  scrollbar-width: thin;
+  scrollbar-color: #757575 #ffffff;
+}
+
+.popular-section .MuiStack-root::-webkit-scrollbar {
+  height: 8px;
+}
+
+.popular-section .MuiStack-root::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+.popular-section .MuiStack-root::-webkit-scrollbar-thumb {
+  background-color: #757575;
+  border-radius: 4px;
+}
+
+.product-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

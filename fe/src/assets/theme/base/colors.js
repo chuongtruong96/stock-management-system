@@ -30,7 +30,7 @@ const colors = {
   },
 
   transparent: {
-    main: "rgba(0, 0, 0, 0)",
+    main: "transparent",
   },
 
   white: {

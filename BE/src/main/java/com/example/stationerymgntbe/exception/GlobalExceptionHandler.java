@@ -40,4 +40,12 @@ public class GlobalExceptionHandler {
         errorDetails.put("message", ex.getMessage());
         return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ControllerAdvice
+    public class RestExceptionHandler {
+        @ExceptionHandler(IllegalStateException.class)
+        public ResponseEntity<String> badReq(IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
 }

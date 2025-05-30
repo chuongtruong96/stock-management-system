@@ -20,15 +20,14 @@ public class Product extends AbstractEntity {
 
     @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
-    private Integer stock;
-
-    @Column(nullable = false)
-    private Double price;
+    
+    private String image;
 
     @ManyToOne
     @JoinColumn(name = "unit_id", nullable = false)
     private Unit unit;
-}
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+}

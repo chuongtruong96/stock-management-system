@@ -51,25 +51,42 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
   const closeSidenav = () => setMiniSidenav(dispatch, true);
 
+  // useEffect(() => {
+  //   // A function that sets the mini state of the sidenav.
+  //   function handleMiniSidenav() {
+  //     setMiniSidenav(dispatch, window.innerWidth < 1200);
+  //     setTransparentSidenav(dispatch, window.innerWidth < 1200 ? false : transparentSidenav);
+  //     setWhiteSidenav(dispatch, window.innerWidth < 1200 ? false : whiteSidenav);
+  //   }
+
+  //   /** 
+  //    The event listener that's calling the handleMiniSidenav function when resizing the window.
+  //   */
+  //   window.addEventListener("resize", handleMiniSidenav);
+
+  //   // Call the handleMiniSidenav function to set the state with the initial value.
+  //   handleMiniSidenav();
+
+  //   // Remove event listener on cleanup
+  //   return () => window.removeEventListener("resize", handleMiniSidenav);
+  // }, [dispatch, location]);
+
   useEffect(() => {
-    // A function that sets the mini state of the sidenav.
-    function handleMiniSidenav() {
-      setMiniSidenav(dispatch, window.innerWidth < 1200);
-      setTransparentSidenav(dispatch, window.innerWidth < 1200 ? false : transparentSidenav);
-      setWhiteSidenav(dispatch, window.innerWidth < 1200 ? false : whiteSidenav);
-    }
+  const handleMini = () => {
+    const narrow = window.innerWidth < 1200;
 
-    /** 
-     The event listener that's calling the handleMiniSidenav function when resizing the window.
-    */
-    window.addEventListener("resize", handleMiniSidenav);
+    if (narrow !== miniSidenav)           setMiniSidenav(dispatch, narrow);
+    if ((narrow ? false : transparentSidenav) !== transparentSidenav)
+      setTransparentSidenav(dispatch, narrow ? false : transparentSidenav);
+    if ((narrow ? false : whiteSidenav) !== whiteSidenav)
+      setWhiteSidenav(dispatch, narrow ? false : whiteSidenav);
+  };
 
-    // Call the handleMiniSidenav function to set the state with the initial value.
-    handleMiniSidenav();
+  window.addEventListener('resize', handleMini);
+  handleMini();                 // chạy đúng 1 lần khi mount
 
-    // Remove event listener on cleanup
-    return () => window.removeEventListener("resize", handleMiniSidenav);
-  }, [dispatch, location]);
+  return () => window.removeEventListener('resize', handleMini);
+}, [dispatch, miniSidenav, transparentSidenav, whiteSidenav]);
 
   // Render all the routes from the routes.js (All the visible items on the Sidenav)
       /* Ẩn item không hợp lệ quyền */

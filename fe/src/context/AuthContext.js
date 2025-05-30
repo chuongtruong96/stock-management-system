@@ -83,12 +83,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const hasRole = (role) => {
-    if (!auth.user || !auth.user.roles) return false;
-    // return auth.user.roles.some(r => r.toUpperCase() === role.toUpperCase());
-    const want = role.toUpperCase();
-    return auth.user.roles.some((r) =>
-      r.replace(/^ROLE_/i, "").toUpperCase() === want
-    );
+  if (!auth.user?.roles?.length) return false;
+  return auth.user.roles.includes(role.toUpperCase());
 };
 
   if (authLoading) {

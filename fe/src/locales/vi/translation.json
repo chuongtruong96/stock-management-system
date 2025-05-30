@@ -1,0 +1,44 @@
+{
+  "adminDashboard"   : "Bảng Quản Trị",
+  "dashboard"        : "Bảng Điều Khiển",
+
+  "pendingOrders"    : "Đơn Chờ Duyệt",
+  "ordersThisMonth"  : "Đơn Trong Tháng",
+  "totalProducts"    : "Tổng Sản Phẩm",
+  "totalOrders"      : "Tổng Đơn Hàng",
+
+  "id"               : "Mã",
+  "date"             : "Ngày",
+  "status"           : "Trạng Thái",
+  "comment"          : "Ghi Chú",
+  "actions"          : "Thao Tác",
+
+  "approve"          : "Duyệt",
+  "reject"           : "Từ Chối",
+  "orderRejected"    : "Đã từ chối đơn",
+
+  "orderWindow"      : "Cửa Sổ Đặt Hàng",
+  "open"             : "Đang Mở",
+  "closed"           : "Đã Đóng",
+
+  "recentOrders"       : "Đơn Gần Đây",
+  "topOrderedProducts" : "Sản Phẩm Đặt Nhiều",
+
+  "orderedQty"  : "Số Lượng Đặt",
+
+  "refresh"     : "Làm mới",
+  "refreshed"   : "Đã tải lại dữ liệu",
+
+  "latestOrder"     : "Đơn Gần Nhất",
+  "recentActivity"  : "Hoạt Động Gần Đây",
+
+  "timeline": {
+    "orderStatus" : "Đơn #{{id}} {{status}}"
+  },
+
+  "window": {
+    "closed"       : "Đã đóng cửa sổ đặt hàng.",
+    "openByAdmin"  : "Cửa sổ đang mở do quản trị viên.",
+    "daysLeft"     : "Còn {{count}} ngày để đặt."
+  }
+}

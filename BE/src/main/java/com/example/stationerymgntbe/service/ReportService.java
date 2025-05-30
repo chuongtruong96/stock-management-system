@@ -1,6 +1,8 @@
 package com.example.stationerymgntbe.service;
 
 import com.example.stationerymgntbe.dto.*;
+import com.example.stationerymgntbe.entity.Order;
+import com.example.stationerymgntbe.entity.OrderItem;
 import com.example.stationerymgntbe.mapper.OrderMapper;
 import com.example.stationerymgntbe.repository.OrderRepository;
 import com.lowagie.text.*;
@@ -185,4 +187,34 @@ public class ReportService {
                           .build())
                   .toList();
     }
+
+    public byte[] exportSingleOrder(Order o) throws IOException {
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        Document doc = new Document(PageSize.A4, 36, 36, 36, 36);
+        PdfWriter.getInstance(doc, out);
+        doc.open();
+        Font h = new Font(Font.HELVETICA, 14, Font.BOLD);
+        doc.add(new Paragraph("Order #" + o.getOrderId(), h));
+        doc.add(new Paragraph("Department: " + o.getDepartment().getName()));
+        doc.add(new Paragraph("Status    : " + o.getStatus()));
+        doc.add(new Paragraph("Created   : " + o.getCreatedAt()));
+        PdfPTable tbl = new PdfPTable(new float[]{10, 60, 15, 15});
+        tbl.setWidthPercentage(100);
+        Stream.of("No", "Product", "Qty", "Unit").forEach(col -> {
+            PdfPCell c = new PdfPCell(new Phrase(col, h));
+            c.setHorizontalAlignment(Element.ALIGN_CENTER);
+            tbl.addCell(c);
+        });
+        int idx = 1;
+        for (OrderItem it : o.getItems()) {
+            tbl.addCell(String.valueOf(idx++));
+            tbl.addCell(it.getProduct().getName());
+            tbl.addCell(String.valueOf(it.getQuantity()));
+            tbl.addCell(it.getProduct().getUnit().getNameVn());
+        }
+        doc.add(tbl);
+        doc.close();
+        return out.toByteArray();
+    }
+}
 }

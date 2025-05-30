@@ -1,0 +1,57 @@
+/* src/components/shop/ToolbarFilter.css */
+.toolbar-filter {
+  background-color: #fafafa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #e0e0e0;
+}
+
+.toolbar-filter .MuiTextField-root {
+  background-color: #ffffff;
+  border-radius: 6px;
+}
+
+.toolbar-filter .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #757575;
+}
+
+.toolbar-filter .MuiSelect-root {
+  background-color: #ffffff;
+  border-radius: 6px;
+}
+
+.toolbar-filter .MuiToggleButtonGroup-root .MuiToggleButton-root {
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.toolbar-filter .MuiToggleButtonGroup-root .MuiToggleButton-root.Mui-selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.toolbar-filter .MuiDivider-root {
+  background-color: #e0e0e0;
+  margin: 16px 0;
+}
+
+.toolbar-filter .MuiChip-root {
+  transition: all 0.2s ease-in-out;
+  border-radius: 6px;
+}
+
+.toolbar-filter .MuiChip-root:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toolbar-filter .MuiChip-filled {
+  background-color: #1976d2;
+  color: #ffffff;
+}
+
+.toolbar-filter .MuiChip-outlined {
+  border-color: #757575;
+  color: #212121;
+}

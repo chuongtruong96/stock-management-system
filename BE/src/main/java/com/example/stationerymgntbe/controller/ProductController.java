@@ -1,78 +1,60 @@
-// src/main/java/com/example/stationerymgntbe/controller/ProductController.java
+// src/main/java/.../controller/ProductController.java
 package com.example.stationerymgntbe.controller;
 
 import com.example.stationerymgntbe.dto.ProductDTO;
-import com.example.stationerymgntbe.service.OrderService;
 import com.example.stationerymgntbe.service.ProductService;
-import com.example.stationerymgntbe.service.UserService;
-import com.example.stationerymgntbe.dto.OrderDTO;
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
+@Validated                     // ⬅ để kích hoạt @Valid
 public class ProductController {
 
-    private final ProductService productService;
-    private final UserService userService;
-    private final OrderService orderService;
-    @GetMapping("/products")
-    public ResponseEntity<List<ProductDTO>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    private final ProductService svc;
+
+    /* ----- CRUD ----- */
+
+    @PostMapping @PreAuthorize("hasRole('ADMIN')")
+    public ProductDTO add(@RequestBody @Validated ProductDTO d){ return svc.add(d); }
+
+    @PutMapping("/{id}") @PreAuthorize("hasRole('ADMIN')")
+    public ProductDTO edit(@PathVariable Integer id,
+                           @RequestBody @Validated ProductDTO d){
+        return svc.update(id,d);
     }
 
-    @PostMapping("/products")
+    @DeleteMapping("/{id}") @PreAuthorize("hasRole('ADMIN')")
+    public void del(@PathVariable Integer id){ svc.delete(id); }
+
+@GetMapping
+public Page<ProductDTO> list(@RequestParam(required=false) Integer categoryId,
+                             @PageableDefault(size = 40) Pageable pageable){
+    if(categoryId!=null) return svc.pageByCategory(categoryId,pageable);
+    return svc.pageByCategory(null,pageable);           // all
+}
+
+@GetMapping("/{id}")
+public ProductDTO byId(@PathVariable Integer id){
+    return svc.getProductById(id);
+}
+    /* ----- UPLOAD IMAGE ----- */
+    @PostMapping(value="/{id}/image",
+                 consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDTO> addProduct(@RequestBody ProductDTO productDTO) {
-        return ResponseEntity.ok(productService.addProduct(productDTO));
-    }
-
-    @PutMapping("/products/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Integer id, @RequestBody ProductDTO productDTO) {
-        return ResponseEntity.ok(productService.updateProduct(id, productDTO));
-    }
-
-    @DeleteMapping("/products/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteProduct(@PathVariable Integer id) {
-        try {
-            productService.deleteProduct(id);
-            return ResponseEntity.ok("Product deleted successfully.");
-        } catch (DataIntegrityViolationException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Cannot delete product because it is referenced by existing order items.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while deleting the product: " + e.getMessage());
-        }
-    }
-
-    @PutMapping("/products/{id}/stock")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductDTO> updateStock(@PathVariable Integer id, @RequestBody Map<String, Integer> request) {
-        return ResponseEntity.ok(productService.updateStock(id, request.get("stock")));
-    }
-
-    @GetMapping("/orders/history")
-    public ResponseEntity<List<OrderDTO>> getOrderHistory(Principal principal) {
-        Integer departmentId = userService.getCurrentUser().getDepartmentId();
-        return ResponseEntity.ok(orderService.getOrdersByDepartment(departmentId));
-    }
-
-    @GetMapping("/low-stock")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ProductDTO>> getLowStockProducts() {
-        return ResponseEntity.ok(productService.getLowStockProducts());
+    public ProductDTO upload(@PathVariable Integer id,
+                             @RequestPart("file") MultipartFile f) throws Exception{
+        return svc.uploadImage(id,f);
     }
 }

@@ -18,39 +18,48 @@ public class NotificationService {
     private final NotificationMapper mapper;
     private final SimpMessagingTemplate broker;
 
-    // create for one user
-    public NotificationDTO sendToUser(Integer userId, String title, String msg, String link) {
-        var n = Notification.builder()
-            .userId(userId)
-            .title(title)
-            .message(msg)
-            .link(link)
-            .read(false)
-            .build();
-        n = repo.save(n);
-        var dto = mapper.toDto(n);
-        broker.convertAndSendToUser(userId.toString(), "/queue/notifications", dto);
+    public NotificationDTO sendToUser(Integer userId,String username,
+            String title,
+            String msg,
+            String link) {
+
+        Notification n = repo.save(Notification.builder()
+                .userId(userId) // cột userId bạn có thể lưu hoặc không
+                .title(title)
+                .message(msg)
+                .link(link)
+                .read(false)
+                .build());
+
+        NotificationDTO dto = mapper.toDto(n);
+
+        // gửi đúng username (Principal.getName())
+        broker.convertAndSendToUser(username,
+                "/queue/notifications",
+                dto);
         return dto;
     }
 
     // broadcast to all
-    public void broadcast(String title, String msg, String link) {
+    public void broadcast( String title, String msg, String link) {
         var n = Notification.builder()
-            .userId(null)
-            .title(title)
-            .message(msg)
-            .link(link)
-            .read(false)
-            .build();
+                .userId(null)
+                .title(title)
+                .message(msg)
+                .link(link)
+                .read(false)
+                .build();
         n = repo.save(n);
         var dto = mapper.toDto(n);
         broker.convertAndSend("/topic/notifications/global", dto);
     }
 
-    public List<NotificationDTO> findByUser(Integer userId) {
-        return repo.findByUserIdOrderByCreatedAtDesc(userId)
-                   .stream().map(mapper::toDto).collect(Collectors.toList());
-    }
+    public List<NotificationDTO> findByUser(Integer uid) {
+        return repo.findByUserIdOrderByCreatedAtDesc(uid)
+                   .stream()
+                   .map(mapper::toDto)
+                   .toList();
+      }
 
     public void markRead(Long id) {
         repo.findById(id).ifPresent(n -> {

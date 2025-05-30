@@ -1,0 +1,123 @@
+/* src/css/pages/ProductsPage.css */
+.products-page-container {
+  background-color: #f5f7fa;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-wrapper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content-wrapper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toolbar-filter {
+  background-color: #fafafa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #e0e0e0;
+}
+
+.toolbar-filter .MuiTextField-root {
+  background-color: #ffffff;
+  border-radius: 6px;
+}
+
+.toolbar-filter .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #757575;
+}
+
+.toolbar-filter .MuiSelect-root {
+  background-color: #ffffff;
+  border-radius: 6px;
+}
+
+.toolbar-filter .MuiChip-root {
+  transition: all 0.2s ease-in-out;
+  border-radius: 6px;
+}
+
+.toolbar-filter .MuiChip-root:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-grid .MuiGrid-item {
+  transition: transform 0.2s ease-in-out;
+}
+
+.product-grid .MuiGrid-item:hover {
+  transform: translateY(-5px);
+}
+
+.product-row {
+  transition: all 0.2s ease-in-out;
+}
+
+.product-row:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-bar .MuiPagination-root {
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.pagination-bar .MuiSelect-root {
+  background-color: #ffffff;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.category-sidebar .MuiList-root {
+  background-color: #fafafa;
+  border-radius: 8px;
+  border: none;
+  padding: 8px;
+}
+
+.category-sidebar .MuiListSubheader-root {
+  background-color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212121;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
+}
+
+.category-sidebar .MuiListItemButton-root {
+  border-radius: 6px;
+  margin: 4px 8px;
+  padding: 8px 16px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.category-sidebar .MuiListItemButton-root:hover {
+  background-color: #e0e0e0;
+}
+
+.category-sidebar .MuiListItemButton-root.Mui-selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.category-sidebar .MuiBadge-root {
+  color: #757575;
+}
+
+.category-sidebar .MuiBadge-badge {
+  font-size: 12px;
+  font-weight: 500;
+}

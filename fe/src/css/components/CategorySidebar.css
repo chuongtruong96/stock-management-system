@@ -1,0 +1,46 @@
+/* src/components/categories/CategorySidebar.css */
+.category-sidebar .MuiList-root {
+  background-color: #fafafa;
+  border-radius: 8px;
+  border: none;
+  padding: 8px;
+}
+
+.category-sidebar .MuiListSubheader-root {
+  background-color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212121;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
+}
+
+.category-sidebar .MuiListItemButton-root {
+  border-radius: 6px;
+  margin: 4px 8px;
+  padding: 8px 16px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.category-sidebar .MuiListItemButton-root:hover {
+  background-color: #e0e0e0;
+}
+
+.category-sidebar .MuiListItemButton-root.Mui-selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.category-sidebar .MuiListItemButton-root.Mui-selected:hover {
+  background-color: #bbdefb;
+}
+
+.category-sidebar .MuiBadge-root {
+  color: #757575;
+}
+
+.category-sidebar .MuiBadge-badge {
+  font-size: 12px;
+  font-weight: 500;
+}

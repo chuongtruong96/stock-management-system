@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,6 +25,7 @@ public class EmailService {
     /**
      * Generic method to send an email via JavaMailSender
      */
+    @Async
     public void sendEmail(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -40,6 +42,7 @@ public class EmailService {
     /**
      * Notify the admin that a new order was created
      */
+    @Async
     public void sendOrderNotificationToAdmin(OrderDTO orderDTO) {
         String subject = "New Stationery Order - Order ID: " + orderDTO.getOrderId();
         String body = "A new order has been submitted by Department ID: " + orderDTO.getDepartmentId() +
@@ -50,6 +53,7 @@ public class EmailService {
     /**
      * Notify department that their order was approved
      */
+    @Async
     public void sendOrderApprovalNotification(Order order) {
         String deptEmail = order.getDepartment().getEmail();
         String subject = "Your Order Has Been Approved - Order ID: " + order.getOrderId();
@@ -60,6 +64,7 @@ public class EmailService {
     /**
      * Notify department that their order was rejected, including reason
      */
+    @Async
     public void sendOrderRejectionNotification(Order order, String reason) {
         String deptEmail = order.getDepartment().getEmail();
         String subject = "Your Order Has Been Rejected - Order ID: " + order.getOrderId();

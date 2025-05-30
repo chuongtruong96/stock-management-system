@@ -1,36 +1,27 @@
-// src/pages/Admin/AdminDashboard.jsx
-import { useMemo, useState } from "react";
-import {
-  Grid,
-  Card,
-  CircularProgress,
-} from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Grid, Card, CircularProgress } from "@mui/material";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
-/* template comps */
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
-import ReportsBarChart       from "examples/Charts/BarCharts/ReportsBarChart";
-import HorizontalBarChart    from "examples/Charts/BarCharts/HorizontalBarChart";
-import DataTable             from "examples/Tables/DataTable";
-import MDBox                 from "components/MDBox";
-import MDTypography          from "components/MDTypography";
-import MDButton              from "components/MDButton";
+import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
+import DataTable from "examples/Tables/DataTable";
+import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
 
-/* hooks */
 import useAdminData from "hooks/useAdminData";
+import { summaryApi, orderWindowApi, orderApi } from "services/api";
+import { useContext } from "react";
+import { AuthContext } from "context/AuthContext";
 
-/* api */
-import { toggleWindow, approveOrder, rejectOrder } from "services/api";
-
-/* dialog */
 import RejectDialog from "components/dialogs/RejectDialog";
-
-/* shell */
 import DashboardShell from "layouts/DashboardShell";
-import { Today } from "@mui/icons-material";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
+
   const {
     orders,
     pendingCount,
@@ -45,132 +36,93 @@ export default function AdminDashboard() {
   } = useAdminData();
 
   const [rejectingId, setRejectingId] = useState(null);
+  const [topProducts, setTopProducts] = useState([]);
 
-  /* ---------- charts data ---------- */
-  const inStockChart = useMemo(
-    () => ({
-      labels: products.slice(0, 5).map((p) => p.name),
-      datasets: [
-        {
-          label: "Stock",
-          data: products.slice(0, 5).map((p) => p.stock),
-          color: "info",
-        },
-      ],
-    }),
-    [products]
-  );
+  useEffect(() => {
+      summaryApi.topProducts(5).then((response) => setTopProducts(response));
+      orderApi.checkPeriod().catch((err) => {
+        console.error("Failed to check period:", err);
+        // Handle error without redirecting (already handled by interceptor)
+      });
+  }, []);
 
   const orderedChart = useMemo(
     () => ({
-      labels  : products.map((p) => p.name),
+      labels: topProducts.map((p) => p.productName),
       datasets: {
-        label: "Orders",
-        data : products.map((p) => p.stock),
+        label: t("orderedQty"),
+        data: topProducts.map((p) => p.totalQuantity),
       },
     }),
-    [products]
+    [topProducts, t]
   );
 
-  /* ---------- summary cards ---------- */
   const summaryCards = [
     {
       color: "dark",
-      icon : "hourglass_top",
-      title: "Pending Orders",
+      icon: "hourglass_top",
+      title: t("pendingOrders"),
       count: pendingCount || "—",
       route: pendingCount ? "/order-management" : null,
-      percentage: { color:"secondary", amount:`${avgPendingAge} d`, label:"avg. age" },
+      percentage: { color: "secondary", amount: `${avgPendingAge} d`, label: t("avgAge") },
     },
-    { icon:"leaderboard", title:"Orders (This Month)", count:monthlyOrders },
-    { color:"success", icon:"store", title:"Total Products", count:products.length },
-    { color:"primary", icon:"inventory_2", title:"Total Orders", count:orders.length },
+    { icon: "leaderboard", title: t("ordersThisMonth"), count: monthlyOrders },
+    { color: "success", icon: "store", title: t("totalProducts"), count: products.length },
+    { color: "primary", icon: "inventory_2", title: t("totalOrders"), count: orders.length },
   ];
 
-  /* ---------- table columns ---------- */
-  const tableColumns = useMemo(() => [
-    { Header:"ID", accessor:"orderId" },
-    {
-      Header:"Date",
-      accessor:"createdAt",
-      Cell:({ value })=> value ? new Date(value).toLocaleString() : "",
-    },
-    { Header:"Status",  accessor:"status" },
-    { Header:"Comment", accessor:"adminComment" },
-    {
-      Header:"Actions",
-      accessor:"action",
-      Cell:({ row }) =>
-        row.original.status === "pending" && (
-          <>
-            <MDButton
-              size="small"
-              variant="contained"
-              color="success"
-              sx={{ mr:1 }}
-              onClick={() => approveOrder(row.original.orderId).then(fetchAll)}
-            >
-              Approve
-            </MDButton>
-            <MDButton
-              size="small"
-              variant="outlined"
-              color="error"
-              onClick={() => setRejectingId(row.original.orderId)}
-            >
-              Reject
-            </MDButton>
-          </>
-        ),
-    },
-  ], [fetchAll]);
+  const tableColumns = useMemo(
+    () => [
+      { Header: t("id"), accessor: "orderId" },
+      {
+        Header: t("date"),
+        accessor: "createdAt",
+        Cell: ({ value }) => (value ? new Date(value).toLocaleString() : ""),
+      },
+      { Header: t("status"), accessor: "status" },
+      { Header: t("comment"), accessor: "adminComment" },
+    ],
+    [t]
+  );
 
-  /* ---------- UI ---------- */
-  if (loading) {
+  if (loading)
     return (
-      <DashboardShell title="Admin Dashboard">
+      <DashboardShell title={t("adminDashboard")}>
         <MDBox display="flex" justifyContent="center" mt={6}>
           <CircularProgress />
         </MDBox>
       </DashboardShell>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
-      <DashboardShell title="Admin Dashboard">
-        <MDTypography variant="h5" color="error">
-          {error}
-        </MDTypography>
+      <DashboardShell title={t("adminDashboard")}>
+        <MDTypography variant="h5" color="error">{error}</MDTypography>
       </DashboardShell>
     );
-  }
 
   return (
-    <DashboardShell title="Admin Dashboard">
-      {/* ===== ORDER WINDOW TOGGLE ===== */}
+    <DashboardShell title={t("adminDashboard")}>
       <Grid container spacing={3} mb={3}>
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ p:2, textAlign:"center", borderRadius:2, boxShadow:3 }}>
+          <Card sx={{ p: 2, textAlign: "center", borderRadius: 2, boxShadow: 3 }}>
             <MDButton
               fullWidth
               size="large"
               color={winOpen ? "success" : "error"}
               onClick={async () => {
-                const res = await toggleWindow();
-                setWinOpen(res.data.open);
+                const response = await orderWindowApi.toggle();
+                setWinOpen(response.open);
               }}
             >
-              ORDER WINDOW&nbsp;
+              {t("orderWindow")}{" "}
               <MDTypography variant="button" color="white">
-                {winOpen ? "Open" : "Closed"}
+                {winOpen ? t("open") : t("closed")}
               </MDTypography>
             </MDButton>
           </Card>
         </Grid>
       </Grid>
-
-      {/* ===== SUMMARY CARDS ===== */}
       <Grid container columnSpacing={3} rowSpacing={5} justifyContent="space-between">
         {summaryCards.map((cfg) => {
           const body = (
@@ -179,50 +131,28 @@ export default function AdminDashboard() {
             </MDBox>
           );
           return (
-            <Grid key={cfg.title} item xs={12} sm={6} md={4} lg={4} sx={{ flexGrow:1 }}>
-              {cfg.route ? (
-                <Link to={cfg.route} style={{ textDecoration:"none" }}>{body}</Link>
-              ) : body}
+            <Grid key={cfg.title} item xs={12} sm={6} md={4} lg={4} sx={{ flexGrow: 1 }}>
+              {cfg.route ? <Link to={cfg.route} style={{ textDecoration: "none" }}>{body}</Link> : body}
             </Grid>
           );
         })}
       </Grid>
-
-      {/* ===== RECENT ORDERS ===== */}
       <MDBox mt={4}>
-        <MDTypography variant="h5" gutterBottom>
-          Recent Orders
-        </MDTypography>
+        <MDTypography variant="h5" gutterBottom>{t("recentOrders")}</MDTypography>
         <DataTable
           table={{ columns: tableColumns, rows: orders }}
           canSearch={false}
-          entriesPerPage={{ defaultValue:10, entries:[10,25,50] }}
+          entriesPerPage={{ defaultValue: 5, entries: [5, 10, 15] }}
         />
       </MDBox>
-
-      {/* ===== CHARTS ===== */}
-      <MDBox
-        p={2}
-        sx={{ display:"flex", gap:3, flexWrap:"wrap" }}
-      >
-        <Card sx={{ flex:1, minWidth:300, maxWidth:"48%", borderRadius:2, boxShadow:3 }}>
-          <MDBox p={2}>
-            <HorizontalBarChart
-              icon={{ color:"info", component:"inventory" }}
-              title="Top 5 – In stock"
-              description=""
-              chart={inStockChart}
-            />
-          </MDBox>
-        </Card>
-
-        <Card sx={{ flex:1, minWidth:300, maxWidth:"48%", borderRadius:2, boxShadow:3 }}>
+      <MDBox p={2} sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+        <Card sx={{ flex: 1, minWidth: 300, maxWidth: "48%", borderRadius: 2, boxShadow: 3 }}>
           <MDBox p={2}>
             <ReportsBarChart
               color="info"
-              title="Top Ordered Products"
-              
-     description=""        /* tránh children warning */
+              title={t("topOrderedProducts")}
+              date={new Date().toLocaleDateString()}
+              description=""
               chart={orderedChart}
             />
             <MDBox mt={1} display="flex" alignItems="center">
@@ -232,23 +162,21 @@ export default function AdminDashboard() {
                 size="small"
                 onClick={() => {
                   fetchAll();
-                  toast.success("Data refreshed");
+                  toast.success(t("refreshed"));
                 }}
               >
-                refresh
+                {t("refresh")}
               </MDButton>
             </MDBox>
           </MDBox>
         </Card>
       </MDBox>
-
-      {/* ----- Reject dialog ----- */}
       <RejectDialog
         open={Boolean(rejectingId)}
         onClose={() => setRejectingId(null)}
         onConfirm={async (reason) => {
-          await rejectOrder(rejectingId, reason);
-          toast.success("Order rejected");
+          await orderApi.reject(rejectingId, reason);
+          toast.success(t("orderRejected"));
           fetchAll();
         }}
       />
