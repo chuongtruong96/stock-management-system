@@ -13,6 +13,7 @@ export default function useAdminData() {
 
   const { subscribe } = useContext(WsContext);
 
+  /* ---------------- fetch all ---------------- */
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
@@ -23,11 +24,11 @@ export default function useAdminData() {
         productsRes,
         winRes,
       ] = await Promise.all([
-        orderApi.getAll(), // Updated to orderApi.getAll
+        orderApi.all(), // Updated to orderApi.all
         orderApi.getPendingCount(), // Updated to orderApi.getPendingCount
         orderApi.getMonthlyCount(), // Updated to orderApi.getMonthlyCount
-        productApi.getAll(), // Updated to productApi.getAll
-        orderWindowApi.status(), // Updated to orderWindowApi.status
+        productApi.all(), // Updated to productApi.all
+        orderWindowApi.getStatus(), // Updated to orderWindowApi.getStatus
       ]);
 
       setOrders(ordersRes);
@@ -44,6 +45,7 @@ export default function useAdminData() {
     }
   }, []);
 
+  /* ---------------- sockets ------------------ */
   const handleAdminOrders = useCallback((o) => {
     setOrders((prev) => [o, ...prev]);
     if (o.status === "pending") setPendingCount((c) => c + 1);
@@ -61,14 +63,12 @@ export default function useAdminData() {
     return () => unsubs.forEach((off) => off());
   }, [subscribe, handleAdminOrders, fetchAll]);
 
-  const pendingList = useMemo(
-    () => orders.filter((o) => o.status === "pending"),
-    [orders]
-  );
+  /* ---------------- derived ------------------ */
+  const pendingList = useMemo(() => orders.filter(o => o.status === "pending"), [orders]);
   const avgPendingAge = useMemo(() => {
     if (!pendingList.length) return 0;
     const sumDays = pendingList.reduce(
-      (s, o) => s + (Date.now() - new Date(o.createdAt)) / 86_400_000,
+      (s,o) => s + (Date.now() - new Date(o.createdAt)) / 86_400_000,
       0
     );
     return Math.round(sumDays / pendingList.length);

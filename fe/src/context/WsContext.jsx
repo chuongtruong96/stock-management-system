@@ -6,19 +6,20 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { Client }   from "@stomp/stompjs";
-import SockJS       from "sockjs-client";
-import { toast }    from "react-toastify";
+import { Client } from "@stomp/stompjs";
+import { toast } from "react-toastify";
 
 /* ---------------- CONSTANTS ---------------- */
 export const WsContext = createContext(null);
 
-const WS_URL = "http://localhost:8082/ws";
+// Use relative URL to avoid mixed content issues
+const WS_URL = "/ws";
 
 const client = new Client({
-  webSocketFactory: () => new SockJS(WS_URL),
-  reconnectDelay  : 5_000,                     // tự reconnect
-  debug           : (m) => console.log("[STOMP]", m),
+  // Use relative URL instead of absolute URL with protocol
+  webSocketFactory: () => new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`),
+  reconnectDelay: 5_000,                     // tự reconnect
+  debug: (m) => console.log("[STOMP]", m),
 });
 
 /* Kết nối; trả Promise resolve khi đã connect */

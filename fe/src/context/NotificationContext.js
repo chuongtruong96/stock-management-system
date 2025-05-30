@@ -7,7 +7,6 @@ import React, {
   useCallback,
 } from "react";
 import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { AuthContext } from "context/AuthContext";
 
 import { notificationApi } from "../services/api"; // Updated import
@@ -38,9 +37,12 @@ export function NotificationProvider({ children }) {
     const token = user?.token;
     if (!token) return; // chưa login
 
-    const sock = () => new SockJS("http://localhost:8082/ws");
+    // Use relative URL and WebSocket protocol based on page protocol
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+    
     const client = new Client({
-      webSocketFactory: sock,
+      webSocketFactory: () => new WebSocket(wsUrl),
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${token}` }, // gửi JWT để backend lấy Principal
       debug: (m) => console.log("[NOTIFY‑WS]", m),
@@ -59,7 +61,7 @@ export function NotificationProvider({ children }) {
 
     client.activate();
     return () => client.deactivate();
-  }, []);
+  }, [auth.token]);
 
   /* ---------- 3. Helpers ---------- */
   const markAsRead = useCallback((id) => {
