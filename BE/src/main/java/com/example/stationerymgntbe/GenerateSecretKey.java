@@ -9,6 +9,6 @@ public class GenerateSecretKey {
         byte[] key = new byte[64]; // 512 bits = 64 bytes
         random.nextBytes(key);
         String base64Key = Base64.getEncoder().encodeToString(key);
-        // System.out.println("Base64-encoded secret key: " + base64Key);
+        System.out.println("Base64-encoded secret key: " + base64Key);
     }
 }

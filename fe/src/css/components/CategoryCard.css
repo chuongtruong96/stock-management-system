@@ -22,7 +22,7 @@
 .category-card .MuiCardContent-root {
   background-color: #fafafa;
   text-align: center;
-  padding: 8px;
+  padding: 4px 8px !important;
 }
 
 .category-card .MuiTypography-subtitle2 {
@@ -33,10 +33,16 @@
   -webkit-line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2 !important;
+  margin-bottom: 4px !important;
+  font-size: 0.875rem !important;
 }
 
 .category-card .MuiTypography-caption {
   color: #757575;
+  font-size: 0.75rem !important;
+  line-height: 1 !important;
+  margin: 0 !important;
 }
 
 .category-card.Mui-disabled {

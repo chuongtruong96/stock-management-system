@@ -7,5 +7,5 @@ public class ProductDTO {
     private String code;
     private String name;
     private String unit;
-    String image;
+    private String  image;
 }

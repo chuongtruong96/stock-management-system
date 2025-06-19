@@ -144,15 +144,13 @@ public class OrderSummaryService {
           long approved = list.stream().filter(o->o.getStatus()==OrderStatus.approved).count();
           long rejected = list.stream().filter(o->o.getStatus()==OrderStatus.rejected).count();
           long pending  = total - approved - rejected;
-          return new OrderSummaryDTO(
-            /*id*/   null,
-            /*dept*/ dId,
-            /*date*/ date,
-            /*tot*/  (int)total,
-            /*ap*/   (int)approved,
-            /*rj*/   (int)rejected,
-            /*pd*/   (int)pending
-          );
+          OrderSummaryDTO dto = new OrderSummaryDTO();
+          dto.setOrderId(null);
+          dto.setDepartmentName("Department " + dId); // You might want to fetch actual department name
+          dto.setItemCount((int)total);
+          dto.setCreatedAt(date.atStartOfDay());
+          dto.setUpdatedAt(date.atStartOfDay());
+          return dto;
         })
         .collect(Collectors.toList());
     }

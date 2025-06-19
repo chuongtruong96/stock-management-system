@@ -1,44 +1,185 @@
 {
-  "adminDashboard"   : "Bảng Quản Trị",
-  "dashboard"        : "Bảng Điều Khiển",
+  "adminDashboard"   : "Bảng điều khiển Admin",
+  "dashboard"        : "Bảng điều khiển",
 
-  "pendingOrders"    : "Đơn Chờ Duyệt",
-  "ordersThisMonth"  : "Đơn Trong Tháng",
-  "totalProducts"    : "Tổng Sản Phẩm",
-  "totalOrders"      : "Tổng Đơn Hàng",
+  "pendingOrders"    : "Đơn hàng chờ duyệt",
+  "ordersThisMonth"  : "Đơn hàng (Tháng này)",
+  "totalProducts"    : "Tổng sản phẩm",
+  "totalOrders"      : "Tổng đơn hàng",
 
   "id"               : "Mã",
   "date"             : "Ngày",
-  "status"           : "Trạng Thái",
-  "comment"          : "Ghi Chú",
-  "actions"          : "Thao Tác",
+  "status"           : "Trạng thái",
+  "comment"          : "Ghi chú",
+  "actions"          : "Thao tác",
 
   "approve"          : "Duyệt",
-  "reject"           : "Từ Chối",
-  "orderRejected"    : "Đã từ chối đơn",
+  "reject"           : "Từ chối",
+  "orderRejected"    : "Đơn hàng đã bị từ chối",
 
-  "orderWindow"      : "Cửa Sổ Đặt Hàng",
-  "open"             : "Đang Mở",
-  "closed"           : "Đã Đóng",
+  "orderWindow"      : "Cửa sổ đặt hàng",
+  "open"             : "Mở",
+  "closed"           : "Đóng",
 
-  "recentOrders"       : "Đơn Gần Đây",
-  "topOrderedProducts" : "Sản Phẩm Đặt Nhiều",
+  "recentOrders"       : "Đơn hàng gần đây",
+  "topOrderedProducts" : "Sản phẩm được đặt nhiều nhất",
 
-  "orderedQty"  : "Số Lượng Đặt",
+  "orderedQty"  : "Số lượng đã đặt",
 
   "refresh"     : "Làm mới",
-  "refreshed"   : "Đã tải lại dữ liệu",
+  "refreshed"   : "Dữ liệu đã được làm mới",
 
-  "latestOrder"     : "Đơn Gần Nhất",
-  "recentActivity"  : "Hoạt Động Gần Đây",
+  "latestOrder"     : "Đơn hàng mới nhất",
+  "recentActivity"  : "Hoạt động gần đây",
 
   "timeline": {
-    "orderStatus" : "Đơn #{{id}} {{status}}"
+    "orderStatus" : "Đơn hàng #{{id}} {{status}}"
   },
 
   "window": {
-    "closed"       : "Đã đóng cửa sổ đặt hàng.",
-    "openByAdmin"  : "Cửa sổ đang mở do quản trị viên.",
-    "daysLeft"     : "Còn {{count}} ngày để đặt."
+    "closed"       : "Cửa sổ đặt hàng đã đóng.",
+    "openByAdmin"  : "Cửa sổ đặt hàng đã được admin MỞ.",
+    "daysLeft"     : "Còn {{count}} ngày để đặt hàng."
+  },
+
+  "nav": {
+    "admin": "Bảng điều khiển Admin",
+    "orders": "Đơn hàng",
+    "categories": "Danh mục",
+    "products": "Sản phẩm",
+    "units": "Đơn vị",
+    "users": "Người dùng",
+    "reports": "Báo cáo",
+    "notifications": "Thông báo",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "noNotifications": "Không có thông báo",
+    "mark": "Đánh dấu",
+    "read": "Đã đọc",
+    "title": "Tiêu đề",
+    "message": "Tin nhắn",
+    "time": "Thời gian",
+    "signIn": "Đăng nhập",
+    "dashboard": "Bảng điều khiển",
+    "productDetail": "Chi tiết sản phẩm",
+    "orderForm": "Đơn đặt hàng",
+    "orderHistory": "Lịch sử đơn hàng",
+    "orderDetail": "Chi tiết đơn hàng",
+    "profile": "Hồ sơ",
+    "adminDashboard": "Bảng điều khiển Admin",
+    "orderManagement": "Quản lý đơn hàng",
+    "categoryManagement": "Quản lý danh mục",
+    "productManagement": "Quản lý sản phẩm",
+    "unitManagement": "Quản lý đơn vị",
+    "userManagement": "Quản lý người dùng"
+  },
+
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "add": "Thêm",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "sort": "Sắp xếp",
+    "export": "Xuất",
+    "import": "Nhập",
+    "upload": "Tải lên",
+    "download": "Tải xuống",
+    "submit": "Gửi",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Trước",
+    "yes": "Có",
+    "no": "Không"
+  },
+
+  "user": {
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "email": "Email",
+    "name": "Tên",
+    "department": "Phòng ban",
+    "role": "Vai trò"
+  },
+
+  "product": {
+    "name": "Tên sản phẩm",
+    "code": "Mã sản phẩm",
+    "description": "Mô tả",
+    "category": "Danh mục",
+    "unit": "Đơn vị",
+    "price": "Giá",
+    "quantity": "Số lượng",
+    "image": "Hình ảnh",
+    "addToCart": "Thêm vào giỏ",
+    "inCart": "Trong giỏ",
+    "outOfStock": "Hết hàng",
+    "available": "Có sẵn"
+  },
+
+  "order": {
+    "orderForm": "Đơn đặt hàng",
+    "orderHistory": "Lịch sử đơn hàng",
+    "orderDetail": "Chi tiết đơn hàng",
+    "createOrder": "Tạo đơn hàng",
+    "orderItems": "Danh sách sản phẩm",
+    "orderProgress": "Tiến trình đơn hàng",
+    "exportPDF": "Xuất PDF",
+    "uploadSigned": "Tải PDF đã ký",
+    "orderCreated": "Đơn hàng đã tạo",
+    "pdfExported": "PDF đã xuất",
+    "signedSubmitted": "Đã gửi có chữ ký",
+    "adminApproved": "Admin đã duyệt",
+    "rejected": "Đã từ chối",
+    "pending": "Chờ xử lý",
+    "approved": "Đã duyệt",
+    "submitted": "Đã gửi",
+    "exported": "Đã xuất"
+  },
+
+  "cart": {
+    "cart": "Giỏ hàng",
+    "addToCart": "Thêm vào giỏ",
+    "removeFromCart": "Xóa khỏi giỏ",
+    "emptyCart": "Giỏ hàng trống",
+    "proceedToOrder": "Tiến hành đặt hàng",
+    "continueShopping": "Tiếp tục mua sắm",
+    "cartCount": "Số lượng trong giỏ",
+    "totalItems": "Tổng số mặt hàng"
+  },
+
+  "category": {
+    "categories": "Danh mục",
+    "categoryName": "Tên danh mục",
+    "allProducts": "Tất cả sản phẩm",
+    "productCount": "Số sản phẩm"
+  },
+
+  "messages": {
+    "orderWindowClosed": "Cửa sổ đặt hàng đang đóng",
+    "orderWindowOpen": "Cửa sổ đặt hàng đang mở",
+    "orderCreatedSuccess": "Đơn hàng đã được tạo thành công! Vui lòng xuất PDF để lấy chữ ký từ trưởng phòng.",
+    "pdfExportedSuccess": "PDF đã được xuất! Vui lòng lấy chữ ký từ trưởng phòng và tải lên lại.",
+    "signedPdfUploaded": "PDF đã ký đã được tải lên thành công! Đơn hàng của bạn đã được gửi để admin duyệt.",
+    "noItemsInCart": "Không có sản phẩm trong giỏ hàng",
+    "cartIsEmpty": "Giỏ hàng trống",
+    "startShopping": "Bắt đầu mua sắm",
+    "userInfoError": "Lỗi thông tin người dùng",
+    "failedToExportPdf": "Không thể xuất PDF",
+    "failedToConfirmOrder": "Không thể xác nhận đơn hàng",
+    "orderSubmittedSuccess": "Đơn hàng đã được gửi thành công! Nó sẽ được gửi đến admin để duyệt cuối cùng.",
+    "waitingForAdminApproval": "Đang chờ admin duyệt",
+    "orderApproved": "Đơn hàng đã được duyệt"
   }
 }

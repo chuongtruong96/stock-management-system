@@ -32,7 +32,7 @@ export default function SubmitSignedDialog({ order, open, onClose, onSubmitted }
     try {
       const form = new FormData();
       form.append("file", file);
-      await orderApi.submitSigned(order.orderId, form); // Updated to orderApi.submitSigned
+      await orderApi.submitSigned(order.orderId, form);
       toast.success("Submitted successfully!");
       onSubmitted();
       onClose();
@@ -51,7 +51,7 @@ export default function SubmitSignedDialog({ order, open, onClose, onSubmitted }
         <Box mt={2}>
           <input type="file" accept="application/pdf" onChange={handleFileChange} />
         </Box>
-        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mt: 2 }}>{error?.message || String(error)}</Alert>}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

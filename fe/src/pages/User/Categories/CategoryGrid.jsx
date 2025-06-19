@@ -2,8 +2,8 @@ import React from "react";
 
 import Skeleton from "@mui/material/Skeleton";
 import Grid from "@mui/material/Grid";
-import CategoryCard          from "./CategoryCard";
-import { useCategories }     from "hooks";
+import CategoryCard          from "../../../components/categories/CategoryCard";
+import { useCategories }     from "hooks/useSharedData";
 
 
 

@@ -188,31 +188,108 @@ public class ReportService {
                   .toList();
     }
 
-    public byte[] exportSingleOrder(Order o) throws IOException {
+    // Add this method to your existing ReportService class
+
+/**
+ * Export single order as PDF
+ */
+public byte[] exportSingleOrder(Order order) throws IOException {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-        Document doc = new Document(PageSize.A4, 36, 36, 36, 36);
+        Document doc = new Document(PageSize.A4, 20, 20, 30, 20);
         PdfWriter.getInstance(doc, out);
         doc.open();
-        Font h = new Font(Font.HELVETICA, 14, Font.BOLD);
-        doc.add(new Paragraph("Order #" + o.getOrderId(), h));
-        doc.add(new Paragraph("Department: " + o.getDepartment().getName()));
-        doc.add(new Paragraph("Status    : " + o.getStatus()));
-        doc.add(new Paragraph("Created   : " + o.getCreatedAt()));
-        PdfPTable tbl = new PdfPTable(new float[]{10, 60, 15, 15});
-        tbl.setWidthPercentage(100);
-        Stream.of("No", "Product", "Qty", "Unit").forEach(col -> {
-            PdfPCell c = new PdfPCell(new Phrase(col, h));
-            c.setHorizontalAlignment(Element.ALIGN_CENTER);
-            tbl.addCell(c);
-        });
-        int idx = 1;
-        for (OrderItem it : o.getItems()) {
-            tbl.addCell(String.valueOf(idx++));
-            tbl.addCell(it.getProduct().getName());
-            tbl.addCell(String.valueOf(it.getQuantity()));
-            tbl.addCell(it.getProduct().getUnit().getNameVn());
+
+        // Title
+        Font titleFont = new Font(Font.HELVETICA, 16, Font.BOLD);
+        Paragraph title = new Paragraph("Stationery Order #" + order.getOrderId(), titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(20);
+        doc.add(title);
+
+        // Order details
+        Font normalFont = new Font(Font.HELVETICA, 12);
+        Font boldFont = new Font(Font.HELVETICA, 12, Font.BOLD);
+        
+        doc.add(new Paragraph("Department: " + order.getDepartment().getName(), normalFont));
+        doc.add(new Paragraph("Order Date: " + order.getCreatedAt().toLocalDate(), normalFont));
+        doc.add(new Paragraph("Status: " + order.getStatus().toString().toUpperCase(), normalFont));
+        doc.add(new Paragraph(" ")); // Empty line
+
+        // Items table
+        float[] widths = {50f, 20f, 20f, 10f};
+        PdfPTable table = new PdfPTable(widths);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(10);
+
+        Font headerF = new Font(Font.HELVETICA, 11, Font.BOLD);
+        Stream.of("Product Name", "Product Code", "Unit", "Quantity")
+                .forEach(col -> {
+                    PdfPCell cell = new PdfPCell(new Phrase(col, headerF));
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell.setBackgroundColor(new Color(211, 211, 211));
+                    cell.setPadding(8);
+                    table.addCell(cell);
+                });
+
+        // Add order items
+        if (order.getItems() != null && !order.getItems().isEmpty()) {
+            for (OrderItem item : order.getItems()) {
+                // Product Name
+                PdfPCell nameCell = new PdfPCell(new Phrase(item.getProduct().getName(), normalFont));
+                nameCell.setPadding(5);
+                table.addCell(nameCell);
+                
+                // Product Code
+                PdfPCell codeCell = new PdfPCell(new Phrase(item.getProduct().getCode(), normalFont));
+                codeCell.setPadding(5);
+                codeCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(codeCell);
+                
+                // Unit
+                PdfPCell unitCell = new PdfPCell(new Phrase(item.getProduct().getUnit().getNameVn(), normalFont));
+                unitCell.setPadding(5);
+                unitCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(unitCell);
+                
+                // Quantity
+                PdfPCell qtyCell = new PdfPCell(new Phrase(String.valueOf(item.getQuantity()), normalFont));
+                qtyCell.setPadding(5);
+                qtyCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(qtyCell);
+            }
+        } else {
+            // No items message
+            PdfPCell noItemsCell = new PdfPCell(new Phrase("No items in this order", normalFont));
+            noItemsCell.setColspan(4);
+            noItemsCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            noItemsCell.setPadding(10);
+            table.addCell(noItemsCell);
         }
-        doc.add(tbl);
+
+        doc.add(table);
+
+        // Add signature section
+        doc.add(new Paragraph(" ")); // Empty line
+        doc.add(new Paragraph(" ")); // Empty line
+        
+        Paragraph signatureSection = new Paragraph("Department Head Signature:", boldFont);
+        signatureSection.setSpacingBefore(30);
+        doc.add(signatureSection);
+        
+        // Add signature line
+        doc.add(new Paragraph(" ")); // Empty line
+        doc.add(new Paragraph("_________________________________", normalFont));
+        doc.add(new Paragraph("Date: _________________", normalFont));
+        
+        // Add instructions
+        doc.add(new Paragraph(" ")); // Empty line
+        Paragraph instructions = new Paragraph(
+            "Instructions: Please sign this document and upload the signed PDF to complete your order.", 
+            new Font(Font.HELVETICA, 10, Font.ITALIC)
+        );
+        instructions.setSpacingBefore(20);
+        doc.add(instructions);
+
         doc.close();
         return out.toByteArray();
     }

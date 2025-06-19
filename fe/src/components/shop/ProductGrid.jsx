@@ -1,50 +1,171 @@
-import { Grid, Alert, Skeleton, Box, Stack } from "@mui/material";
+import { 
+  Box, 
+  Skeleton, 
+  Alert, 
+  Stack, 
+  Typography,
+  Paper,
+  Container,
+  Grid,
+} from "@mui/material";
+import {
+  SearchOff as NoResultsIcon,
+  Inventory as ProductsIcon,
+} from "@mui/icons-material";
+import { useMemo } from "react";
 import ProductCard from "./ProductCard";
-import ProductRow from "./ProductRow";
-import "../../css/components/ProductGrid.css";
+import ProductRow  from "./ProductRow";
+import LoadingSpinner from "../common/LoadingSpinner";
 
-export default function ProductGrid({ products, loading, view = "grid", onAddToCart }) {
-  if (loading)
+export default function ProductGrid({
+  products = [],
+  loading  = false,
+  view     = "grid",
+  onAddToCart,
+}) {
+  const valid = useMemo(() => products.filter(Boolean), [products]);
+
+  /* ─── loading ─── */
+  if (loading) {
+    if (view === "list") {
+      return (
+        <Stack spacing={2}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Paper
+              key={i}
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Skeleton variant="rectangular" width={120} height={80} sx={{ borderRadius: 2 }} />
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton variant="text" width="60%" height={24} />
+                  <Skeleton variant="text" width="40%" height={20} sx={{ mt: 1 }} />
+                  <Skeleton variant="text" width="30%" height={20} sx={{ mt: 1 }} />
+                </Box>
+                <Box>
+                  <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: 2 }} />
+                </Box>
+              </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      );
+    }
+
     return (
-      <Grid container spacing={3} className="product-grid">
-        {Array.from({ length: view === "list" ? 4 : 9 }).map((_, i) => (
-          <Grid
+      <Grid container spacing={2}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <Grid 
+            item 
+            xs={6}    // 2 products per row on mobile
+            sm={4}    // 3 products per row on small screens
+            md={3}    // 4 products per row on medium screens
+            lg={2.4}  // 5 products per row on large screens
+            xl={2}    // 6 products per row on extra large screens
             key={i}
-            item
-            xs={12}
-            sm={view === "list" ? 12 : 6}
-            md={view === "list" ? 12 : 4}
           >
-            <Skeleton
-              variant="rectangular"
-              height={view === "list" ? 120 : 300}
-              sx={{ borderRadius: 2 }}
-            />
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                overflow: 'hidden',
+              }}
+            >
+              <Skeleton variant="rectangular" height={180} />
+              <Box sx={{ p: 2 }}>
+                <Skeleton variant="text" width="80%" height={20} />
+                <Skeleton variant="text" width="60%" height={16} sx={{ mt: 1 }} />
+                <Skeleton variant="text" width="40%" height={16} sx={{ mt: 1 }} />
+                <Skeleton variant="rectangular" width="100%" height={32} sx={{ mt: 2, borderRadius: 1 }} />
+              </Box>
+            </Paper>
           </Grid>
         ))}
       </Grid>
     );
+  }
 
-  if (!products.length) return <Alert severity="info">No products found.</Alert>;
-
-  if (view === "list")
+  /* ─── empty ─── */
+  if (!valid.length) {
     return (
-      <Stack spacing={2} className="product-grid">
-        {products.map((p) => (
-          <ProductRow key={p.id ?? p.productId} data={p} onAdd={(q) => onAddToCart(p, q)} />
+      <Paper
+        elevation={0}
+        sx={{
+          p: 6,
+          textAlign: 'center',
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.9) 100%)',
+        }}
+      >
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            bgcolor: 'grey.100',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 3,
+          }}
+        >
+          <NoResultsIcon sx={{ fontSize: 40, color: 'text.secondary' }} />
+        </Box>
+        <Typography variant="h5" fontWeight={600} color="text.primary" gutterBottom>
+          No products found
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 400, mx: 'auto' }}>
+          We couldn't find any products matching your criteria. Try adjusting your filters or search terms.
+        </Typography>
+      </Paper>
+    );
+  }
+
+  /* ─── list view ─── */
+  if (view === "list") {
+    return (
+      <Stack spacing={2}>
+        {valid.map((p, index) => (
+          <ProductRow
+            key={p.id || p.productId || index}
+            data={p}
+            onAdd={(prod, q) => onAddToCart?.(prod, q)}
+          />
         ))}
       </Stack>
     );
+  }
 
+  /* ─── grid view ─── */
   return (
-    <Box className="product-grid">
-      <Grid container spacing={3}>
-        {products.map((p) => (
-          <Grid key={p.id ?? p.productId} item xs={12} sm={6} md={4}>
-            <ProductCard data={p} onAdd={(q) => onAddToCart(p, q)} />
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
+    <Grid container spacing={2}>
+      {valid.map((p, index) => (
+        <Grid 
+          item 
+          xs={6}    // 2 products per row on mobile
+          sm={4}    // 3 products per row on small screens
+          md={3}    // 4 products per row on medium screens
+          lg={2.4}  // 5 products per row on large screens
+          xl={2}    // 6 products per row on extra large screens
+          key={p.id || p.productId || index}
+        >
+          <ProductCard
+            data={p}
+            onAdd={(prod, q) => onAddToCart?.(prod, q)}
+          />
+        </Grid>
+      ))}
+    </Grid>
   );
 }

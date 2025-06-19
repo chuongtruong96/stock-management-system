@@ -1,4 +1,3 @@
-
 import PropTypes from "prop-types";
 
 // @mui material components
@@ -8,7 +7,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Icon from "@mui/material/Icon";
 
 // Material Dashboard 2 React components
-import MDBox from "components/MDBox";
+import MDBox from "components/template/MDBox";
 
 // Custom styles for the SidenavCollapse
 import {
@@ -23,7 +22,13 @@ import { useMaterialUIController } from "context";
 
 function SidenavCollapse({ icon, name, active, ...rest }) {
   const [controller] = useMaterialUIController();
-  const { miniSidenav, transparentSidenav, whiteSidenav, darkMode, sidenavColor } = controller;
+  const {
+    miniSidenav,
+    transparentSidenav,
+    whiteSidenav,
+    darkMode,
+    sidenavColor,
+  } = controller;
 
   return (
     <ListItem component="li">
@@ -41,7 +46,12 @@ function SidenavCollapse({ icon, name, active, ...rest }) {
       >
         <ListItemIcon
           sx={(theme) =>
-            collapseIconBox(theme, { transparentSidenav, whiteSidenav, darkMode, active })
+            collapseIconBox(theme, {
+              transparentSidenav,
+              whiteSidenav,
+              darkMode,
+              active,
+            })
           }
         >
           {typeof icon === "string" ? (

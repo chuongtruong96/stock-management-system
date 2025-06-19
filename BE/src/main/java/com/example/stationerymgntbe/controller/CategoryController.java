@@ -28,7 +28,16 @@ public class CategoryController {
 
     private final CategoryService srv;
 
-    @GetMapping public List<CategoryDTO> list(){ return srv.all(); }
+    @GetMapping 
+    public List<CategoryDTO> list(){ return srv.all(); }
+
+    @GetMapping("/{id}")
+    public CategoryDTO getById(@PathVariable Integer id) {
+        return srv.all().stream()
+                .filter(cat -> cat.getCategoryId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+    }
 
     @PostMapping @PreAuthorize("hasRole('ADMIN')")
     public CategoryDTO add(@RequestBody CategoryDTO d){ return srv.create(d); }

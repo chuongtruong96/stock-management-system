@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 
 // react-github-btn
@@ -17,9 +15,9 @@ import TwitterIcon from "@mui/icons-material/Twitter";
 import FacebookIcon from "@mui/icons-material/Facebook";
 
 // Material Dashboard 2 React components
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-import MDButton from "components/MDButton";
+import MDBox from "components/template/MDBox";
+import MDTypography from "components/template/MDTypography";
+import MDButton from "components/template/MDButton";
 
 // Custom styles for the Configurator
 import ConfiguratorRoot from "examples/Configurator/ConfiguratorRoot";
@@ -46,7 +44,14 @@ function Configurator() {
     darkMode,
   } = controller;
   const [disabled, setDisabled] = useState(false);
-  const sidenavColors = ["primary", "dark", "info", "success", "warning", "error"];
+  const sidenavColors = [
+    "primary",
+    "dark",
+    "info",
+    "success",
+    "warning",
+    "error",
+  ];
 
   // Use the useEffect hook to change the button state for the sidenav type based on window size.
   useEffect(() => {
@@ -105,11 +110,15 @@ function Configurator() {
     palette: { white, gradients, background },
   }) => ({
     height: pxToRem(39),
-    background: darkMode ? white.main : linearGradient(gradients.dark.main, gradients.dark.state),
+    background: darkMode
+      ? white.main
+      : linearGradient(gradients.dark.main, gradients.dark.state),
     color: darkMode ? background.sidenav : white.main,
 
     "&:hover, &:focus, &:focus:not(:hover)": {
-      background: darkMode ? white.main : linearGradient(gradients.dark.main, gradients.dark.state),
+      background: darkMode
+        ? white.main
+        : linearGradient(gradients.dark.main, gradients.dark.state),
       color: darkMode ? background.sidenav : white.main,
     },
   });
@@ -164,7 +173,9 @@ function Configurator() {
                   width: "24px",
                   height: "24px",
                   padding: 0,
-                  border: `${borderWidth[1]} solid ${darkMode ? background.sidenav : white.main}`,
+                  border: `${borderWidth[1]} solid ${
+                    darkMode ? background.sidenav : white.main
+                  }`,
                   borderColor: () => {
                     let borderColorValue = sidenavColor === color && dark.main;
 
@@ -178,8 +189,14 @@ function Configurator() {
                     easing: transitions.easing.sharp,
                     duration: transitions.duration.shorter,
                   }),
-                  backgroundImage: ({ functions: { linearGradient }, palette: { gradients } }) =>
-                    linearGradient(gradients[color].main, gradients[color].state),
+                  backgroundImage: ({
+                    functions: { linearGradient },
+                    palette: { gradients },
+                  }) =>
+                    linearGradient(
+                      gradients[color].main,
+                      gradients[color].state
+                    ),
 
                   "&:not(:last-child)": {
                     mr: 1,
@@ -266,7 +283,12 @@ function Configurator() {
           <Switch checked={fixedNavbar} onChange={handleFixedNavbar} />
         </MDBox>
         <Divider />
-        <MDBox display="flex" justifyContent="space-between" alignItems="center" lineHeight={1}>
+        <MDBox
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          lineHeight={1}
+        >
           <MDTypography variant="h6">Light / Dark</MDTypography>
 
           <Switch checked={darkMode} onChange={handleDarkMode} />
@@ -325,7 +347,7 @@ function Configurator() {
               &nbsp; Share
             </MDButton>
           </MDBox> */}
-        {/* </MDBox> */} 
+        {/* </MDBox> */}
       </MDBox>
     </ConfiguratorRoot>
   );

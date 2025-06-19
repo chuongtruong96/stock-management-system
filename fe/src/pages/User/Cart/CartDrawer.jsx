@@ -1,3 +1,4 @@
+// src/pages/User/Cart/CartDrawer.jsx
 import {
   Drawer,
   IconButton,
@@ -13,24 +14,28 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
-import QuantitySelector from "components/QuantitySelector";
-import { useCart } from "context/CartContext";
+import QuantitySelector from "components/shop/QuantitySelector";
+import { useCart } from "context/CartContext/useCart";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 export default function CartDrawer() {
   const {
     drawerOpen,
     closeCart,
-    items,
-    remove,
+    items = [],
+    removeItem,
     updateQty,
     totalItems,
   } = useCart();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleCheckout = () => {
-    if (!items.length) return toast.info("Cart is empty");
-    window.location.href = "/order-form";
+    if (!items.length) return toast.info(t('cart.emptyCart'));
+    closeCart();
+    navigate("/order-form");
   };
 
   return (
@@ -40,13 +45,13 @@ export default function CartDrawer() {
       onClose={closeCart}
       PaperProps={{
         sx: {
-          width: { xs: 400, sm: 600 }, // Increased width for a wider drawer
-          background: "rgba(20, 30, 60, 0.9)", // Semi-transparent dark background
-          backdropFilter: "blur(10px)", // Blur effect for a futuristic look
-          border: "1px solid rgba(0, 255, 255, 0.5)", // Cyan glowing border
-          boxShadow: "0 0 20px rgba(0, 255, 255, 0.3)", // Glowing effect
-          color: "#ffffff", // White text for contrast
-          overflowX: "hidden", // Remove horizontal scrollbar
+          width: { xs: 400, sm: 600 },
+          background: "rgba(20, 30, 60, 0.9)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(0, 255, 255, 0.5)",
+          boxShadow: "0 0 20px rgba(0, 255, 255, 0.3)",
+          color: "#ffffff",
+          overflowX: "hidden",
         },
       }}
     >
@@ -57,91 +62,93 @@ export default function CartDrawer() {
             variant="h6"
             sx={{
               fontWeight: 600,
-              background: "linear-gradient(90deg, #00ffff, #ff00ff)", // Gradient text
+              background: "linear-gradient(90deg, #00ffff, #ff00ff)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
           >
-            Cart ({totalItems})
+            {t('cart.cart')} ({totalItems})
           </Typography>
           <IconButton
             size="small"
             onClick={closeCart}
             sx={{
-              color: "#00ffff", // Cyan color for icon
-              "&:hover": { color: "#ff00ff" }, // Magenta on hover
+              color: "#00ffff",
+              "&:hover": { color: "#ff00ff" },
             }}
           >
             <CloseIcon />
           </IconButton>
         </Box>
 
-        <Divider
-          sx={{
-            my: 2,
-            background: "rgba(0, 255, 255, 0.3)", // Glowing cyan divider
-          }}
-        />
+        <Divider sx={{ my: 2, background: "rgba(0, 255, 255, 0.3)" }} />
 
         {/* Cart Items */}
         <List dense sx={{ maxHeight: "60vh", overflowY: "auto" }}>
-          {items.map((it) => (
-            <ListItem
-              key={it.id}
-              sx={{
-                alignItems: "flex-start",
-                background: "rgba(255, 255, 255, 0.05)", // Slight transparency
-                borderRadius: 1,
-                mb: 1,
-                "&:hover": {
-                  background: "rgba(255, 255, 255, 0.1)", // Hover effect
-                },
-              }}
-            >
-              <Avatar
-                src={it.imageUrl || "/placeholder-prod.png"}
+          {items.map((item) => {
+            const product = item.product;
+            const unitLabel =
+              typeof product.unit === "object" && product.unit !== null
+                ? product.unit.name || product.unit.nameVn
+                : product.unit;
+            const imageSrc = product?.image
+              ? `/uploads/product-img/${product.image}`
+              : "/placeholder-prod.png";
+
+            return (
+              <ListItem
+                key={product.id}
                 sx={{
-                  width: 48,
-                  height: 48,
-                  mr: 2,
-                  border: "2px solid #00ffff", // Cyan border for avatar
-                }}
-              />
-              <ListItemText
-                primary={it.name}
-                secondary={`${it.quantity} × ${it.unit}`}
-                primaryTypographyProps={{ color: "#ffffff", fontWeight: 500 }}
-                secondaryTypographyProps={{ color: "rgba(255, 255, 255, 0.7)" }}
-                sx={{ mr: 2 }}
-              />
-              <QuantitySelector
-                small
-                min={1}
-                value={it.quantity}
-                setValue={(v) => updateQty(it.id, v)}
-                sx={{
-                  background: "rgba(255, 255, 255, 0.1)",
+                  alignItems: "flex-start",
+                  background: "rgba(255, 255, 255, 0.05)",
                   borderRadius: 1,
-                  "& button": {
-                    color: "#00ffff",
-                    "&:hover": { background: "rgba(255, 255, 255, 0.2)" },
+                  mb: 1,
+                  "&:hover": {
+                    background: "rgba(255, 255, 255, 0.1)",
                   },
                 }}
-              />
-              <ListItemSecondaryAction>
-                <IconButton
-                  size="small"
-                  onClick={() => remove(it.id)}
+              >
+                <Avatar
+                  src={imageSrc}
                   sx={{
-                    color: "#ff00ff", // Magenta delete icon
-                    "&:hover": { color: "#00ffff" }, // Cyan on hover
+                    width: 48,
+                    height: 48,
+                    mr: 2,
+                    border: "2px solid #00ffff",
                   }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
-            </ListItem>
-          ))}
+                />
+                <ListItemText
+                primary={product.name}
+                secondary={`${t('product.quantity')}: ${item.qty} × ${unitLabel}`}
+                primaryTypographyProps={{
+                color: "#ffffff",
+                fontWeight: 500,
+                }}
+                secondaryTypographyProps={{
+                color: "rgba(255, 255, 255, 0.7)",
+                }}
+                sx={{ mr: 2 }}
+                />
+                <QuantitySelector
+                  value={item.qty}
+                  setValue={(v) => updateQty(product.id, v)}
+                  small
+                />
+                <ListItemSecondaryAction>
+                  <IconButton
+                    size="small"
+                    onClick={() => removeItem(product.id)}
+                    sx={{
+                      color: "#ff00ff",
+                      "&:hover": { color: "#00ffff" },
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            );
+          })}
           {!items.length && (
             <Typography
               align="center"
@@ -151,17 +158,12 @@ export default function CartDrawer() {
                 fontStyle: "italic",
               }}
             >
-              No items
+              {t('cart.emptyCart')}
             </Typography>
           )}
         </List>
 
-        <Divider
-          sx={{
-            my: 2,
-            background: "rgba(0, 255, 255, 0.3)", // Glowing cyan divider
-          }}
-        />
+        <Divider sx={{ my: 2, background: "rgba(0, 255, 255, 0.3)" }} />
 
         {/* Proceed Button */}
         <Button
@@ -170,12 +172,12 @@ export default function CartDrawer() {
           disabled={!items.length}
           onClick={handleCheckout}
           sx={{
-            background: "linear-gradient(90deg, #00ffff, #ff00ff)", // Gradient button
+            background: "linear-gradient(90deg, #00ffff, #ff00ff)",
             color: "#ffffff",
             fontWeight: 600,
-            boxShadow: "0 0 10px rgba(0, 255, 255, 0.5)", // Glowing shadow
+            boxShadow: "0 0 10px rgba(0, 255, 255, 0.5)",
             "&:hover": {
-              background: "linear-gradient(90deg, #ff00ff, #00ffff)", // Reverse gradient on hover
+              background: "linear-gradient(90deg, #ff00ff, #00ffff)",
               boxShadow: "0 0 15px rgba(0, 255, 255, 0.7)",
             },
             "&:disabled": {
@@ -185,7 +187,7 @@ export default function CartDrawer() {
             },
           }}
         >
-          Proceed
+          {t('cart.proceedToOrder')}
         </Button>
       </Box>
     </Drawer>

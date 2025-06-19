@@ -16,6 +16,9 @@ public class Order extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderId;
 
+    @Column(unique = true, nullable = true)
+    private String orderNumber;
+
     @ManyToOne
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;

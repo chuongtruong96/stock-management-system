@@ -15,6 +15,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     @Query("SELECT oi FROM OrderItem oi LEFT JOIN FETCH oi.product WHERE oi.order.orderId = :orderId")
     Collection<OrderItem> findByOrderOrderId(@Param("orderId") Integer orderId);
 
+    @Query("SELECT COUNT(oi) FROM OrderItem oi WHERE oi.order.orderId = :orderId")
+    Integer countByOrderOrderId(@Param("orderId") Integer orderId);
+
     @Query(
        "SELECT new com.example.stationerymgntbe.dto.ProductOrderSummaryDTO(oi.product.productId, oi.product.name, SUM(oi.quantity)) " +
        "FROM OrderItem oi " +

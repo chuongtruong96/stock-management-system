@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
-import api from "../services/api";
+import { orderApi } from "../services/api";
 import { AuthContext } from "./AuthContext"; // Import AuthContext
 
 const OrderWindowCtx = createContext({ canOrder: false });
@@ -10,11 +10,18 @@ export function OrderWindowProvider({ children }) {
 
   const { data } = useQuery({
     queryKey: ["order-period"],
-    queryFn: () => api.get("/orders/check-period").then((r) => r.data),
+    queryFn: async () => {
+      try {
+        const result = await orderApi.checkPeriod();
+        return result || { canOrder: false };
+      } catch (error) {
+        console.warn("Order period check failed:", error);
+        return { canOrder: false };
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
-    // enabled: isAuthenticated(), // Only run query if authenticated
-    retry: false, // Prevent retry on 401
+    retry: false,
   });
 
   return (

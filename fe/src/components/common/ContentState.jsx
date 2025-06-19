@@ -10,7 +10,7 @@ export default function ContentState({ loading, error, empty, children }) {
   if (error)
     return (
       <Box py={10} textAlign="center">
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">{error?.message || String(error)}</Alert>
       </Box>
     );
   if (empty)

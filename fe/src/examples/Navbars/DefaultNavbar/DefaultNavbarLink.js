@@ -1,4 +1,3 @@
-
 import PropTypes from "prop-types";
 
 // react-router-dom components
@@ -8,9 +7,8 @@ import { Link } from "react-router-dom";
 import Icon from "@mui/material/Icon";
 
 // Material Dashboard 2 React components
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-
+import MDBox from "components/template/MDBox";
+import MDTypography from "components/template/MDTypography";
 function DefaultNavbarLink({ icon, name, route, light }) {
   return (
     <MDBox
@@ -24,7 +22,8 @@ function DefaultNavbarLink({ icon, name, route, light }) {
     >
       <Icon
         sx={{
-          color: ({ palette: { white, secondary } }) => (light ? white.main : secondary.main),
+          color: ({ palette: { white, secondary } }) =>
+            light ? white.main : secondary.main,
           verticalAlign: "middle",
         }}
       >

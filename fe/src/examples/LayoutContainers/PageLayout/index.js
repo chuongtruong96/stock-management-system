@@ -1,5 +1,3 @@
-
-
 import { useEffect } from "react";
 
 // react-router-dom components
@@ -9,7 +7,7 @@ import { useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 
 // Material Dashboard 2 React components
-import MDBox from "components/MDBox";
+import MDBox from "components/template/MDBox";
 
 // Material Dashboard 2 React context
 import { useMaterialUIController, setLayout } from "context";

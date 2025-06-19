@@ -21,6 +21,12 @@ public class User extends AbstractEntity {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = true)
+    private String email;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
     @ManyToOne
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
@@ -30,6 +36,15 @@ public class User extends AbstractEntity {
     private UserRole role;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private PasswordResetToken passwordResetToken;          // ⬅ add line
+    private PasswordResetToken passwordResetToken;
+
+    // Helper methods for compatibility with service layer
+    public Integer getId() {
+        return this.userId;
+    }
+
+    public void setId(Integer id) {
+        this.userId = id;
+    }
 }
 

@@ -7,6 +7,7 @@ export default function CardBase({ children, sx = {}, ...rest }) {
       {...rest}
       sx={{
         width: "100%",
+        minWidth: 0,
         border: 1,
         borderColor: "grey.300",
         borderRadius: 2,

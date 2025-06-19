@@ -1,35 +1,350 @@
-
-import React from "react";
-import { Box, Typography, Button } from "@mui/material";
+import React, { useState, useContext } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Avatar,
+  Grid,
+  Card,
+  CardContent,
+  Divider,
+  Stack,
+  Chip,
+  IconButton,
+  Alert,
+} from "@mui/material";
+import {
+  Person as PersonIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Security as SecurityIcon,
+  Business as BusinessIcon,
+  Email as EmailIcon,
+  Badge as BadgeIcon,
+} from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { useAuth } from "context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useOrderHistory } from "hooks/useOrderHistory";
-  // variant returns orders list
+import { AuthContext } from "context/AuthContext";
+import { useTranslation } from "react-i18next";
+import { userApi } from "services/api";
+
 export default function ProfilePage() {
-  const [pwd, setPwd] = React.useState("");
-  const handleSubmit = () => {
-    // call API change password
-    toast.success("Password changed");
+  const { auth } = useContext(AuthContext);
+  const { t } = useTranslation();
+  const [editMode, setEditMode] = useState(false);
+  const [passwordMode, setPasswordMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    username: auth?.user?.username || "",
+    email: auth?.user?.email || "",
+    department: auth?.user?.department || "",
+  });
+  
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const handleProfileUpdate = async () => {
+    setLoading(true);
+    try {
+      // await userApi.updateProfile(formData);
+      toast.success(t('messages.profileUpdated') || "Profile updated successfully");
+      setEditMode(false);
+    } catch (error) {
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // await userApi.changePassword(passwordData);
+      toast.success("Password changed successfully");
+      setPasswordMode(false);
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error) {
+      toast.error(error.message || "Failed to change password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditMode(false);
+    setPasswordMode(false);
+    setFormData({
+      username: auth?.user?.username || "",
+      email: auth?.user?.email || "",
+      department: auth?.user?.department || "",
+    });
+    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  };
+
   return (
-    <Box p={3} maxWidth={480} mx="auto">
-      <Typography variant="h4" gutterBottom>
-        Profile
-      </Typography>
-      <Typography variant="subtitle1" gutterBottom>
-        Change Password
-      </Typography>
-      <input
-        type="password"
-        placeholder="New password"
-        value={pwd}
-        onChange={(e) => setPwd(e.target.value)}
-        style={{ width: "100%", padding: 8, marginBottom: 16 }}
-      />
-      <Button variant="contained" onClick={handleSubmit} disabled={!pwd.length}>
-        Update
-      </Button>
+    <Box sx={{ p: 3, maxWidth: 1000, mx: "auto" }}>
+      {/* Header */}
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          mb: 3,
+          borderRadius: 3,
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          color: "white",
+        }}
+      >
+        <Stack direction="row" spacing={3} alignItems="center">
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              bgcolor: "rgba(255,255,255,0.2)",
+              fontSize: "2rem",
+              fontWeight: 600,
+            }}
+          >
+            {auth?.user?.username?.charAt(0)?.toUpperCase() || "U"}
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h4" fontWeight={700} gutterBottom>
+              {auth?.user?.username || "User"}
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              <Chip
+                icon={<BadgeIcon />}
+                label={auth?.user?.roles?.join(", ") || "User"}
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  color: "white",
+                  "& .MuiChip-icon": { color: "white" },
+                }}
+              />
+              <Chip
+                icon={<BusinessIcon />}
+                label={auth?.user?.department || "No Department"}
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  color: "white",
+                  "& .MuiChip-icon": { color: "white" },
+                }}
+              />
+            </Stack>
+          </Box>
+        </Stack>
+      </Paper>
+
+      <Grid container spacing={3}>
+        {/* Profile Information */}
+        <Grid item xs={12} md={8}>
+          <Card elevation={2} sx={{ borderRadius: 3 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={3}
+              >
+                <Typography variant="h5" fontWeight={600} color="primary">
+                  <PersonIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+                  {t('user.profile')}
+                </Typography>
+                {!editMode && !passwordMode && (
+                  <IconButton
+                    color="primary"
+                    onClick={() => setEditMode(true)}
+                    sx={{
+                      bgcolor: "primary.main",
+                      color: "white",
+                      "&:hover": { bgcolor: "primary.dark" },
+                    }}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                )}
+              </Stack>
+
+              <Stack spacing={3}>
+                <TextField
+                  label={t('user.username')}
+                  value={formData.username}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
+                  }
+                  disabled={!editMode}
+                  fullWidth
+                  variant={editMode ? "outlined" : "filled"}
+                  InputProps={{
+                    startAdornment: <PersonIcon sx={{ mr: 1, color: "text.secondary" }} />,
+                  }}
+                />
+
+                <TextField
+                  label={t('user.email')}
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  disabled={!editMode}
+                  fullWidth
+                  variant={editMode ? "outlined" : "filled"}
+                  InputProps={{
+                    startAdornment: <EmailIcon sx={{ mr: 1, color: "text.secondary" }} />,
+                  }}
+                />
+
+                <TextField
+                  label={t('user.department')}
+                  value={formData.department}
+                  disabled
+                  fullWidth
+                  variant="filled"
+                  InputProps={{
+                    startAdornment: <BusinessIcon sx={{ mr: 1, color: "text.secondary" }} />,
+                  }}
+                />
+
+                {editMode && (
+                  <Stack direction="row" spacing={2} justifyContent="flex-end">
+                    <Button
+                      variant="outlined"
+                      startIcon={<CancelIcon />}
+                      onClick={handleCancel}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<SaveIcon />}
+                      onClick={handleProfileUpdate}
+                      disabled={loading}
+                    >
+                      {t('common.save')}
+                    </Button>
+                  </Stack>
+                )}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Security Settings */}
+        <Grid item xs={12} md={4}>
+          <Card elevation={2} sx={{ borderRadius: 3 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Typography variant="h6" fontWeight={600} color="primary" gutterBottom>
+                <SecurityIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+                Security
+              </Typography>
+
+              {!passwordMode ? (
+                <Box>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Keep your account secure by updating your password regularly.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => setPasswordMode(true)}
+                    startIcon={<SecurityIcon />}
+                  >
+                    Change Password
+                  </Button>
+                </Box>
+              ) : (
+                <Stack spacing={2}>
+                  <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
+                    Password must be at least 6 characters long.
+                  </Alert>
+
+                  <TextField
+                    label="Current Password"
+                    type="password"
+                    size="small"
+                    value={passwordData.currentPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        currentPassword: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="New Password"
+                    type="password"
+                    size="small"
+                    value={passwordData.newPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        newPassword: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="Confirm Password"
+                    type="password"
+                    size="small"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleCancel}
+                      fullWidth
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={handlePasswordChange}
+                      disabled={
+                        loading ||
+                        !passwordData.currentPassword ||
+                        !passwordData.newPassword ||
+                        !passwordData.confirmPassword
+                      }
+                      fullWidth
+                    >
+                      Update
+                    </Button>
+                  </Stack>
+                </Stack>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

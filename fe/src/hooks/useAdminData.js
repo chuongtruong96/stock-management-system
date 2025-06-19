@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useContext } from "react";
 import { WsContext } from "context/WsContext";
-import { orderApi, productApi, orderWindowApi } from "services/api"; // Updated import
+import { orderApi, productApi, orderWindowApi } from "services/api";
 
 export default function useAdminData() {
   const [orders, setOrders] = useState([]);
@@ -23,21 +23,28 @@ export default function useAdminData() {
         productsRes,
         winRes,
       ] = await Promise.all([
-        orderApi.getAll(), // Updated to orderApi.getAll
-        orderApi.getPendingCount(), // Updated to orderApi.getPendingCount
-        orderApi.getMonthlyCount(), // Updated to orderApi.getMonthlyCount
-        productApi.getAll(), // Updated to productApi.getAll
-        orderWindowApi.status(), // Updated to orderWindowApi.status
+        orderApi.all(),
+        orderApi.getPendingCount(),
+        orderApi.getMonthlyCount(),
+        productApi.list(),
+        orderWindowApi.getStatus(),
       ]);
 
+      // Log raw responses for debugging
+      console.log("ordersRes:", ordersRes);
+      console.log("pendingRes:", pendingRes);
+      console.log("monthlyRes:", monthlyRes);
+      console.log("productsRes:", productsRes);
+      console.log("winRes:", winRes);
+
       setOrders(ordersRes);
-      setPendingCount(pendingRes.count);
+      setPendingCount(pendingRes?.count ?? (typeof pendingRes === "number" ? pendingRes : 0)); // Handle different formats
       setMonthlyOrders(monthlyRes);
       setProducts(productsRes);
-      setWinOpen(winRes.open);
+      setWinOpen(winRes?.open ?? false); // Handle undefined winRes
       setError(null);
     } catch (e) {
-      console.error(e);
+      console.error("Fetch all error:", e);
       setError("Load failed");
     } finally {
       setLoading(false);

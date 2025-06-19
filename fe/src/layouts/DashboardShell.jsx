@@ -1,24 +1,26 @@
-// src/layouts/DashboardShell.jsx
+import { useLocation } from "react-router-dom";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer          from "examples/Footer";
-import MDBox           from "components/MDBox";
-import MDTypography    from "components/MDTypography";
+import Footer from "examples/Footer";
+import Breadcrumbs from "examples/Breadcrumbs";
+import MDBox from "components/template/MDBox";
+import { usePageTitle } from "hooks/usePageTitle";
+import { useTranslation } from "react-i18next";
 
-/**
- * Wrapper chia sẻ Navbar/Footer – tránh lặp code
- */
-export default function DashboardShell({ title, children }) {
+export default function DashboardShell({ children, titleKey, icon = "home" }) {
+  const { pathname } = useLocation();
+  const { t } = useTranslation();
+  const title = t(titleKey);
+  const route = pathname.split("/").filter(Boolean);
+
+  usePageTitle(title);
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox p={3}>
-        {title && (
-          <MDTypography variant="h4" mb={3}>
-            {title}
-          </MDTypography>
-        )}
-        {children}
+      <MDBox px={2} py={3}>
+        <Breadcrumbs icon={icon} title={title} route={route} />
+        <MDBox mt={3}>{children}</MDBox>
       </MDBox>
       <Footer />
     </DashboardLayout>

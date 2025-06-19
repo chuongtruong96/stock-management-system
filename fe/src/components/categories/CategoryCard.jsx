@@ -25,7 +25,7 @@ export default function CategoryCard({ data, disabled = false }) {
           sx={{ height: 140, objectFit: "cover" }}
           loading="lazy"
         />
-        <CardContent sx={{ bgcolor: "grey.100", textAlign: "center", py: 1 }}>
+        <CardContent sx={{ bgcolor: "grey.100", textAlign: "center", py: 0.5, px: 1 }}>
           <Typography
             variant="subtitle2"
             fontWeight={600}
@@ -34,12 +34,23 @@ export default function CategoryCard({ data, disabled = false }) {
               WebkitBoxOrient: "vertical",
               WebkitLineClamp: 2,
               overflow: "hidden",
+              lineHeight: 1.2,
+              mb: 0.5,
+              fontSize: "0.875rem",
             }}
           >
             {data.nameEn || data.nameVn || data.code}
           </Typography>
           {data.productCount !== undefined && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography 
+              variant="caption" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: "0.75rem",
+                lineHeight: 1,
+                display: "block",
+              }}
+            >
               {data.productCount} items
             </Typography>
           )}

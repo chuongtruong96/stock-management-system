@@ -23,6 +23,16 @@ public class UnitController {
         return ResponseEntity.ok(unitService.getAllUnits());
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UnitDTO> getUnitById(@PathVariable Integer id) {
+        UnitDTO unit = unitService.getAllUnits().stream()
+                .filter(u -> u.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Unit not found"));
+        return ResponseEntity.ok(unit);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UnitDTO> addUnit(@RequestBody UnitDTO unitDTO) {

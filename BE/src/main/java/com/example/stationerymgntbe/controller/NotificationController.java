@@ -37,4 +37,22 @@ public class NotificationController {
         svc.markRead(id);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/unread-count")
+    public ResponseEntity<Integer> getUnreadCount() {
+        Integer uid = userSvc.getCurrentUser().getId();
+        List<NotificationDTO> notifications = svc.findByUser(uid);
+        int unreadCount = (int) notifications.stream().filter(n -> !n.isRead()).count();
+        return ResponseEntity.ok(unreadCount);
+    }
+
+    @PutMapping("/mark-all-read")
+    public ResponseEntity<Void> markAllRead() {
+        Integer uid = userSvc.getCurrentUser().getId();
+        List<NotificationDTO> notifications = svc.findByUser(uid);
+        notifications.stream()
+                .filter(n -> !n.isRead())
+                .forEach(n -> svc.markRead(n.getId()));
+        return ResponseEntity.ok().build();
+    }
 }
