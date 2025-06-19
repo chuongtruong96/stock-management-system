@@ -6,7 +6,7 @@ import { AuthContext } from "./AuthContext"; // Import AuthContext
 const OrderWindowCtx = createContext({ canOrder: false });
 
 export function OrderWindowProvider({ children }) {
-  // const { isAuthenticated } = useContext(AuthContext); // Add AuthContext
+  const { auth } = useContext(AuthContext); // Add AuthContext
 
   const { data } = useQuery({
     queryKey: ["order-period"],

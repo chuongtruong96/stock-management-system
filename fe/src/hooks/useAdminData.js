@@ -13,6 +13,7 @@ export default function useAdminData() {
 
   const { subscribe } = useContext(WsContext);
 
+  /* ---------------- fetch all ---------------- */
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
@@ -51,6 +52,7 @@ export default function useAdminData() {
     }
   }, []);
 
+  /* ---------------- sockets ------------------ */
   const handleAdminOrders = useCallback((o) => {
     setOrders((prev) => [o, ...prev]);
     if (o.status === "pending") setPendingCount((c) => c + 1);
@@ -68,14 +70,12 @@ export default function useAdminData() {
     return () => unsubs.forEach((off) => off());
   }, [subscribe, handleAdminOrders, fetchAll]);
 
-  const pendingList = useMemo(
-    () => orders.filter((o) => o.status === "pending"),
-    [orders]
-  );
+  /* ---------------- derived ------------------ */
+  const pendingList = useMemo(() => orders.filter(o => o.status === "pending"), [orders]);
   const avgPendingAge = useMemo(() => {
     if (!pendingList.length) return 0;
     const sumDays = pendingList.reduce(
-      (s, o) => s + (Date.now() - new Date(o.createdAt)) / 86_400_000,
+      (s,o) => s + (Date.now() - new Date(o.createdAt)) / 86_400_000,
       0
     );
     return Math.round(sumDays / pendingList.length);

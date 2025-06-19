@@ -31,6 +31,7 @@ public class OrderService {
     private final OrderRepository orderRepo;
     private final OrderItemRepository itemRepo;
     private final ProductRepository productRepo;
+    private final EmailService mail;
     private final UserService userService;
     private final EmailService emailService;
     private final BroadcastService broadcastService;
