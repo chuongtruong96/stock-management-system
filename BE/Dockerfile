@@ -1,14 +1,11 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:17-jdk-slim
-
-# Set environment variable for jar location
-ARG JAR_FILE=target/stationery-mgnt-be-0.0.1-SNAPSHOT.jar
-
-# Set working directory
+# ---- Build Stage ----
+FROM maven:3.9.4-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy the built jar file into the container
-COPY ${JAR_FILE} app.jar
-
-# Run the jar file
+# ---- Run Stage ----
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/stationery-mgnt-be-0.0.1-SNAPSHOT.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
