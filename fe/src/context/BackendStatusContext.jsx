@@ -16,6 +16,26 @@ export const BackendStatusProvider = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
   const [lastChecked, setLastChecked] = useState(null);
 
+  const getBackendUrl = () => {
+    // Check if we're on Netlify (production)
+    if (window?.location?.hostname?.includes('netlify.app')) {
+      return 'https://stock-management-system-1-p6xu.onrender.com/api/categories';
+    }
+    
+    // In development, use localhost
+    if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
+      return 'http://localhost:8080/api/categories';
+    }
+    
+    // Production fallback
+    if (process.env.NODE_ENV === 'production') {
+      return 'https://stock-management-system-1-p6xu.onrender.com/api/categories';
+    }
+    
+    // Development fallback
+    return 'http://localhost:8080/api/categories';
+  };
+
   const checkBackendStatus = async () => {
     try {
       setIsChecking(true);
@@ -24,7 +44,7 @@ export const BackendStatusProvider = ({ children }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://localhost:8080/api/categories', {
+      const response = await fetch(getBackendUrl(), {
         method: 'GET',
         signal: controller.signal,
         headers: {
