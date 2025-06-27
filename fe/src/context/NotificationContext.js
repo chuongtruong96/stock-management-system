@@ -51,13 +51,13 @@ export function NotificationProvider({ children }) {
 
     // Determine WebSocket URL based on environment
     const getWebSocketUrl = () => {
-      // In development, use the backend port
-      if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
-        return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8082/ws`;
-      }
-      // In production, use relative URL
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      return `${wsProtocol}//${window.location.host}/ws`;
+    // In development, use the backend port
+    if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
+    return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8080/ws`;
+    }
+    // In production, use relative URL
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${wsProtocol}//${window.location.host}/ws`;
     };
     
     const client = new Client({

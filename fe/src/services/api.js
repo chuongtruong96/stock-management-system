@@ -8,9 +8,9 @@ const resolveBaseURL = () => {
   if (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.trim() !== '') {
     return process.env.REACT_APP_API_URL;
   }
-  // In development (running on port 3000) default to Spring Boot port 8082 to avoid proxy issues
+  // In development (running on port 3000) default to Spring Boot port 8080 to avoid proxy issues
   if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
-    return 'http://localhost:8082/api';
+    return 'http://localhost:8080/api';
   }
   // Production: Use your Render backend URL
   if (process.env.NODE_ENV === 'production') {

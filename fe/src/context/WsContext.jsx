@@ -17,7 +17,7 @@ export const WsContext = createContext(null);
 const getWebSocketUrl = () => {
   // In development, use the backend port
   if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
-    return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8082/ws`;
+    return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8080/ws`;
   }
   // In production, use relative URL
   return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;

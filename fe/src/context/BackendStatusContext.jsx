@@ -24,7 +24,7 @@ export const BackendStatusProvider = ({ children }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://localhost:8082/api/categories', {
+      const response = await fetch('http://localhost:8080/api/categories', {
         method: 'GET',
         signal: controller.signal,
         headers: {

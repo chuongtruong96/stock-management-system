@@ -49,7 +49,7 @@ export default function DevelopmentNotice() {
           }}
         >
           <AlertTitle>Backend Server Not Running</AlertTitle>
-          The backend server (localhost:8082) is not available. WebSocket connections and some API calls are disabled. 
+          The backend server (localhost:8080) is not available. WebSocket connections and some API calls are disabled. 
           Please start the backend server to enable full functionality.
           {lastChecked && (
             <Box sx={{ mt: 1, fontSize: '0.8rem', opacity: 0.8 }}>
