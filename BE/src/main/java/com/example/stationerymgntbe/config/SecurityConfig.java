@@ -111,17 +111,22 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // @Bean
-    // public CorsConfigurationSource corsConfigurationSource(){
-    //     return corsConfigurationSource("${cors.allowed-origins}");
-    // }
-    
+    @Bean
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOriginPatterns(List.of("http://localhost:3000", "https://your-netlify-name.netlify.app"));
+        
+        // Get allowed origins from environment variable
+        String allowedOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
+        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
+            // Fallback for local development
+            allowedOrigins = "http://localhost:3000,https://stationery-mgnt.netlify.app";
+        }
+        
+        cfg.setAllowedOriginPatterns(List.of(allowedOrigins.split(",")));
         cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization","Content-Type"));
         cfg.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
         src.registerCorsConfiguration("/**",cfg);
         return src;

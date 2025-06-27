@@ -32,3 +32,14 @@ build/
 ### VS Code ###
 .vscode/
 .qodo
+
+### Environment Variables ###
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+### Uploads ###
+uploads/
+*.log
