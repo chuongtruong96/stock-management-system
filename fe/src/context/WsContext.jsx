@@ -8,50 +8,138 @@ import React, {
 } from "react";
 import { Client } from "@stomp/stompjs";
 import { toast } from "react-toastify";
+import { useBackendStatus } from "./BackendStatusContext";
 
 /* ---------------- CONSTANTS ---------------- */
 export const WsContext = createContext(null);
 
-// Use relative URL to avoid mixed content issues
-const WS_URL = "/ws";
+// Determine WebSocket URL based on environment
+const getWebSocketUrl = () => {
+  // In development, use the backend port
+  if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
+    return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8082/ws`;
+  }
+  // In production, use relative URL
+  return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
+};
 
-const client = new Client({
-  // Use relative URL instead of absolute URL with protocol
-  webSocketFactory: () => new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`),
-  reconnectDelay: 5_000,                     // tự reconnect
-  debug: (m) => console.log("[STOMP]", m),
-});
+const createClient = () => {
+  // Get authentication token
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const token = user?.token;
+  
+  return new Client({
+    webSocketFactory: () => {
+      try {
+        return new WebSocket(getWebSocketUrl());
+      } catch (error) {
+        console.error("[STOMP] WebSocket creation failed:", error);
+        throw error;
+      }
+    },
+    reconnectDelay: 10_000, // Increased delay to reduce spam
+    maxReconnectAttempts: 5, // Limit reconnection attempts
+    connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+    debug: (m) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[STOMP]", m);
+      }
+    },
+    onConnect: () => {
+      console.log("[STOMP] Connected successfully");
+    },
+    onDisconnect: () => {
+      console.log("[STOMP] Disconnected");
+    },
+    onStompError: (frame) => {
+      console.error("[STOMP] Error:", frame);
+    },
+    onWebSocketError: (error) => {
+      console.error("[STOMP] WebSocket Error:", error);
+    },
+  });
+};
+
+let client = createClient();
 
 /* Kết nối; trả Promise resolve khi đã connect */
 export const connectStomp = () =>
-  new Promise((res) => {
+  new Promise((res, rej) => {
     if (client.connected) return res();
-    client.onConnect = () => res();
-    client.activate();
+    
+    // Check if user is authenticated
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!user?.token) {
+      console.warn("[STOMP] No authentication token, skipping WebSocket connection");
+      return rej(new Error("No authentication token"));
+    }
+    
+    // Recreate client with fresh token if needed
+    if (!client.connectHeaders?.Authorization) {
+      client = createClient();
+    }
+    
+    let timeout = setTimeout(() => {
+      rej(new Error("WebSocket connection timeout"));
+    }, 10000); // 10 second timeout
+    
+    client.onConnect = () => {
+      clearTimeout(timeout);
+      res();
+    };
+    
+    client.onStompError = (frame) => {
+      clearTimeout(timeout);
+      rej(new Error(`STOMP Error: ${frame.headers.message || 'Unknown error'}`));
+    };
+    
+    try {
+      client.activate();
+    } catch (error) {
+      clearTimeout(timeout);
+      rej(error);
+    }
   });
 
 /* ======================================================
    Provider
    ==================================================== */
 const WsProvider = ({ children }) => {
+  const { isBackendAvailable } = useBackendStatus();
+  
   /* ----- giữ danh sách subscription để huỷ dễ dàng ----- */
   const subs = useRef([]);
 
   /* ----- send: luôn ổn định nhờ useCallback ----- */
   const send = useCallback(
-    (dest, body) =>
-      client.connected &&
-      client.publish({ destination: dest, body: JSON.stringify(body) }),
-    []
+    (dest, body) => {
+      if (!isBackendAvailable) {
+        console.warn("[STOMP] Backend not available, skipping send");
+        return false;
+      }
+      return client.connected &&
+        client.publish({ destination: dest, body: JSON.stringify(body) });
+    },
+    [isBackendAvailable]
   );
 
   /* ----- subscribe: ổn định & trả hàm huỷ ----- */
   const subscribe = useCallback(async (topic, handler) => {
-    await connectStomp();
-    const sub = client.subscribe(topic, (m) => handler(JSON.parse(m.body)));
-    subs.current.push(sub);
-    return () => sub.unsubscribe();
-  }, []);
+    if (!isBackendAvailable) {
+      console.warn("[STOMP] Backend not available, skipping subscription to", topic);
+      return () => {}; // Return empty function to prevent errors
+    }
+    
+    try {
+      await connectStomp();
+      const sub = client.subscribe(topic, (m) => handler(JSON.parse(m.body)));
+      subs.current.push(sub);
+      return () => sub.unsubscribe();
+    } catch (error) {
+      console.error("[STOMP] Failed to subscribe to", topic, error);
+      return () => {}; // Return empty function to prevent errors
+    }
+  }, [isBackendAvailable]);
 
   /* ----- dọn dẹp tất cả khi Provider unmount ----- */
   useEffect(
@@ -63,9 +151,13 @@ const WsProvider = ({ children }) => {
   useEffect(() => {
     let off;                               // lưu hàm huỷ
     (async () => {
-      off = await subscribe("/topic/order-window", ({ open }) =>
-        toast.info(open ? "✅ Window OPEN" : "⏰ Window CLOSED")
-      );
+      try {
+        off = await subscribe("/topic/order-window", ({ open }) =>
+          toast.info(open ? "✅ Window OPEN" : "⏰ Window CLOSED")
+        );
+      } catch (error) {
+        console.warn("[STOMP] Failed to subscribe to order-window topic:", error);
+      }
     })();
     return () => off && off();
   }, [subscribe]);

@@ -27,6 +27,7 @@ import { Typography } from "@mui/material";
 import AdminLayout from "layouts/AdminLayout";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { toastUtils } from "utils/toastUtils";
 
 import { categoryApi } from "services/api";
 
@@ -42,10 +43,32 @@ export default function CategoryManagement({ language = "en" }) {
   const fetchRows = useCallback(async () => {
     try {
       const response = await categoryApi.all();
-      console.log('Categories response:', response);
-      setRows(Array.isArray(response) ? response : []);
+      console.log('🔍 CategoryManagement: Categories response:', response);
+      
+      // Validate and filter the response
+      if (Array.isArray(response)) {
+        const validCategories = response.filter(cat => 
+          cat && 
+          typeof cat === 'object' && 
+          (cat.categoryId || cat.id) && 
+          cat.nameEn && 
+          cat.nameVn
+        );
+        
+        // Normalize categoryId field if needed
+        const normalizedCategories = validCategories.map(cat => ({
+          ...cat,
+          categoryId: cat.categoryId || cat.id
+        }));
+        
+        console.log('✅ CategoryManagement: Loaded', normalizedCategories.length, 'valid categories');
+        setRows(normalizedCategories);
+      } else {
+        console.warn('⚠️ CategoryManagement: Invalid response format:', response);
+        setRows([]);
+      }
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error('❌ CategoryManagement: Failed to fetch categories:', error);
       toast.error("Failed to load categories");
       setRows([]);
     }
@@ -55,69 +78,173 @@ export default function CategoryManagement({ language = "en" }) {
     fetchRows();
   }, [fetchRows]);
 
+  // Cleanup any stuck toasts when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('🔍 CategoryManagement: Component unmounting, dismissing any stuck toasts');
+      toastUtils.dismissAll();
+    };
+  }, []);
+
   const reset = () => {
     setDraft({ categoryId: null, nameVn: "", nameEn: "", code: "", icon: "" });
     setIconFile(null);
   };
 
   const save = async () => {
-    if (!draft.nameEn.trim() || !draft.nameVn.trim()) {
-      toast.warn(language === "vi" ? "Nhập tên tiếng Anh và tiếng Việt" : "English and Vietnamese names required");
-      return;
+  if (!draft.nameEn.trim() || !draft.nameVn.trim()) {
+    toast.warn(language === "vi" ? "Nhập tên tiếng Anh và tiếng Việt" : "English and Vietnamese names required");
+    return;
+  }
+  if (!draft.code.trim()) {
+    toast.warn(language === "vi" ? "Nhập mã danh mục" : "Category code required");
+    return;
+  }
+  
+  console.log('🔍 CategoryManagement: Starting save operation with draft:', draft);
+  
+  try {
+    let saved;
+    const payload = { 
+      nameVn: draft.nameVn, 
+      nameEn: draft.nameEn, 
+      code: draft.code 
+    };
+    
+    console.log('🔍 CategoryManagement: Payload to send:', payload);
+    
+    // Use the existing categoryApi instead of dynamic imports
+    if (draft.categoryId) {
+      console.log('🔍 CategoryManagement: Updating existing category:', draft.categoryId);
+      saved = await categoryApi.update(draft.categoryId, payload);
+    } else {
+      console.log('🔍 CategoryManagement: Creating new category');
+      saved = await categoryApi.create(payload);
     }
-    if (!draft.code.trim()) {
-      toast.warn(language === "vi" ? "Nhập mã danh mục" : "Category code required");
-      return;
+    
+    console.log('🔍 CategoryManagement: API response:', saved);
+    
+    // Validate the saved response
+    if (!saved) {
+      console.error('❌ CategoryManagement: API returned null/undefined response');
+      throw new Error('API returned empty response');
     }
-    try {
-      let saved;
-      const payload = { 
-        nameVn: draft.nameVn, 
-        nameEn: draft.nameEn, 
-        code: draft.code 
-      };
-      if (draft.categoryId) {
-        saved = await categoryApi.update(draft.categoryId, payload);
+    
+    if (typeof saved !== 'object') {
+      console.error('❌ CategoryManagement: API response is not an object:', typeof saved);
+      throw new Error(`Invalid response type: ${typeof saved}`);
+    }
+    
+    // Handle different possible ID field names
+    if (!saved.categoryId && !saved.id && !saved._id) {
+      console.error('❌ CategoryManagement: API response missing ID field. Available fields:', Object.keys(saved));
+      console.error('❌ CategoryManagement: Full response:', JSON.stringify(saved, null, 2));
+      
+      // Try to create a temporary ID if the save was successful but no ID returned
+      if (saved.nameEn && saved.nameVn && saved.code) {
+        console.warn('⚠️ CategoryManagement: Creating temporary ID for valid response without ID');
+        saved = {
+          ...saved,
+          categoryId: `temp_${Date.now()}_${saved.code}`
+        };
       } else {
-        saved = await categoryApi.create(payload);
+        throw new Error('API response missing required ID field');
       }
-
-      if (iconFile) {
-        const fd = new FormData();
-        fd.append("file", iconFile);
-        const tId = toast.loading("Uploading icon…");
-        const catWithIcon = await categoryApi.uploadIcon(saved.categoryId, fd);
-        toast.update(tId, {
-          render: "Done",
-          type: "success",
-          isLoading: false,
-          autoClose: 1500,
-        });
-        saved = catWithIcon;
-      }
-
-      setRows((prev) => {
-        const exist = prev.find((x) => x.categoryId === saved.categoryId);
-        return exist
-          ? prev.map((x) => (x.categoryId === saved.categoryId ? saved : x))
-          : [...prev, saved];
-      });
-      toast.success(draft.categoryId ? "Updated!" : "Added!");
-      setDlgOpen(false);
-      reset();
-    } catch (e) {
-      toast.error(e.response?.data?.message || e.message);
+    } else {
+      // Normalize the ID field
+      saved = {
+        ...saved,
+        categoryId: saved.categoryId || saved.id || saved._id
+      };
     }
-  };
+    
+    console.log('✅ CategoryManagement: Normalized saved object:', saved);
+
+    // Handle icon upload if present
+    if (iconFile && saved?.categoryId) {
+      const fd = new FormData();
+      fd.append("file", iconFile);
+      let tId = null;
+      
+      try {
+        console.log('🔍 CategoryManagement: Starting icon upload for category:', saved.categoryId);
+        
+        tId = toastUtils.loading("Uploading icon…");
+        
+        const catWithIcon = await categoryApi.uploadIcon(saved.categoryId, fd);
+        console.log('✅ CategoryManagement: Icon upload successful:', catWithIcon);
+        
+        toastUtils.updateToSuccess(tId, "Icon uploaded successfully!");
+        
+        // Update saved object with icon info if available
+        if (catWithIcon && typeof catWithIcon === 'object') {
+          saved = {
+            ...saved,
+            ...catWithIcon,
+            categoryId: catWithIcon.categoryId || catWithIcon.id || saved.categoryId
+          };
+        }
+        
+      } catch (uploadError) {
+        console.error('❌ CategoryManagement: Icon upload failed:', uploadError);
+        
+        const errorMessage = uploadError.response?.data?.message || uploadError.message || 'Unknown upload error';
+        toastUtils.updateToError(tId, `Icon upload failed: ${errorMessage}`);
+        
+        // Continue without the icon - don't fail the entire save
+        console.warn('⚠️ CategoryManagement: Continuing without icon due to upload failure');
+      }
+    }
+
+    // Update the rows state
+    setRows((prev) => {
+      const exist = prev.find((x) => x?.categoryId === saved.categoryId);
+      return exist
+        ? prev.map((x) => (x?.categoryId === saved.categoryId ? saved : x))
+        : [...prev, saved];
+    });
+    
+    toast.success(draft.categoryId ? "Updated!" : "Added!");
+    setDlgOpen(false);
+    reset();
+    
+  } catch (e) {
+    console.error('❌ CategoryManagement: Save failed:', e);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to save category';
+    
+    if (e.response?.status === 400) {
+      errorMessage = e.response?.data?.message || 'Invalid data provided';
+    } else if (e.response?.status === 409) {
+      errorMessage = 'Category code already exists';
+    } else if (e.response?.status === 500) {
+      errorMessage = 'Server error - please try again';
+    } else if (e.message) {
+      errorMessage = e.message;
+    }
+    
+    toast.error(errorMessage);
+  }
+};
 
   const remove = async (id) => {
+    if (!id) {
+      console.error('❌ CategoryManagement: Cannot delete - no ID provided');
+      toast.error('Cannot delete category - invalid ID');
+      return;
+    }
+    
     if (!window.confirm("Delete?")) return;
+    
     try {
+      console.log('🔍 CategoryManagement: Deleting category with ID:', id);
       await categoryApi.delete(id);
-      setRows((r) => r.filter((x) => x.categoryId !== id));
+      setRows((r) => r.filter((x) => x?.categoryId !== id));
       toast.success("Deleted");
     } catch (e) {
-      toast.error(e.message);
+      console.error('❌ CategoryManagement: Delete failed:', e);
+      toast.error(e.response?.data?.message || e.message);
     }
   };
 
@@ -132,8 +259,12 @@ export default function CategoryManagement({ language = "en" }) {
   };
 
   const handleViewProducts = () => {
-    if (selectedCategory) {
+    if (selectedCategory?.categoryId) {
+      console.log('🔍 CategoryManagement: Navigating to products for category:', selectedCategory.categoryId);
       navigate(`/admin/product-management?categoryId=${selectedCategory.categoryId}`);
+    } else {
+      console.error('❌ CategoryManagement: Cannot view products - no valid category selected');
+      toast.error('Cannot view products - invalid category');
     }
     handleMenuClose();
   };
@@ -145,22 +276,24 @@ export default function CategoryManagement({ language = "en" }) {
       width: 80,
       renderCell: ({ row }) => (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          <img 
-            src={`/assets/icons/${row.icon}`}
-            alt={row.nameEn}
-            style={{ 
-              width: 48, 
-              height: 48,
-              objectFit: 'cover',
-              borderRadius: '8px',
-              border: '2px solid #1976d2',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
+          {row.icon && row.icon !== 'null' && row.icon !== 'undefined' ? (
+            <img 
+              src={`/icons/${row.icon}`}
+              alt={row.nameEn || 'Category'}
+              style={{ 
+                width: 48, 
+                height: 48,
+                objectFit: 'cover',
+                borderRadius: '8px',
+                border: '2px solid #1976d2',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
           <Avatar 
             sx={{ 
               width: 48, 
@@ -168,7 +301,7 @@ export default function CategoryManagement({ language = "en" }) {
               border: '2px solid',
               borderColor: 'primary.main',
               boxShadow: 2,
-              display: 'none',
+              display: (!row.icon || row.icon === 'null' || row.icon === 'undefined') ? 'flex' : 'none',
               bgcolor: 'primary.main'
             }}
           >
@@ -240,7 +373,7 @@ export default function CategoryManagement({ language = "en" }) {
           <IconButton
             color="error"
             size="small"
-            onClick={() => remove(row.categoryId)}
+            onClick={() => remove(row?.categoryId)}
             sx={{
               bgcolor: 'error.50',
               '&:hover': { bgcolor: 'error.100' }
@@ -314,7 +447,7 @@ export default function CategoryManagement({ language = "en" }) {
           <DataGrid
             rows={rows}
             columns={columns}
-            getRowId={(r) => r.categoryId}
+            getRowId={(r) => r?.categoryId || r?.id || Math.random()}
             slots={{ toolbar: GridToolbar }}
             disableRowSelectionOnClick
             rowHeight={80}
@@ -384,8 +517,12 @@ export default function CategoryManagement({ language = "en" }) {
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => {
-          setDraft(selectedCategory);
-          setDlgOpen(true);
+          if (selectedCategory) {
+            setDraft(selectedCategory);
+            setDlgOpen(true);
+          } else {
+            toast.error('Cannot edit - invalid category');
+          }
           handleMenuClose();
         }} sx={{ py: 1.5 }}>
           <ListItemIcon>
@@ -566,13 +703,15 @@ export default function CategoryManagement({ language = "en" }) {
               </Button>
             </Box>
             
-            {(iconFile || draft.icon) && (
+            {(iconFile || (draft.icon && draft.icon !== 'null' && draft.icon !== 'undefined')) && (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                 <Avatar
                   src={
                     iconFile
                       ? URL.createObjectURL(iconFile)
-                      : `/assets/icons/${draft.icon}`
+                      : (draft.icon && draft.icon !== 'null' && draft.icon !== 'undefined') 
+                        ? `/icons/${draft.icon}`
+                        : undefined
                   }
                   sx={{ 
                     width: 80, 
@@ -581,7 +720,11 @@ export default function CategoryManagement({ language = "en" }) {
                     borderColor: 'primary.main',
                     boxShadow: 2
                   }}
-                />
+                >
+                  {(!iconFile && (!draft.icon || draft.icon === 'null' || draft.icon === 'undefined')) && (
+                    <InventoryIcon sx={{ fontSize: 40 }} />
+                  )}
+                </Avatar>
               </Box>
             )}
           </Stack>

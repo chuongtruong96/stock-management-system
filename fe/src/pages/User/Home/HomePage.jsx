@@ -32,6 +32,9 @@ import SectionTitle from "components/common/SectionTitle";
 import CategoryGridCompact from "components/categories/CategoryGridCompact";
 import ProductCardCompact from "components/shop/ProductCardCompact";
 import ContentState from "components/common/ContentState";
+import DevelopmentNotice from "components/common/DevelopmentNotice";
+import DebugInfo from "components/common/DebugInfo";
+import { useBackendStatus } from "context/BackendStatusContext";
 
 const features = [
   {
@@ -73,6 +76,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
+  const { isBackendAvailable } = useBackendStatus();
 
   const { data: cats = [], isLoading: catLoad, error: catErr } = useQuery({
     queryKey: ["cats"],
@@ -83,17 +87,13 @@ export default function HomePage() {
   const { data: pop = [], isLoading: popLoad, error: popErr } = useQuery({
     queryKey: ["popular"],
     queryFn: async () => {
-      try {
-        const result = await productApi.top(8);
-        console.log("Popular products data:", result);
-        // Normalize the data to ensure consistent structure
-        return Array.isArray(result) ? result.map(normalizeProduct) : [];
-      } catch (error) {
-        console.error("Error fetching popular products:", error);
-        return [];
-      }
+      const result = await productApi.top(8);
+      console.log("Popular products data:", result);
+      // The API now handles fallback internally, so we just need to normalize
+      return Array.isArray(result) ? result.map(normalizeProduct) : [];
     },
     staleTime: 60_000,
+    retry: 1, // Only retry once to avoid spam
   });
 
   const handleSearch = (e) => {
@@ -106,7 +106,9 @@ export default function HomePage() {
   };
 
   return (
-    <Box sx={{ bgcolor: "#f8f9fa", minHeight: "100vh" }}>
+    <>
+      <DevelopmentNotice />
+      <Box sx={{ bgcolor: "#f8f9fa", minHeight: "100vh" }}>
       {/* Hero Section */}
       <Box
         sx={{
@@ -211,7 +213,7 @@ export default function HomePage() {
           {/* Quick Stats */}
           <Grid container spacing={3} sx={{ mt: 4 }}>
             {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                 <Card
                   elevation={4}
                   sx={{
@@ -300,7 +302,7 @@ export default function HomePage() {
             {!!pop.length && (
               <Grid container spacing={2}>
                 {pop.map((product, index) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={product.id || product.productId || index}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={product.id || product.productId || index}>
                     <ProductCardCompact
                       data={product}
                     />
@@ -393,6 +395,19 @@ export default function HomePage() {
           </Stack>
         </Container>
       </Box>
-    </Box>
+      </Box>
+      {process.env.NODE_ENV === 'development' && (
+        <DebugInfo 
+          data={{ 
+            backendAvailable: isBackendAvailable,
+            popLength: pop.length, 
+            popLoad, 
+            popErr: popErr?.message,
+            sampleProduct: pop[0] 
+          }} 
+          title="HomePage Debug" 
+        />
+      )}
+    </>
   );
 }

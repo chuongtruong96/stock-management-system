@@ -31,16 +31,19 @@ public class UserService {
     // CURRENT USER METHODS
     // ============================================================================
 
+    @Transactional
     public UserDetailDTO getCurrentUserDetailInfo() {
         User currentUser = getCurrentUserEntity();
         return mapToUserDetailDTO(currentUser);
     }
 
+    @Transactional
     public UserProfileDTO getCurrentUserProfile() {
         User currentUser = getCurrentUserEntity();
         return mapToUserProfileDTO(currentUser);
     }
 
+    @Transactional
     public User getCurrentUserEntity() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
@@ -49,6 +52,7 @@ public class UserService {
             .orElseThrow(() -> new ResourceNotFoundException("Current user not found: " + username));
     }
 
+    @Transactional
     public UserDTO getCurrentUser() {
         User user = getCurrentUserEntity();
         return mapToUserDTO(user);
@@ -58,12 +62,14 @@ public class UserService {
     // USER MANAGEMENT METHODS
     // ============================================================================
 
+    @Transactional
     public List<UserSummaryDTO> getAllUsersSummary() {
         return userRepository.findAllWithDepartmentAndRole().stream()
             .map(this::mapToUserSummaryDTO)
             .collect(Collectors.toList());
     }
 
+    @Transactional
     public UserDetailDTO getUserDetailById(Integer id) {
         User user = userRepository.findByIdWithDepartmentAndRole(id)
             .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));

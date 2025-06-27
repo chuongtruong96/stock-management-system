@@ -5,21 +5,49 @@ import com.example.stationerymgntbe.dto.ProductDTO;
 import com.example.stationerymgntbe.entity.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
-    @Mapping(target = "unit", expression = "java(getUnitName(product))")
+    
     @Mapping(source = "productId", target = "id")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "code", target = "code")
+    @Mapping(source = "image", target = "image")
+    @Mapping(target = "categoryId", ignore = true)
+    @Mapping(target = "unitId", ignore = true)
+    @Mapping(target = "unit", ignore = true)
     ProductDTO toDto(Product product);
 
-    @Mapping(target = "unit", ignore = true) // manually set in service
-    Product toEntity(ProductDTO dto);
-    
-    default String getUnitName(Product product) {
-        try {
-            return product.getUnit() != null ? product.getUnit().getNameVn() : "Unknown Unit";
-        } catch (Exception e) {
-            return "Unknown Unit";
+    @AfterMapping
+    default void setCategoryAndUnit(@MappingTarget ProductDTO dto, Product product) {
+        // Set categoryId safely
+        if (product.getCategory() != null) {
+            dto.setCategoryId(product.getCategory().getCategoryId());
+        }
+        
+        // Set unitId and unit name safely
+        if (product.getUnit() != null) {
+            dto.setUnitId(product.getUnit().getUnitId());
+            String unitName = product.getUnit().getNameVn();
+            if (unitName == null || unitName.trim().isEmpty()) {
+                unitName = product.getUnit().getNameEn();
+            }
+            if (unitName == null || unitName.trim().isEmpty()) {
+                unitName = "Unknown Unit";
+            }
+            dto.setUnit(unitName);
+        } else {
+            dto.setUnit("Unknown Unit");
         }
     }
+
+    @Mapping(target = "unit", ignore = true) // manually set in service
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "productId", ignore = true)
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "code", target = "code")
+    @Mapping(source = "image", target = "image")
+    Product toEntity(ProductDTO dto);
 }

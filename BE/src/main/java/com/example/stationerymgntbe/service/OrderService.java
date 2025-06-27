@@ -5,13 +5,13 @@ import com.example.stationerymgntbe.entity.*;
 import com.example.stationerymgntbe.enums.OrderStatus;
 import com.example.stationerymgntbe.exception.ResourceNotFoundException;
 import com.example.stationerymgntbe.exception.InvalidOrderStateException;
-import com.example.stationerymgntbe.mapper.*;
 import com.example.stationerymgntbe.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,13 +31,8 @@ public class OrderService {
     private final OrderRepository orderRepo;
     private final OrderItemRepository itemRepo;
     private final ProductRepository productRepo;
-    private final EmailService mail;
     private final UserService userService;
-    private final EmailService emailService;
     private final BroadcastService broadcastService;
-    private final NotificationService notificationService;
-    private final OrderMapper orderMapper;
-    private final OrderItemMapper itemMapper;
     private final ReportService reportService;
     private final AuditService auditService;
 
@@ -69,7 +64,7 @@ public class OrderService {
             order = orderRepo.save(order);
             
             // Create order items
-            List<OrderItem> orderItems = createOrderItems(order, input.getItems());
+            createOrderItems(order, input.getItems());
             
             // Generate order number
             order.setOrderNumber(generateOrderNumber(order.getOrderId(), department.getName()));
@@ -253,6 +248,7 @@ public class OrderService {
         }
     }
 
+    @Transactional
     public ApiResponse<OrderDetailDTO> getOrderDetails(Integer orderId) {
         try {
             Order order = orderRepo.findByIdWithDetails(orderId)
@@ -271,6 +267,7 @@ public class OrderService {
         }
     }
 
+    @Transactional
     public ApiResponse<List<OrderItemDetailDTO>> getOrderItems(Integer orderId) {
         try {
             Order order = orderRepo.findByIdWithDetails(orderId)
@@ -430,9 +427,30 @@ public class OrderService {
     @Transactional
     public ApiResponse<Page<OrderSummaryDTO>> getAllOrders(Pageable pageable) {
         try {
-            Page<Order> orders = orderRepo.findAllByOrderByCreatedAtDesc(pageable);
-            Page<OrderSummaryDTO> orderDTOs = orders.map(this::mapToOrderSummaryDTO);
-            return ApiResponse.success("All orders retrieved successfully", orderDTOs);
+            // For small datasets, fetch all with details to avoid lazy loading issues
+            if (pageable.getPageSize() <= 50) {
+                List<Order> allOrders = orderRepo.findAllWithDetailsOrderByCreatedAtDesc();
+                
+                // Manual pagination
+                int start = (int) pageable.getOffset();
+                int end = Math.min(start + pageable.getPageSize(), allOrders.size());
+                List<Order> pageContent = allOrders.subList(start, end);
+                
+                List<OrderSummaryDTO> orderDTOs = pageContent.stream()
+                    .map(this::mapToOrderSummaryDTO)
+                    .collect(Collectors.toList());
+                
+                // Create a Page manually
+                Page<OrderSummaryDTO> page = new PageImpl<>(
+                    orderDTOs, pageable, allOrders.size());
+                
+                return ApiResponse.success("All orders retrieved successfully", page);
+            } else {
+                // For large datasets, use regular pagination
+                Page<Order> orders = orderRepo.findAllByOrderByCreatedAtDesc(pageable);
+                Page<OrderSummaryDTO> orderDTOs = orders.map(this::mapToOrderSummaryDTO);
+                return ApiResponse.success("All orders retrieved successfully", orderDTOs);
+            }
         } catch (Exception e) {
             log.error("Error retrieving all orders", e);
             return ApiResponse.error("Failed to retrieve all orders: " + e.getMessage());
@@ -466,6 +484,14 @@ public class OrderService {
     public boolean toggleOrderWindow() {
         windowOpen = !windowOpen;
         log.info("Order window toggled to: {}", windowOpen ? "OPEN" : "CLOSED");
+        
+        // Broadcast the change via WebSocket
+        try {
+            broadcastService.orderWindow(windowOpen);
+        } catch (Exception e) {
+            log.warn("Failed to broadcast order window toggle", e);
+        }
+        
         return windowOpen;
     }
 
@@ -626,7 +652,6 @@ public class OrderService {
     }
 
     private void updateOrderStatus(Order order, OrderStatus newStatus, String comment) {
-        OrderStatus oldStatus = order.getStatus();
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
         

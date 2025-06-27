@@ -23,8 +23,6 @@ public class OrderSummaryService {
     private final OrderRepository orderRepo;
     private final OrderSummaryMapper mapper;
     public List<OrderSummaryDTO> fetchSummaries(Integer deptId, LocalDate from, LocalDate to) {
-        LocalDateTime start = from.atStartOfDay();
-        LocalDateTime end   = to.plusDays(1).atStartOfDay();
         List<OrderSummary> list = summaryRepo.findByDateBetween(from, to);
         return list.stream()
             .filter(s -> deptId==null || s.getDepartmentId().equals(deptId))
@@ -46,7 +44,7 @@ public class OrderSummaryService {
         LocalDateTime start = yesterday.atStartOfDay();
         LocalDateTime end = start.plusDays(1);
 
-        List<OrderSummary> byDept = orderRepo.findAll().stream()
+        orderRepo.findAll().stream()
             .filter(o -> {
                 var ca = o.getCreatedAt();
                 return !ca.isBefore(start) && ca.isBefore(end);
@@ -89,10 +87,10 @@ public class OrderSummaryService {
             LocalDateTime end   = start.plusDays(1);
     
             List<Order> list = orderRepo.findByCreatedAtBetween(start, end);
-            Map<Integer,List<Order>> byDept = list.stream()
+            Map<Integer,List<Order>> departmentOrders = list.stream()
                 .collect(Collectors.groupingBy(o -> o.getDepartment().getDepartmentId()));
     
-            byDept.forEach((deptId, orders) -> {
+            departmentOrders.forEach((deptId, orders) -> {
                 int tot = orders.size();
                 int ap  = (int) orders.stream()
                                .filter(o->o.getStatus()==OrderStatus.approved).count();
@@ -140,10 +138,7 @@ public class OrderSummaryService {
           Integer dId = e.getKey().getKey();
           LocalDate date = e.getKey().getValue();
           List<Order> list = e.getValue();
-          long total    = list.size();
-          long approved = list.stream().filter(o->o.getStatus()==OrderStatus.approved).count();
-          long rejected = list.stream().filter(o->o.getStatus()==OrderStatus.rejected).count();
-          long pending  = total - approved - rejected;
+          long total = list.size();
           OrderSummaryDTO dto = new OrderSummaryDTO();
           dto.setOrderId(null);
           dto.setDepartmentName("Department " + dId); // You might want to fetch actual department name

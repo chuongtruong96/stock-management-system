@@ -68,7 +68,7 @@ export default function EnhancedOrderManagement({ language = "en" }) {
     fetchOrders();
   }, [fetchOrders]);
 
-  const openDialog = (order, mode) => setDialog({ order, mode });
+  const openDialog = (order, mode) => setDialog({ open: true, order, mode });
   const closeDialog = () => setDialog(null);
 
   const handleDelete = async (id) => {
@@ -290,14 +290,15 @@ export default function EnhancedOrderManagement({ language = "en" }) {
 
   return (
     <AdminLayout titleKey="orderManagement" icon="assignment">
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 0, py: 1 }}>
         <Box
           display="flex"
           alignItems="center"
           justifyContent="space-between"
-          mb={3}
+          mb={2}
           sx={{ 
             p: 2, 
+            mx: 1,
             borderRadius: 2, 
             bgcolor: 'background.paper',
             boxShadow: 1
@@ -339,7 +340,8 @@ export default function EnhancedOrderManagement({ language = "en" }) {
           bgcolor: 'background.paper',
           borderRadius: 2,
           overflow: 'hidden',
-          boxShadow: 1
+          boxShadow: 1,
+          mx: 1, // Consistent margin with header
         }}>
           <DataGrid
             rows={orders}

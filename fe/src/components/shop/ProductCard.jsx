@@ -32,6 +32,7 @@ import CardBase from "../common/CardBase";
 import QuantitySelector from "./QuantitySelector";
 import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../context/LanguageContext";
 
 /** Enhanced Single product tile with improved UI/UX and advanced features */
 function ProductCard({ 
@@ -55,6 +56,7 @@ function ProductCard({
   const [isFavorite, setIsFavorite] = useState(false);
   const { isInCart, getCartItemQty } = useCart();
   const { t } = useTranslation();
+  const { getDisplayName } = useLanguage();
 
   // Memoized values for better performance
   const productData = useMemo(() => {
@@ -64,7 +66,7 @@ function ProductCard({
     
     return {
       id,
-      name: name || 'Unnamed Product',
+      name: getDisplayName(data) || name || 'Unnamed Product',
       image,
       unit,
       description: description || '',
@@ -74,7 +76,7 @@ function ProductCard({
       isNew: isNew || false,
       isFeatured: isFeatured || false,
     };
-  }, [data]);
+  }, [data, getDisplayName]);
 
   const inCart = useMemo(() => productData ? isInCart(productData.id) : false, [productData, isInCart]);
   const cartQty = useMemo(() => productData ? getCartItemQty(productData.id) : 0, [productData, getCartItemQty]);

@@ -40,9 +40,6 @@ public class OrderController {
     }
 
     @GetMapping("/mine")
-    public Page<OrderDTO> myOrders(@PageableDefault(size = 20) Pageable pg){
-        return orderService.findByCreator(userService.getCurrentUser().getId(), pg);
-    }
     public ResponseEntity<ApiResponse<Page<OrderSummaryDTO>>> getMyOrders(
             @PageableDefault(size = 20) Pageable pageable) {
         

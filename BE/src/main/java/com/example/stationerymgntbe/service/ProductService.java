@@ -34,16 +34,13 @@ public class ProductService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    /* ========== EXISTING METHODS ========== */
     
-    @Transactional
-    public List<ProductDTO> getAllProducts() {
-        return repo.findAllWithUnitAndCategory().stream().map(map::toDto).toList();
-    }
 
     @Transactional
     public List<ProductDTO> listAll() {
-        return getAllProducts();
+        return repo.findAll().stream()
+                .map(map::toDto)
+                .collect(Collectors.toList());
     }
 
     public Page<ProductDTO> list(Pageable pageable, Integer categoryId) {
@@ -53,9 +50,27 @@ public class ProductService {
         return repo.findAll(pageable).map(map::toDto);
     }
 
+    public Page<ProductDTO> list(Pageable pageable, Integer categoryId, String query) {
+        // If no search query, use the original method
+        if (query == null || query.trim().isEmpty()) {
+            return list(pageable, categoryId);
+        }
+        
+        // Search with category filter
+        if (categoryId != null) {
+            return repo.findByCategoryAndNameOrCodeContainingIgnoreCase(categoryId, query.trim(), pageable)
+                      .map(map::toDto);
+        }
+        
+        // Search without category filter
+        return repo.findByNameOrCodeContainingIgnoreCase(query.trim(), pageable)
+                  .map(map::toDto);
+    }
+
     public ProductDTO getProductById(Integer id) {
-        return map.toDto(repo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product " + id)));
+        Product product = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product " + id));
+        return map.toDto(product);
     }
 
     public ProductDTO getById(Integer id) {
@@ -173,11 +188,25 @@ public class ProductService {
      * Get most ordered products this month
      */
     public List<Map<String, Object>> getTopOrderedProducts(int limit) {
-        YearMonth currentMonth = YearMonth.now();
-        LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
-        LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59);
-        
-        return getTopOrderedProductsInMonth(startOfMonth, endOfMonth, limit);
+        try {
+            YearMonth currentMonth = YearMonth.now();
+            LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
+            LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+            
+            List<Map<String, Object>> result = getTopOrderedProductsInMonth(startOfMonth, endOfMonth, limit);
+            
+            // If no orders this month, get all-time top products
+            if (result.isEmpty()) {
+                return getAllTimeTopProducts(limit);
+            }
+            
+            return result;
+        } catch (Exception e) {
+            // Log error and return fallback
+            System.err.println("Error getting top ordered products: " + e.getMessage());
+            e.printStackTrace();
+            return getAllTimeTopProducts(limit);
+        }
     }
 
     /**
@@ -198,6 +227,79 @@ public class ProductService {
         }
         
         return distribution;
+    }
+
+    /**
+     * Fallback method to get all-time top products or just recent products
+     */
+    private List<Map<String, Object>> getAllTimeTopProducts(int limit) {
+        try {
+            // Try to get all-time top ordered products
+            String query = """
+                SELECT p.product_id as productId, p.name as productName, p.code as productCode, 
+                       c.name_vn as category, u.name_vn as unit, p.image as image,
+                       COALESCE(SUM(oi.quantity), 0) as totalQuantity, 
+                       COALESCE(COUNT(oi.order_item_id), 0) as orderCount 
+                FROM products p 
+                LEFT JOIN order_items oi ON p.product_id = oi.product_id 
+                LEFT JOIN orders o ON oi.order_id = o.order_id 
+                LEFT JOIN categories c ON p.category_id = c.category_id 
+                LEFT JOIN units u ON p.unit_id = u.unit_id 
+                GROUP BY p.product_id, p.name, p.code, c.name_vn, u.name_vn, p.image 
+                ORDER BY totalQuantity DESC, p.product_id ASC 
+                LIMIT ?
+                """;
+            
+            @SuppressWarnings("unchecked")
+            List<Object[]> results = entityManager.createNativeQuery(query)
+                    .setParameter(1, limit)
+                    .getResultList();
+            
+            return results.stream().map(result -> {
+                Map<String, Object> productData = new HashMap<>();
+                productData.put("productId", ((Number) result[0]).longValue());
+                productData.put("productName", (String) result[1]);
+                productData.put("productCode", (String) result[2]);
+                productData.put("category", (String) result[3]);
+                productData.put("unit", (String) result[4]);
+                productData.put("image", (String) result[5]);
+                productData.put("totalQuantity", ((Number) result[6]).longValue());
+                productData.put("orderCount", ((Number) result[7]).longValue());
+                return productData;
+            }).toList();
+            
+        } catch (Exception e) {
+            // Ultimate fallback: return recent products
+            System.err.println("Error getting all-time top products, using recent products: " + e.getMessage());
+            return getRecentProducts(limit);
+        }
+    }
+
+    /**
+     * Ultimate fallback: get recent products
+     */
+    private List<Map<String, Object>> getRecentProducts(int limit) {
+        try {
+            List<ProductDTO> products = listAll();
+            return products.stream()
+                    .limit(limit)
+                    .map(product -> {
+                        Map<String, Object> productData = new HashMap<>();
+                        productData.put("productId", product.getId().longValue());
+                        productData.put("productName", product.getName());
+                        productData.put("productCode", product.getCode());
+                        productData.put("category", "Uncategorized");
+                        productData.put("unit", product.getUnit());
+                        productData.put("image", product.getImage());
+                        productData.put("totalQuantity", 0L);
+                        productData.put("orderCount", 0L);
+                        return productData;
+                    })
+                    .toList();
+        } catch (Exception e) {
+            System.err.println("Error getting recent products: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     // Helper methods that use native queries
@@ -251,13 +353,15 @@ public class ProductService {
     private List<Map<String, Object>> getTopOrderedProductsInMonth(LocalDateTime start, LocalDateTime end, int limit) {
         String query = """
             SELECT p.product_id as productId, p.name as productName, p.code as productCode, 
-                   c.name_vn as category, SUM(oi.quantity) as totalQuantity, COUNT(oi.order_item_id) as orderCount 
+                   c.name_vn as category, u.name_vn as unit, p.image as image,
+                   SUM(oi.quantity) as totalQuantity, COUNT(oi.order_item_id) as orderCount 
             FROM order_items oi 
             JOIN orders o ON oi.order_id = o.order_id 
             JOIN products p ON oi.product_id = p.product_id 
             LEFT JOIN categories c ON p.category_id = c.category_id 
+            LEFT JOIN units u ON p.unit_id = u.unit_id 
             WHERE o.created_at BETWEEN ? AND ? 
-            GROUP BY p.product_id, p.name, p.code, c.name_vn 
+            GROUP BY p.product_id, p.name, p.code, c.name_vn, u.name_vn, p.image 
             ORDER BY totalQuantity DESC 
             LIMIT ?
             """;
@@ -275,8 +379,10 @@ public class ProductService {
             productData.put("productName", (String) result[1]);
             productData.put("productCode", (String) result[2]);
             productData.put("category", (String) result[3]);
-            productData.put("totalQuantity", ((Number) result[4]).longValue());
-            productData.put("orderCount", ((Number) result[5]).longValue());
+            productData.put("unit", (String) result[4]);
+            productData.put("image", (String) result[5]);
+            productData.put("totalQuantity", ((Number) result[6]).longValue());
+            productData.put("orderCount", ((Number) result[7]).longValue());
             return productData;
         }).toList();
     }

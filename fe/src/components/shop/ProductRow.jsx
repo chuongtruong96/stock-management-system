@@ -6,16 +6,19 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function ProductRow({ data, onAdd }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const { isInCart, getCartItemQty } = useCart();
   const { t } = useTranslation();
+  const { getDisplayName } = useLanguage();
 
   const id = data.id ?? data.productId;
   const inCart = isInCart(id);
   const cartQty = getCartItemQty(id);
+  const displayName = getDisplayName(data);
 
   return (
     <Paper
@@ -72,7 +75,7 @@ export default function ProductRow({ data, onAdd }) {
           noWrap
           sx={{ color: inCart ? "#666" : "inherit" }}
         >
-          {data.name}
+          {displayName}
         </Typography>
         {data.price && (
           <Typography variant="subtitle2" color="primary">

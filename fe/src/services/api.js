@@ -163,8 +163,15 @@ export const unwrap = (r) => {
     // Backend ApiResponse format: {success: true, data: [...], message: "..."}
     return Array.isArray(r.data.data) ? r.data.data : r.data.data?.content || r.data.data;
   }
-  // Legacy format: direct array or paginated response
-  return Array.isArray(r.data) ? r.data : r.data.content;
+  // Legacy format: direct array, paginated response, or direct object
+  if (Array.isArray(r.data)) {
+    return r.data;
+  }
+  if (r.data && r.data.content) {
+    return r.data.content;
+  }
+  // Return the data directly if it's an object (like CategoryDTO)
+  return r.data;
 };
 
 export const normalize = (p) => ({
@@ -181,19 +188,62 @@ export const unwrapArray = r => {
 };
 
 export const unwrapPage = r => {
+  console.log('🔍 API: unwrapPage - Raw response:', r);
+  console.log('🔍 API: unwrapPage - Response data:', r.data);
+  
   // Handle ApiResponse wrapper for paginated responses
   if (r.data && typeof r.data === 'object' && r.data.hasOwnProperty('success') && r.data.hasOwnProperty('data')) {
-    // If it's a Page object, extract the content
+    console.log('🔍 API: unwrapPage - Detected ApiResponse wrapper');
     const data = r.data.data;
+    console.log('🔍 API: unwrapPage - Extracted data:', data);
+    
+    // If it's a Page object, return the full page structure
     if (data && data.content && Array.isArray(data.content)) {
-      return data.content; // Return just the content array for DataGrid
+      console.log('✅ API: unwrapPage - Returning paginated content:', data.content.length, 'items');
+      return data; // Return the full page object with content, totalPages, etc.
     }
+    
+    // If data is directly an array, wrap it in a page-like structure
+    if (Array.isArray(data)) {
+      console.log('✅ API: unwrapPage - Wrapping array in page structure:', data.length, 'items');
+      return {
+        content: data,
+        totalElements: data.length,
+        totalPages: 1,
+        number: 0,
+        size: data.length,
+        first: true,
+        last: true,
+        empty: data.length === 0
+      };
+    }
+    
+    console.log('✅ API: unwrapPage - Returning data as-is');
     return data;
   }
-  // Handle direct Page object
+  
+  // Handle direct Page object - return the full page structure
   if (r.data && r.data.content && Array.isArray(r.data.content)) {
-    return r.data.content;
+    console.log('✅ API: unwrapPage - Direct page object detected');
+    return r.data; // Return the full page object
   }
+  
+  // Handle direct array
+  if (Array.isArray(r.data)) {
+    console.log('✅ API: unwrapPage - Direct array detected, wrapping in page structure');
+    return {
+      content: r.data,
+      totalElements: r.data.length,
+      totalPages: 1,
+      number: 0,
+      size: r.data.length,
+      first: true,
+      last: true,
+      empty: r.data.length === 0
+    };
+  }
+  
+  console.log('⚠️ API: unwrapPage - Unknown format, returning as-is');
   return r.data;
 };
 
@@ -245,19 +295,62 @@ export const productApi = {
     if (!catIds.length) {
       return productApi.list(null, page, size, ...rest);
     }
+    
+    if (catIds.length === 1) {
+      return productApi.list(catIds[0], page, size, ...rest);
+    }
+    
     const pages = await Promise.all(
       catIds.map((id) => productApi.list(id, page, size, ...rest))
     );
+    
     return {
-      content: pages.flatMap((p) => p.content),
-      totalPages: Math.max(...pages.map((p) => p.totalPages)),
+      content: pages.flatMap((p) => p?.content || []),
+      totalPages: Math.max(...pages.map((p) => p?.totalPages || 0)),
+      totalElements: pages.reduce((sum, p) => sum + (p?.totalElements || 0), 0),
+      number: page,
+      size: size,
+      first: page === 0,
+      last: page >= Math.max(...pages.map((p) => p?.totalPages || 1)) - 1,
     };
   },
   byId: (id) => api.get(`/products/${id}`).then((r) => normalize(r.data)),
-  top: (limit = 8) =>
-    api
-      .get("/orders/reports/products", { params: { top: limit } })
-      .then((r) => r.data.map(normalize)),
+  top: async (limit = 8) => {
+    try {
+      // Use the correct endpoint: /products/top-ordered
+      const response = await api.get("/products/top-ordered", { params: { limit } });
+      // The endpoint returns an array of objects with different structure than regular products
+      if (Array.isArray(response.data)) {
+        return response.data.map(item => ({
+          id: item.productId,
+          productId: item.productId,
+          name: item.productName,
+          productName: item.productName,
+          code: item.productCode,
+          categoryName: item.category || 'Uncategorized',
+          unit: item.unit || '',
+          unitName: item.unit || '',
+          image: item.image,
+          totalQuantity: item.totalQuantity,
+          orderCount: item.orderCount,
+          // Add default fields for compatibility
+          description: '',
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.warn("Top products endpoint failed, falling back to regular products:", error.message);
+      // Fallback to regular products endpoint
+      try {
+        const fallbackResponse = await api.get("/products", { params: { page: 0, size: limit } });
+        const products = unwrapPage(fallbackResponse) || [];
+        return Array.isArray(products) ? products.map(normalize) : [];
+      } catch (fallbackError) {
+        console.error("Both top products and fallback failed:", fallbackError.message);
+        return [];
+      }
+    }
+  },
   all: () => api.get("/products/all").then(unwrap), // Use /all endpoint for simple listing
   add: (body) => api.post("/products", body).then(unwrap),
   uploadImage: (id, formData) =>
@@ -321,9 +414,67 @@ export const orderApi = {
 
 // Order Window API
 export const orderWindowApi = {
-  getStatus: () => api.get("/orders/order-window/status").then(unwrap),
-  check: () => api.get("/orders/order-window/status").then(unwrap), // Alias for backward compatibility
-  toggle: () => api.post("/orders/order-window/toggle").then(unwrap),
+  getStatus: () => api.get("/orders/order-window/status").then((response) => {
+    // Handle ApiResponse wrapper for status
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    return response.data;
+  }),
+  check: () => api.get("/orders/order-window/status").then((response) => {
+    // Handle ApiResponse wrapper for check (alias)
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    return response.data;
+  }),
+  toggle: () => api.post("/orders/order-window/toggle").then((response) => {
+    console.log('🔍 TOGGLE DEBUG - Raw response:', response);
+    console.log('🔍 TOGGLE DEBUG - Response data:', response.data);
+    console.log('🔍 TOGGLE DEBUG - Response status:', response.status);
+    console.log('🔍 TOGGLE DEBUG - Response headers:', response.headers);
+    
+    // Check if response.data exists
+    if (!response.data) {
+      console.error('❌ TOGGLE ERROR: No response.data');
+      throw new Error('No response data received');
+    }
+    
+    // Check if it's an ApiResponse wrapper
+    if (response.data.success !== undefined) {
+      console.log('🔍 TOGGLE DEBUG - ApiResponse detected');
+      console.log('🔍 TOGGLE DEBUG - Success:', response.data.success);
+      console.log('🔍 TOGGLE DEBUG - Message:', response.data.message);
+      console.log('🔍 TOGGLE DEBUG - Data:', response.data.data);
+      
+      if (response.data.success && response.data.data) {
+        console.log('✅ TOGGLE SUCCESS - Returning data:', response.data.data);
+        return response.data.data;
+      } else {
+        console.error('❌ TOGGLE ERROR: ApiResponse indicates failure');
+        throw new Error(`API Error: ${response.data.message || 'Unknown error'}`);
+      }
+    }
+    
+    // Check if it's a direct response
+    if (response.data.open !== undefined) {
+      console.log('🔍 TOGGLE DEBUG - Direct response detected');
+      console.log('✅ TOGGLE SUCCESS - Returning direct data:', response.data);
+      return response.data;
+    }
+    
+    // Unknown format
+    console.error('❌ TOGGLE ERROR: Unknown response format');
+    console.error('Response data type:', typeof response.data);
+    console.error('Response data keys:', Object.keys(response.data || {}));
+    throw new Error(`Unknown response format: ${JSON.stringify(response.data)}`);
+  }).catch((error) => {
+    console.error('❌ TOGGLE CATCH BLOCK:', error);
+    console.error('Error message:', error.message);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+    throw error; // Re-throw to maintain error flow
+  }),
 };
 
 // Unit API

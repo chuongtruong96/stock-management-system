@@ -29,7 +29,7 @@ function AdminLayout({ children, titleKey, icon = "dashboard" }) {
   return (
     <MDBox
       sx={({ breakpoints, transitions, functions: { pxToRem } }) => ({
-        p: 3,
+        p: 1,
         position: "relative",
         minHeight: "100vh",
         backgroundColor: "background.default",
@@ -47,8 +47,8 @@ function AdminLayout({ children, titleKey, icon = "dashboard" }) {
       <DashboardNavbar />
       
       {/* Main Content */}
-      <MDBox px={2} py={3}>
-        <MDBox mt={3}>
+      <MDBox px={1} py={2}>
+        <MDBox mt={2}>
           {children}
         </MDBox>
       </MDBox>

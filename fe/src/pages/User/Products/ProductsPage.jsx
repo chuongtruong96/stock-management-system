@@ -41,7 +41,7 @@ export default function ProductsPage() {
     queryFn : () =>
       productApi.listMultiCats(catParam, pageParam, pageSize, sort, keyword),
     keepPreviousData: true,
-  });
+      });
 
   /* helpers for updating the URL params */
   const mutateParams = (fn) =>

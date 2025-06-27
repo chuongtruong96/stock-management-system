@@ -18,8 +18,8 @@ public class Product extends AbstractEntity {
     @Column(nullable = false, unique = true)
     private String code;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "name", nullable = false)
+    private String name; // Vietnamese name - English translation via LibreTranslation when needed
     
     private String image;
 

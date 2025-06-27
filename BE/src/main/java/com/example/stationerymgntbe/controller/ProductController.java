@@ -3,6 +3,7 @@ package com.example.stationerymgntbe.controller;
 import com.example.stationerymgntbe.dto.ProductDTO;
 import com.example.stationerymgntbe.dto.ProductStatsDTO;
 import com.example.stationerymgntbe.service.ProductService;
+import com.example.stationerymgntbe.service.TranslationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class ProductController {
 
     private final ProductService svc;
+    private final TranslationService translationService;
 
     /* ─────────── LIST ─────────── */
 
@@ -32,11 +34,12 @@ public class ProductController {
         return svc.listAll();
     }
 
-    /** Pageable list (optional category filter) */
+    /** Pageable list (optional category filter and search) */
     @GetMapping
     public Page<ProductDTO> list(@RequestParam(required = false) Integer categoryId,
+                                 @RequestParam(required = false) String q,
                                  @PageableDefault(size = 40) Pageable pg) {
-        return svc.list(pg, categoryId);
+        return svc.list(pg, categoryId, q);
     }
 
     @GetMapping("/{id}")
@@ -88,7 +91,6 @@ public class ProductController {
     }
 
     @GetMapping("/top-ordered")
-    @PreAuthorize("hasRole('ADMIN')")
     public List<Map<String, Object>> getTopOrderedProducts(
             @RequestParam(defaultValue = "10") int limit) {
         return svc.getTopOrderedProducts(limit);
@@ -98,5 +100,28 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public Map<String, Long> getProductCategoryDistribution() {
         return svc.getProductCategoryDistribution();
+    }
+
+    /* ─────────── TRANSLATION ─────────── */
+
+    @PostMapping("/translate")
+    public Map<String, String> translateProductName(@RequestBody Map<String, String> request) {
+        String text = request.get("text");
+        String targetLang = request.getOrDefault("targetLang", "en");
+        
+        String translatedText;
+        if ("en".equals(targetLang)) {
+            translatedText = translationService.translateToEnglish(text);
+        } else {
+            // For now, we only support Vietnamese to English translation
+            // Vietnamese to Vietnamese just returns the original text
+            translatedText = text;
+        }
+        
+        return Map.of(
+            "originalText", text,
+            "translatedText", translatedText != null ? translatedText : text,
+            "targetLanguage", targetLang
+        );
     }
 }

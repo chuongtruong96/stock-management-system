@@ -13,12 +13,12 @@ import java.util.*;
 public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     /* ========== EXISTING METHODS ========= */
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.department d")
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.department d LEFT JOIN FETCH o.createdBy LEFT JOIN FETCH o.approvedBy")
     List<Order> findAllWithDetails();
 
     Page<Order> findByCreatedByUserIdOrderByCreatedAtDesc(Integer uid, Pageable pageable);
 
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.department d WHERE o.orderId = :orderId")
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.department d LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.product p LEFT JOIN FETCH p.unit LEFT JOIN FETCH o.createdBy LEFT JOIN FETCH o.approvedBy WHERE o.orderId = :orderId")
     Optional<Order> findByIdWithDetails(@Param("orderId") Integer orderId);
 
     List<Order> findByStatus(OrderStatus status);
@@ -108,4 +108,8 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     // Find all orders ordered by creation date descending (for admin view)
     Page<Order> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    
+    // Find all orders with details for admin view
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.department d LEFT JOIN FETCH o.createdBy LEFT JOIN FETCH o.approvedBy ORDER BY o.createdAt DESC")
+    List<Order> findAllWithDetailsOrderByCreatedAtDesc();
 }

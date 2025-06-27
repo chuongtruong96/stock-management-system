@@ -2,7 +2,6 @@ package com.example.stationerymgntbe.controller;
 
 import com.example.stationerymgntbe.dto.*;
 import com.example.stationerymgntbe.service.OrderService;
-import com.example.stationerymgntbe.service.ProductService;
 import com.example.stationerymgntbe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +19,6 @@ import java.util.Map;
 public class DashboardController {
 
     private final OrderService orderService;
-    private final ProductService productService;
     private final UserService userService;
 
     /* ─────────── OVERVIEW STATS ─────────── */

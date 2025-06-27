@@ -1,0 +1,8 @@
+{
+  "type": "java",
+  "name": "Spring Boot BE",
+  "request": "launch",
+  "mainClass": "com.example.stationerymgntbe.StationeryMgntBeApplication",
+  "projectName": "stationery-mgnt-be",
+  "envFile": "${workspaceFolder}/BE/.env"
+}

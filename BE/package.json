@@ -1,0 +1,13 @@
+{
+  "name": "be",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+  "start": "env-cmd -f .env ./mvnw spring-boot:run",
+  "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

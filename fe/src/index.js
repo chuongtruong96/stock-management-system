@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryProvider } from "./providers/QueryProvider";
 import { MaterialUIControllerProvider } from "context";
 import { AuthProvider } from "context/AuthContext";
+import { BackendStatusProvider } from "context/BackendStatusContext";
 import WsProvider from "context/WsContext";
 import { NotificationProvider } from "context/NotificationContext";
 import { CartProvider } from "context/CartContext/CartProvider";
@@ -21,19 +22,21 @@ root.render(
   <QueryProvider>
     <MaterialUIControllerProvider>
       <BrowserRouter>
-        <WsProvider>
-          <AuthProvider>
-            <OrderWindowProvider>
-              <NotificationProvider>
-                <Suspense fallback={<Loading />}>
-                  <CartProvider>
-                    <App />
-                  </CartProvider>
-                </Suspense>
-              </NotificationProvider>
-            </OrderWindowProvider>
-          </AuthProvider>
-        </WsProvider>
+        <BackendStatusProvider>
+          <WsProvider>
+            <AuthProvider>
+              <OrderWindowProvider>
+                <NotificationProvider>
+                  <Suspense fallback={<Loading />}>
+                    <CartProvider>
+                      <App />
+                    </CartProvider>
+                  </Suspense>
+                </NotificationProvider>
+              </OrderWindowProvider>
+            </AuthProvider>
+          </WsProvider>
+        </BackendStatusProvider>
       </BrowserRouter>
     </MaterialUIControllerProvider>
   </QueryProvider>

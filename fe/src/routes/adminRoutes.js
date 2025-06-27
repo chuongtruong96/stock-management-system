@@ -274,7 +274,7 @@ export const adminRoutes = [
     },
   },
   {
-    path: "profile",
+    path: "admin/profile",
     element: (
       <ErrorBoundary
         FallbackComponent={ErrorFallback}

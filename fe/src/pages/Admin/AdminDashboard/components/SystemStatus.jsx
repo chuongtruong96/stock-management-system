@@ -37,18 +37,56 @@ const SystemStatus = memo(({ winOpen, setWinOpen }) => {
   const greyMain = theme?.palette?.grey?.[400] || '#bdbdbd';
 
   const handleToggleOrderWindow = async () => {
+    console.log('🚀 SYSTEM STATUS - Starting toggle operation');
     setLoading(true);
     try {
+      console.log('🚀 SYSTEM STATUS - Calling orderWindowApi.toggle()');
       const response = await orderWindowApi.toggle();
-      setWinOpen(response.open);
+      console.log('🔍 SYSTEM STATUS - Toggle response received:', response);
+      console.log('🔍 SYSTEM STATUS - Response type:', typeof response);
+      console.log('🔍 SYSTEM STATUS - Response keys:', Object.keys(response || {}));
+      
+      // The API should return { open: boolean } after unwrapping
+      let isOpen;
+      if (typeof response === 'boolean') {
+        // Direct boolean response
+        isOpen = response;
+        console.log('✅ SYSTEM STATUS - Direct boolean response:', isOpen);
+      } else if (response && typeof response.open === 'boolean') {
+        // Expected format: { open: boolean }
+        isOpen = response.open;
+        console.log('✅ SYSTEM STATUS - Object with open property:', isOpen);
+      } else if (response && response.data && typeof response.data.open === 'boolean') {
+        // Nested data format: { data: { open: boolean } }
+        isOpen = response.data.open;
+        console.log('✅ SYSTEM STATUS - Nested data format:', isOpen);
+      } else {
+        // Log the unexpected format and throw error
+        console.error('❌ SYSTEM STATUS - Unexpected response format:', response);
+        console.error('❌ SYSTEM STATUS - Response type:', typeof response);
+        console.error('❌ SYSTEM STATUS - Response stringified:', JSON.stringify(response));
+        throw new Error(`Unexpected response format: ${JSON.stringify(response)}`);
+      }
+      
+      console.log('✅ SYSTEM STATUS - Setting winOpen to:', isOpen);
+      setWinOpen(isOpen);
+      console.log('✅ SYSTEM STATUS - Success! Showing toast');
       toast.success(
-        response.open 
+        isOpen 
           ? t("orderWindowOpened") || "Order window opened"
           : t("orderWindowClosed") || "Order window closed"
       );
     } catch (error) {
+      console.error('❌ SYSTEM STATUS - Toggle error caught:', error);
+      console.error('❌ SYSTEM STATUS - Error name:', error.name);
+      console.error('❌ SYSTEM STATUS - Error message:', error.message);
+      console.error('❌ SYSTEM STATUS - Error stack:', error.stack);
+      console.error('❌ SYSTEM STATUS - Error response:', error.response?.data);
+      console.error('❌ SYSTEM STATUS - Error status:', error.response?.status);
+      console.error('❌ SYSTEM STATUS - Showing error toast');
       toast.error(t("failedToToggleOrderWindow") || "Failed to toggle order window");
     } finally {
+      console.log('🔄 SYSTEM STATUS - Setting loading to false');
       setLoading(false);
     }
   };

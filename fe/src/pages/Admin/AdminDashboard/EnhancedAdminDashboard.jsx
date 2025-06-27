@@ -37,7 +37,7 @@ import DataTable from "examples/Tables/DataTable";
 import MDButton from "components/template/MDButton";
 
 // Services
-import { dashboardApi, orderApi, productApi, userApi, categoryApi, unitApi } from "services/api";
+import { dashboardApi, orderApi, productApi, userApi, categoryApi, unitApi, orderWindowApi } from "services/api";
 
 // Layout
 import AdminLayout from "layouts/AdminLayout";
@@ -80,6 +80,7 @@ export default function EnhancedAdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [tabValue, setTabValue] = useState(0);
+  const [winOpen, setWinOpen] = useState(true); // Order window state
 
   // Dashboard data state
   const [dashboardData, setDashboardData] = useState({
@@ -435,7 +436,7 @@ export default function EnhancedAdminDashboard() {
         </Box>
 
         {/* System Status */}
-        <SystemStatus />
+        <SystemStatus winOpen={winOpen} setWinOpen={setWinOpen} />
       </Box>
 
       {/* Quick Actions */}

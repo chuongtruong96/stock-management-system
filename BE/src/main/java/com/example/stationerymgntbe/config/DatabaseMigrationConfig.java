@@ -8,7 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * Database migration component to handle schema updates
+ * Database migration component to handle user table schema updates
  * This runs after the application context is loaded but before the application is ready
  */
 @Slf4j
@@ -21,24 +21,23 @@ public class DatabaseMigrationConfig implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("Starting database migration checks...");
+        log.info("Starting user table migration checks...");
         
         try {
             // Check and add active column to users table
             addActiveColumnIfNotExists();
             
-            // Remove deprecated columns
+            // Remove deprecated columns from users table
             removeDeprecatedColumns();
             
             // Update existing users to be active
             updateExistingUsersToActive();
             
-            log.info("Database migration completed successfully!");
+            log.info("User table migration completed successfully!");
             
         } catch (Exception e) {
-            log.error("Database migration failed: {}", e.getMessage(), e);
+            log.error("User table migration failed: {}", e.getMessage(), e);
             // Don't throw exception to prevent application startup failure
-            // The application will still start but with potential schema issues
         }
     }
 

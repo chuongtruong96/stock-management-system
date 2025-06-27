@@ -82,6 +82,7 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [tabValue, setTabValue] = useState(0);
+  const [winOpen, setWinOpen] = useState(true); // Order window state
 
   // Dashboard data state
   const [dashboardData, setDashboardData] = useState({
@@ -137,6 +138,8 @@ export default function AdminDashboard() {
   }, [t]);
 
   const fetchTableData = useCallback(async () => {
+    console.log('🔍 AdminDashboard: Starting to fetch table data...');
+    
     try {
       const [orders, products, users, categories, units, departments] = await Promise.allSettled([
         orderApi.all(),
@@ -147,16 +150,56 @@ export default function AdminDashboard() {
         departmentApi.all(),
       ]);
 
-      setTableData({
-        orders: orders.status === 'fulfilled' ? (Array.isArray(orders.value) ? orders.value : []) : [],
-        products: products.status === 'fulfilled' ? (Array.isArray(products.value) ? products.value : []) : [],
-        users: users.status === 'fulfilled' ? (Array.isArray(users.value) ? users.value : []) : [],
-        categories: categories.status === 'fulfilled' ? (Array.isArray(categories.value) ? categories.value : []) : [],
-        units: units.status === 'fulfilled' ? (Array.isArray(units.value) ? units.value : []) : [],
-        departments: departments.status === 'fulfilled' ? (Array.isArray(departments.value) ? departments.value : []) : [],
+      console.log('🔍 AdminDashboard: API responses:', {
+        orders: orders.status === 'fulfilled' ? orders.value : orders.reason,
+        products: products.status === 'fulfilled' ? products.value : products.reason,
+        users: users.status === 'fulfilled' ? users.value : users.reason,
+        categories: categories.status === 'fulfilled' ? categories.value : categories.reason,
+        units: units.status === 'fulfilled' ? units.value : units.reason,
+        departments: departments.status === 'fulfilled' ? departments.value : departments.reason,
       });
+
+      // Helper function to extract data from API responses
+      const extractData = (response, dataType) => {
+        if (response.status !== 'fulfilled') {
+          console.warn(`❌ AdminDashboard: Failed to fetch ${dataType}:`, response.reason);
+          return [];
+        }
+
+        const value = response.value;
+        console.log(`🔍 AdminDashboard: Processing ${dataType} response:`, value);
+
+        // Handle paginated response (has content property)
+        if (value && value.content && Array.isArray(value.content)) {
+          console.log(`✅ AdminDashboard: Found ${value.content.length} ${dataType} items in paginated response`);
+          return value.content;
+        }
+
+        // Handle direct array response
+        if (Array.isArray(value)) {
+          console.log(`✅ AdminDashboard: Found ${value.length} ${dataType} items in direct array`);
+          return value;
+        }
+
+        // Handle empty or invalid response
+        console.warn(`⚠️ AdminDashboard: Unexpected ${dataType} response format:`, value);
+        return [];
+      };
+
+      const tableData = {
+        orders: extractData(orders, 'orders'),
+        products: extractData(products, 'products'),
+        users: extractData(users, 'users'),
+        categories: extractData(categories, 'categories'),
+        units: extractData(units, 'units'),
+        departments: extractData(departments, 'departments'),
+      };
+
+      console.log('✅ AdminDashboard: Final table data:', tableData);
+      setTableData(tableData);
+
     } catch (error) {
-      console.error("Failed to fetch table data:", error);
+      console.error("❌ AdminDashboard: Failed to fetch table data:", error);
       toast.error(t("failedToFetchTableData") || "Failed to fetch table data");
     }
   }, [t]);
@@ -1162,7 +1205,7 @@ export default function AdminDashboard() {
 
       {/* System Status */}
       <Box sx={{ mt: 3 }}>
-        <SystemStatus />
+        <SystemStatus winOpen={winOpen} setWinOpen={setWinOpen} />
       </Box>
 
       {/* Recent Activity */}

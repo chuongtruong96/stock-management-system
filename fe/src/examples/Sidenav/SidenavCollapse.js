@@ -5,6 +5,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Icon from "@mui/material/Icon";
+import Tooltip from "@mui/material/Tooltip";
 
 // Material Dashboard 2 React components
 import MDBox from "components/template/MDBox";
@@ -30,7 +31,7 @@ function SidenavCollapse({ icon, name, active, ...rest }) {
     sidenavColor,
   } = controller;
 
-  return (
+  const content = (
     <ListItem component="li">
       <MDBox
         {...rest}
@@ -75,6 +76,17 @@ function SidenavCollapse({ icon, name, active, ...rest }) {
       </MDBox>
     </ListItem>
   );
+
+  // Wrap with tooltip when sidebar is collapsed
+  if (miniSidenav) {
+    return (
+      <Tooltip title={name} placement="right" arrow>
+        {content}
+      </Tooltip>
+    );
+  }
+
+  return content;
 }
 
 // Setting default values for the props of SidenavCollapse

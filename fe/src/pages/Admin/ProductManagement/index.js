@@ -102,22 +102,24 @@ export default function ProductManagement({ language = "en" }) {
       width: 80,
       renderCell: ({ row }) => (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          <img 
-            src={`/assets/prod/${row.image}`}
-            alt={row.name}
-            style={{ 
-              width: 48, 
-              height: 48,
-              objectFit: 'cover',
-              borderRadius: '8px',
-              border: '2px solid #1976d2',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
+          {row.image && row.image !== 'null' ? (
+            <img 
+              src={`/assets/prod/${row.image}`}
+              alt={row.name}
+              style={{ 
+                width: 48, 
+                height: 48,
+                objectFit: 'cover',
+                borderRadius: '8px',
+                border: '2px solid #1976d2',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
           <Avatar 
             sx={{ 
               width: 48, 
@@ -125,7 +127,7 @@ export default function ProductManagement({ language = "en" }) {
               border: '2px solid',
               borderColor: 'primary.main',
               boxShadow: 2,
-              display: 'none',
+              display: row.image && row.image !== 'null' ? 'none' : 'flex',
               bgcolor: 'primary.main'
             }}
           >
@@ -268,14 +270,15 @@ export default function ProductManagement({ language = "en" }) {
 
   return (
     <AdminLayout titleKey="productManagement" icon="inventory">
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ px: 0, py: 1 }}>
         <Box
           display="flex"
           alignItems="center"
           justifyContent="space-between"
-          mb={3}
+          mb={2}
           sx={{ 
             p: 2, 
+            mx: 1,
             borderRadius: 2, 
             bgcolor: 'background.paper',
             boxShadow: 1
@@ -309,7 +312,8 @@ export default function ProductManagement({ language = "en" }) {
           bgcolor: 'background.paper',
           borderRadius: 2,
           overflow: 'hidden',
-          boxShadow: 1
+          boxShadow: 1,
+          mx: 1,
         }}>
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>

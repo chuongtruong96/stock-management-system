@@ -17,6 +17,7 @@ import {
   setLayout,
 } from "context";
 import { AuthContext } from "context/AuthContext";
+import { LanguageProvider } from "context/LanguageContext";
 import ProtectedRoute from "routes/ProtectedRoute";
 
 import Sidenav from "examples/Sidenav";
@@ -32,6 +33,8 @@ import themeDarkRTL from "assets/theme-dark/theme-rtl";
 import routes from "routes";
 import "react-toastify/dist/ReactToastify.css";
 import "./i18n"; // Initialize i18n
+import "utils/emergencyToastCleanup"; // Emergency toast cleanup utility
+import "utils/categoryApiTest"; // Category API test utility
 
 const Loading = () => (
   <Box
@@ -62,6 +65,16 @@ export default function App() {
   const { auth, authLoading, hasRole } = useContext(AuthContext);
   const { pathname } = useLocation();
   const isAuthScreen = pathname.startsWith("/auth");
+
+  // Enhanced authentication logging
+  console.log('🔍 App: Authentication state:', {
+    auth: auth,
+    authLoading: authLoading,
+    pathname: pathname,
+    isAuthScreen: isAuthScreen,
+    userRoles: auth?.user?.roles,
+    hasAdminRole: auth?.user?.roles?.some(role => role.toLowerCase() === "admin")
+  });
 
   const baseTheme =
     direction === "rtl"
@@ -147,9 +160,11 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ToastContainer position="top-right" autoClose={3000} theme="light" />
+      <LanguageProvider>
+        <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
       {!isAuthScreen &&
+        auth?.token &&
         auth?.user?.roles?.some(role => role.toLowerCase() === "admin") &&
         layout === "dashboard" && (
           <>
@@ -189,8 +204,9 @@ export default function App() {
         )}
 
       <Suspense fallback={<Loading />}>
-        <Routes>{routeElements}</Routes>
-      </Suspense>
+          <Routes>{routeElements}</Routes>
+        </Suspense>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

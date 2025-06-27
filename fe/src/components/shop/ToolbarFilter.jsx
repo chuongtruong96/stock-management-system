@@ -31,6 +31,7 @@ import {
 } from "@mui/icons-material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import LanguageToggle from "../common/LanguageToggle";
 
 export default function ToolbarFilter({
   keyword,
@@ -202,6 +203,9 @@ export default function ToolbarFilter({
                     ))}
                   </Select>
                 </FormControl>
+
+                {/* Language Toggle */}
+                <LanguageToggle size="small" />
 
                 {/* View Toggle */}
                 <ToggleButtonGroup

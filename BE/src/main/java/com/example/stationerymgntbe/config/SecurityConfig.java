@@ -15,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import com.example.stationerymgntbe.repository.UserRepository;
 
@@ -25,7 +24,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -44,12 +42,59 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(requests -> requests
+                        // Public endpoints (no authentication required)
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/ws/**").permitAll() 
-                        .requestMatchers("/api/departments").permitAll()
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // Expects "ADMIN"
-                        .requestMatchers("/api/users/me").authenticated()
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/assets/**").permitAll() // Allow access to static assets
+                        .requestMatchers(HttpMethod.GET, "/api/departments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/category/{categoryId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/top-ordered").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/orders/order-window/status").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/orders/check-period").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        
+                        // Admin-only endpoints
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/dashboard/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/reports/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/summaries/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/products/stats").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/products/category-distribution").hasAuthority("ADMIN")
+                        .requestMatchers("/api/units/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/users").hasAuthority("ADMIN")
+                        .requestMatchers("/api/users/{id}").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/orders/order-window/toggle").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/pending").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/submitted").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/orders/{id}/approve").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/orders/{id}/reject").hasAuthority("ADMIN")
+                        .requestMatchers("/api/notifications/announce").hasAuthority("ADMIN")
+                        
+                        // Authenticated user endpoints
+                        .requestMatchers("/api/users/me").authenticated()
+                        .requestMatchers("/api/orders/mine").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/orders/{id}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/orders/{id}/items").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/orders/{id}/export").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/orders/{id}/submit-signed").authenticated()
+                        .requestMatchers("/api/notifications").authenticated()
+                        .requestMatchers("/api/notifications/{id}/read").authenticated()
+                        .requestMatchers("/api/notifications/unread-count").authenticated()
+                        .requestMatchers("/api/notifications/mark-all-read").authenticated()
+                        
+                        // Default: require authentication for any other endpoint
                         .anyRequest().authenticated())
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
@@ -73,7 +118,7 @@ public class SecurityConfig {
     
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+        cfg.setAllowedOriginPatterns(List.of("http://localhost:3000", "https://your-netlify-name.netlify.app"));
         cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization","Content-Type"));
         cfg.setAllowCredentials(true);

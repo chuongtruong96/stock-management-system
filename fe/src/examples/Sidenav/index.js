@@ -56,11 +56,14 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const collapseName = location.pathname.replace("/", "");
 
   let textColor = "white";
+  let iconColor = "white";
 
   if (transparentSidenav || (whiteSidenav && !darkMode)) {
     textColor = "dark";
+    iconColor = "dark";
   } else if (whiteSidenav && darkMode) {
     textColor = "inherit";
+    iconColor = "inherit";
   }
 
   const closeSidenav = () => setMiniSidenav(dispatch, true);
@@ -196,7 +199,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
             }}
           >
             <Tooltip title="Collapse sidebar">
-              <ChevronLeftIcon sx={{ color: textColor, fontSize: "1.2rem" }} />
+            <ChevronLeftIcon sx={{ color: iconColor, fontSize: "1.2rem" }} />
             </Tooltip>
           </MDBox>
         )}
@@ -245,24 +248,30 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
       {/* Enhanced User Profile Section */}
       {auth?.user && !miniSidenav && (
-        <MDBox px={3} py={2}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: "rgba(255, 255, 255, 0.1)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              backdropFilter: "blur(10px)",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.15)",
-                transform: "translateY(-1px)",
-              }
-            }}
-          >
+      <MDBox px={3} py={2}>
+      <Box
+      sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 1.5,
+      p: 1.5,
+      borderRadius: 2,
+      bgcolor: whiteSidenav && !darkMode 
+      ? "rgba(0, 0, 0, 0.05)" 
+      : "rgba(255, 255, 255, 0.1)",
+      border: whiteSidenav && !darkMode 
+      ? "1px solid rgba(0, 0, 0, 0.1)" 
+      : "1px solid rgba(255, 255, 255, 0.2)",
+      backdropFilter: "blur(10px)",
+      transition: "all 0.3s ease",
+      "&:hover": {
+      bgcolor: whiteSidenav && !darkMode 
+      ? "rgba(0, 0, 0, 0.08)" 
+      : "rgba(255, 255, 255, 0.15)",
+      transform: "translateY(-1px)",
+      }
+      }}
+      >
             <Avatar
               sx={{
                 width: 36,
@@ -289,17 +298,19 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
                 {auth.user.username}
               </Typography>
               <Chip
-                label={auth.user.roles?.[0] || "User"}
-                size="small"
-                sx={{
-                  height: 18,
-                  fontSize: "0.65rem",
-                  bgcolor: "rgba(255, 255, 255, 0.2)",
-                  color: textColor,
-                  "& .MuiChip-label": {
-                    px: 1
-                  }
-                }}
+              label={auth.user.roles?.[0] || "User"}
+              size="small"
+              sx={{
+              height: 18,
+              fontSize: "0.65rem",
+              bgcolor: whiteSidenav && !darkMode 
+              ? "rgba(0, 0, 0, 0.1)" 
+              : "rgba(255, 255, 255, 0.2)",
+              color: textColor,
+              "& .MuiChip-label": {
+              px: 1
+              }
+              }}
               />
             </Box>
           </Box>
@@ -352,23 +363,23 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: "center" }}>
             <Tooltip title="Profile" placement="right">
-              <IconButton
-                component={NavLink}
-                to="/admin/profile"
-                size="small"
-                sx={{ color: textColor }}
-              >
-                <PersonIcon fontSize="small" />
-              </IconButton>
+            <IconButton
+            component={NavLink}
+            to="/admin/profile"
+            size="small"
+            sx={{ color: iconColor }}
+            >
+            <PersonIcon fontSize="small" />
+            </IconButton>
             </Tooltip>
             <Tooltip title="Logout" placement="right">
-              <IconButton
-                onClick={logout}
-                size="small"
-                sx={{ color: "#f44336" }}
-              >
-                <LogoutIcon fontSize="small" />
-              </IconButton>
+            <IconButton
+            onClick={logout}
+            size="small"
+            sx={{ color: "#f44336" }}
+            >
+            <LogoutIcon fontSize="small" />
+            </IconButton>
             </Tooltip>
           </Box>
         )}

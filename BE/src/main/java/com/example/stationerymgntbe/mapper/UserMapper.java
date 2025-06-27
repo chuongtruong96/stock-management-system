@@ -22,7 +22,13 @@ public interface UserMapper {
 
     @Mappings({
         @Mapping(source = "departmentId", target = "department.departmentId"),
-        
+        @Mapping(target = "userId", ignore = true),
+        @Mapping(target = "id", ignore = true),
+        @Mapping(target = "createdAt", ignore = true),
+        @Mapping(target = "updatedAt", ignore = true),
+        @Mapping(target = "active", ignore = true),
+        @Mapping(target = "email", ignore = true),
+        @Mapping(target = "passwordResetToken", ignore = true)
     })
     User toEntity(UserInputDTO dto);
 
