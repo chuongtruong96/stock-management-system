@@ -12,6 +12,10 @@ const resolveBaseURL = () => {
   if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
     return 'http://localhost:8082/api';
   }
+  // Production: Use your Render backend URL
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://stock-management-system-1-p6xu.onrender.com/api';
+  }
   // Fallback – same origin `/api`
   return '/api';
 };
