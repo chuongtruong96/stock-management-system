@@ -8,14 +8,22 @@ const resolveBaseURL = () => {
   if (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.trim() !== '') {
     return process.env.REACT_APP_API_URL;
   }
+  
+  // Check if we're on Netlify (production)
+  if (window?.location?.hostname?.includes('netlify.app')) {
+    return 'https://stock-management-system-1-p6xu.onrender.com/api';
+  }
+  
   // In development (running on port 3000) default to Spring Boot port 8080 to avoid proxy issues
   if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
     return 'http://localhost:8080/api';
   }
+  
   // Production: Use your Render backend URL
   if (process.env.NODE_ENV === 'production') {
     return 'https://stock-management-system-1-p6xu.onrender.com/api';
   }
+  
   // Fallback – same origin `/api`
   return '/api';
 };

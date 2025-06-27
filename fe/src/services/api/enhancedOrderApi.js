@@ -3,7 +3,22 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 // Base API configuration
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
+const resolveApiBaseUrl = () => {
+  // If env variable provided, respect it
+  if (process.env.REACT_APP_API_BASE_URL && process.env.REACT_APP_API_BASE_URL.trim() !== '') {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+  
+  // Check if we're on Netlify (production)
+  if (window?.location?.hostname?.includes('netlify.app')) {
+    return 'https://stock-management-system-1-p6xu.onrender.com/api';
+  }
+  
+  // Default to localhost for development
+  return 'http://localhost:8080/api';
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 // Create axios instance with enhanced configuration
 const apiClient = axios.create({
