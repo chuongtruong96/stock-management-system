@@ -4,32 +4,77 @@ import { toast } from 'react-toastify';
 
 // Enhanced API configuration with better error handling and performance optimizations
 const resolveBaseURL = () => {
+  console.log('🔧 API: Resolving base URL...');
+  console.log('🔧 API: NODE_ENV:', process.env.NODE_ENV);
+  console.log('🔧 API: REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+  console.log('🔧 API: Current hostname:', window?.location?.hostname);
+  console.log('🔧 API: Current port:', window?.location?.port);
+  console.log('🔧 API: Current protocol:', window?.location?.protocol);
+  console.log('🔧 API: Current href:', window?.location?.href);
+  
   // If env variable provided, respect it
   if (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.trim() !== '') {
+    console.log('🔧 API: Using REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
     return process.env.REACT_APP_API_URL;
   }
   
   // Check if we're on Netlify (production)
   if (window?.location?.hostname?.includes('netlify.app')) {
+    console.log('🔧 API: Detected Netlify deployment');
+    return 'https://stock-management-system-1-p6xu.onrender.com/api';
+  }
+  
+  // Check if we're on Render (production) - look for render.com or onrender.com
+  if (window?.location?.hostname?.includes('onrender.com') || window?.location?.hostname?.includes('render.com')) {
+    console.log('🔧 API: Detected Render deployment');
+    return 'https://stock-management-system-1-p6xu.onrender.com/api';
+  }
+  
+  // Special case: If we detect we're running on the exact Render backend URL, force the correct API URL
+  if (window?.location?.hostname === 'stock-management-system-1-p6xu.onrender.com') {
+    console.log('🔧 API: Detected running on Render backend domain, forcing API URL');
     return 'https://stock-management-system-1-p6xu.onrender.com/api';
   }
   
   // In development (running on port 3000) default to Spring Boot port 8080 to avoid proxy issues
   if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
+    console.log('🔧 API: Development mode detected');
     return 'http://localhost:8080/api';
   }
   
-  // Production: Use your Render backend URL
+  // Production: Use your Render backend URL (this should catch most production cases)
   if (process.env.NODE_ENV === 'production') {
+    console.log('🔧 API: Production mode detected');
     return 'https://stock-management-system-1-p6xu.onrender.com/api';
   }
   
   // Fallback – same origin `/api`
+  console.log('🔧 API: Using fallback URL');
   return '/api';
 };
 
+const baseURL = resolveBaseURL();
+console.log('🔧 API: Final baseURL configured:', baseURL);
+
+// Validate that the baseURL includes /api
+let validatedBaseURL = baseURL;
+if (baseURL && !baseURL.endsWith('/api')) {
+    console.warn('🔧 API: BaseURL does not end with /api, appending it');
+    validatedBaseURL = baseURL.replace(/\/$/, '') + '/api';
+}
+
+// Special handling for production deployment
+if (process.env.NODE_ENV === 'production' && 
+    (window?.location?.hostname?.includes('onrender.com') || 
+     window?.location?.hostname === 'stock-management-system-1-p6xu.onrender.com')) {
+    console.log('🔧 API: Production deployment detected, ensuring correct API URL');
+    validatedBaseURL = 'https://stock-management-system-1-p6xu.onrender.com/api';
+}
+
+console.log('🔧 API: Validated baseURL:', validatedBaseURL);
+
 const api = axios.create({
-    baseURL: resolveBaseURL(),
+    baseURL: validatedBaseURL,
     timeout: 30000, // 30 second timeout
     headers: {
         'Content-Type': 'application/json',
@@ -261,7 +306,11 @@ export const unwrapPage = r => {
 
 // Auth API
 export const authApi = {
-    login: (credentials) => api.post("/auth/login", credentials).then((r) => r.data),
+    login: (credentials) => {
+        console.log('🔧 AUTH: Making login request with baseURL:', api.defaults.baseURL);
+        console.log('🔧 AUTH: Full URL will be:', `${api.defaults.baseURL}/auth/login`);
+        return api.post("/auth/login", credentials).then((r) => r.data);
+    },
     forgotPassword: (payload) => api.post("/auth/forgot", payload).then(unwrap),
 };
 
