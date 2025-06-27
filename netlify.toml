@@ -1,11 +1,12 @@
 [build]
   base = "fe"
-  command = "npm install --legacy-peer-deps && npm run build"
+  command = "npm install --legacy-peer-deps && CI=false npm run build"
   publish = "build"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "10"
+  CI = "false"
 
 # Redirect all requests to index.html for React Router
 [[redirects]]
