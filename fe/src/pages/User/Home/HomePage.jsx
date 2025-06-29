@@ -12,15 +12,18 @@ import {
   Avatar,
   Chip,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import {
   Search as SearchIcon,
   TrendingUp as TrendingUpIcon,
   Category as CategoryIcon,
   LocalOffer as OfferIcon,
-  Speed as SpeedIcon,
-  Security as SecurityIcon,
-  Support as SupportIcon,
+  Inventory as InventoryIcon,
+  Assessment as AssessmentIcon,
+  Schedule as ScheduleIcon,
+  Favorite as FavoriteIcon,
+  Translate as TranslateIcon,
 } from "@mui/icons-material";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -34,25 +37,28 @@ import ProductCardCompact from "components/shop/ProductCardCompact";
 import ContentState from "components/common/ContentState";
 import DevelopmentNotice from "components/common/DevelopmentNotice";
 import DebugInfo from "components/common/DebugInfo";
+import PendingOrderWidget from "components/order/PendingOrderWidget";
 import { useBackendStatus } from "context/BackendStatusContext";
+import { usePendingOrder } from "hooks/usePendingOrder";
+import { useUniversalTranslation } from "context/UniversalTranslationContext";
 
 const features = [
   {
-    icon: <SpeedIcon />,
-    title: "Fast Delivery",
-    description: "Quick processing and delivery of your orders",
+    icon: <InventoryIcon />,
+    title: "Inventory Tracking",
+    description: "Real-time stock levels and automated reorder alerts",
     color: "#4caf50",
   },
   {
-    icon: <SecurityIcon />,
-    title: "Secure Ordering",
-    description: "Safe and secure ordering process",
+    icon: <AssessmentIcon />,
+    title: "Usage Analytics",
+    description: "Track consumption patterns and optimize ordering",
     color: "#2196f3",
   },
   {
-    icon: <SupportIcon />,
-    title: "24/7 Support",
-    description: "Round-the-clock customer support",
+    icon: <ScheduleIcon />,
+    title: "Order Management",
+    description: "Streamlined approval workflow and order tracking",
     color: "#ff9800",
   },
 ];
@@ -71,12 +77,41 @@ const normalizeProduct = (product) => ({
   categoryName: product.categoryName || 'Uncategorized',
 });
 
+// Simple favorites management using localStorage
+const getFavorites = () => {
+  try {
+    const favorites = localStorage.getItem('userFavorites');
+    return favorites ? JSON.parse(favorites) : [];
+  } catch {
+    return [];
+  }
+};
+
+const getFavoriteProducts = async () => {
+  const favoriteIds = getFavorites();
+  if (favoriteIds.length === 0) return [];
+  
+  try {
+    // Fetch products and filter by favorites
+    const response = await productApi.list(null, 0, 50); // Get more products to find favorites
+    const allProducts = response?.content || [];
+    return allProducts.filter(product => 
+      favoriteIds.includes(product.id || product.productId)
+    ).map(normalizeProduct);
+  } catch (error) {
+    console.error('Error fetching favorite products:', error);
+    return [];
+  }
+};
+
 export default function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const { isBackendAvailable } = useBackendStatus();
+  const { pendingOrder, loading: pendingLoading, refresh: refreshPendingOrder, hasPendingOrder } = usePendingOrder();
+  const { currentLanguage, isTranslating } = useUniversalTranslation();
 
   const { data: cats = [], isLoading: catLoad, error: catErr } = useQuery({
     queryKey: ["cats"],
@@ -96,6 +131,13 @@ export default function HomePage() {
     retry: 1, // Only retry once to avoid spam
   });
 
+  const { data: favorites = [], isLoading: favLoad, error: favErr } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: getFavoriteProducts,
+    staleTime: 30_000,
+    enabled: getFavorites().length > 0, // Only fetch if there are favorites
+  });
+
   const handleSearch = (e) => {
     if (e.key === "Enter" || e.type === "click") {
       const query = searchQuery.trim();
@@ -105,156 +147,171 @@ export default function HomePage() {
     }
   };
 
+  
   return (
     <>
       <DevelopmentNotice />
       <Box sx={{ bgcolor: "#f8f9fa", minHeight: "100vh" }}>
-      {/* Hero Section */}
-      <Box
-        sx={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          color: "white",
-          py: { xs: 8, md: 12 },
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Background Pattern */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            opacity: 0.3,
-          }}
-        />
-        
-        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
-          <Box sx={{ textAlign: "center", mb: 6 }}>
-            <Typography
-              variant="h2"
-              fontWeight={700}
-              gutterBottom
-              sx={{
-                fontSize: { xs: "2.5rem", md: "3.5rem" },
-                mb: 2,
-              }}
-            >
-              📋 Stationery Management
-            </Typography>
-            <Typography
-              variant="h5"
-              sx={{
-                opacity: 0.9,
-                maxWidth: 600,
-                mx: "auto",
-                mb: 4,
-                fontSize: { xs: "1.1rem", md: "1.25rem" },
-              }}
-            >
-              Streamline your office supplies with our comprehensive stationery management system
-            </Typography>
-
-            {/* Enhanced Search Bar */}
-            <Paper
-              elevation={8}
-              sx={{
-                p: 1,
-                borderRadius: 4,
-                maxWidth: 600,
-                mx: "auto",
-                display: "flex",
-                alignItems: "center",
-                bgcolor: "rgba(255,255,255,0.95)",
-                backdropFilter: "blur(10px)",
-              }}
-            >
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder={t('common.search') + " products or categories..."}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearch}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    border: "none",
-                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                  },
-                }}
-              />
-              <Button
-                variant="contained"
-                onClick={handleSearch}
-                sx={{
-                  ml: 1,
-                  px: 3,
-                  py: 1.5,
-                  borderRadius: 3,
-                  background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                  "&:hover": {
-                    background: "linear-gradient(45deg, #1976D2 30%, #1BA3D3 90%)",
-                  },
-                }}
-              >
-                Search
-              </Button>
-            </Paper>
-          </Box>
-
-          {/* Quick Stats */}
-          <Grid container spacing={3} sx={{ mt: 4 }}>
-            {features.map((feature, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-                <Card
-                  elevation={4}
-                  sx={{
-                    p: 3,
-                    textAlign: "center",
-                    borderRadius: 3,
-                    bgcolor: "rgba(255,255,255,0.95)",
-                    backdropFilter: "blur(10px)",
-                    transition: "transform 0.3s ease-in-out",
-                    height: "100%",
+      {/* Clean Action Header */}
+      <Box sx={{ bgcolor: "#f8f9fa", py: { xs: 3, md: 4 } }}>
+        <Container maxWidth="lg">
+          <Paper
+            elevation={8}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: 4,
+              background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
+              border: "1px solid rgba(102, 126, 234, 0.1)",
+              position: "relative",
+              overflow: "hidden",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%)",
+                pointerEvents: "none",
+              },
+            }}
+          >
+            <Box sx={{ position: "relative", zIndex: 1 }}>
+              {/* Main Action Row */}
+              <Box sx={{ 
+                display: "flex", 
+                flexDirection: { xs: "column", md: "row" },
+                alignItems: { xs: "stretch", md: "center" },
+                gap: { xs: 2, md: 3 },
+              }}>
+                {/* Search Section */}
+                <Box sx={{ flex: 1, minWidth: { xs: "100%", md: 300 } }}>
+                  <Box sx={{ 
                     display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    "&:hover": {
-                      transform: "translateY(-8px)",
+                    alignItems: "center",
+                    bgcolor: "white",
+                    borderRadius: 3,
+                    border: "2px solid #e3f2fd",
+                    transition: "all 0.3s ease",
+                    "&:focus-within": {
+                      borderColor: "#667eea",
+                      boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
                     },
-                  }}
+                  }}>
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Search items, categories..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={handleSearch}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon sx={{ color: "#667eea" }} />
+                          </InputAdornment>
+                        ),
+                        sx: {
+                          border: "none",
+                          "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                          "& input": {
+                            py: 1.5,
+                            fontSize: "1rem",
+                          },
+                        },
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={handleSearch}
+                      sx={{
+                        m: 0.5,
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: 2,
+                        background: "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
+                        boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                        "&:hover": {
+                          background: "linear-gradient(45deg, #5a6fd8 30%, #6a4190 90%)",
+                          transform: "translateY(-1px)",
+                          boxShadow: "0 6px 16px rgba(102, 126, 234, 0.4)",
+                        },
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      Search
+                    </Button>
+                  </Box>
+                </Box>
+
+                {/* Quick Actions */}
+                <Stack 
+                  direction={{ xs: "column", sm: "row" }} 
+                  spacing={2}
+                  sx={{ minWidth: { xs: "100%", md: "auto" } }}
                 >
-                  <Avatar
+                  <Button
+                    variant="contained"
+                    onClick={() => navigate("/products")}
+                    startIcon={<CategoryIcon />}
                     sx={{
-                      bgcolor: feature.color,
-                      width: 56,
-                      height: 56,
-                      mx: "auto",
-                      mb: 2,
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 3,
+                      background: "linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)",
+                      boxShadow: "0 4px 12px rgba(76, 175, 80, 0.3)",
+                      fontWeight: 600,
+                      "&:hover": {
+                        background: "linear-gradient(45deg, #388e3c 30%, #689f38 90%)",
+                        transform: "translateY(-1px)",
+                        boxShadow: "0 6px 16px rgba(76, 175, 80, 0.4)",
+                      },
+                      transition: "all 0.3s ease",
                     }}
                   >
-                    {feature.icon}
-                  </Avatar>
-                  <Typography variant="h6" fontWeight={600} gutterBottom>
-                    {feature.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {feature.description}
-                  </Typography>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+                    Browse Catalog
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate("/order-history")}
+                    startIcon={<ScheduleIcon />}
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 3,
+                      borderWidth: 2,
+                      borderColor: "#667eea",
+                      color: "#667eea",
+                      fontWeight: 600,
+                      "&:hover": { 
+                        borderWidth: 2,
+                        bgcolor: "rgba(102, 126, 234, 0.08)",
+                        transform: "translateY(-1px)",
+                        boxShadow: "0 4px 12px rgba(102, 126, 234, 0.2)",
+                      },
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    My Requests
+                  </Button>
+                </Stack>
+              </Box>
+            </Box>
+          </Paper>
         </Container>
       </Box>
+
+      {/* Pending Order Widget */}
+      {hasPendingOrder && (
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          <Container maxWidth="lg">
+            <PendingOrderWidget 
+              order={pendingOrder} 
+              onRefresh={refreshPendingOrder}
+            />
+          </Container>
+        </Box>
+      )}
 
       {/* Categories Section */}
       <Box sx={{ py: { xs: 6, md: 8 } }}>
@@ -279,19 +336,73 @@ export default function HomePage() {
                   "&:hover": { borderWidth: 2 },
                 }}
               >
-                View All Products
+                Browse All Items
               </Button>
             </Box>
           </ContentState>
         </Container>
       </Box>
 
+      {/* Favorites Section */}
+      {favorites.length > 0 && (
+        <Box sx={{ bgcolor: "#f8f9fa", py: { xs: 6, md: 8 } }}>
+          <Container maxWidth="lg">
+            <SectionTitle subtitle="Your saved items" align="center">
+              <FavoriteIcon sx={{ mr: 1, verticalAlign: "middle", color: "#e91e63" }} />
+              Favorite Items
+            </SectionTitle>
+            
+            <ContentState 
+              loading={favLoad} 
+              error={favErr}
+              empty={!favorites.length && "No favorite items yet"}
+            >
+              {!!favorites.length && (
+                <Grid container spacing={2}>
+                  {favorites.slice(0, 8).map((product, index) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={product.id || product.productId || index}>
+                      <ProductCardCompact
+                        data={product}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </ContentState>
+
+            {favorites.length > 8 && (
+              <Box sx={{ textAlign: "center", mt: 4 }}>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={() => navigate("/products?favorites=true")}
+                  sx={{
+                    borderRadius: 3,
+                    px: 4,
+                    py: 1.5,
+                    borderWidth: 2,
+                    borderColor: "#e91e63",
+                    color: "#e91e63",
+                    "&:hover": { 
+                      borderWidth: 2,
+                      bgcolor: "rgba(233, 30, 99, 0.08)",
+                    },
+                  }}
+                >
+                  View All Favorites
+                </Button>
+              </Box>
+            )}
+          </Container>
+        </Box>
+      )}
+
       {/* Popular Products Section */}
       <Box sx={{ bgcolor: "white", py: { xs: 6, md: 8 } }}>
         <Container maxWidth="lg">
-          <SectionTitle subtitle="Top ordered" align="center">
+          <SectionTitle subtitle="Most requested" align="center">
             <TrendingUpIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-            Popular Products
+            Frequently Ordered Items
           </SectionTitle>
           
           <ContentState 
@@ -328,73 +439,87 @@ export default function HomePage() {
                   },
                 }}
               >
-                Explore All Products
+                View Full Catalog
               </Button>
             </Box>
           )}
         </Container>
       </Box>
 
-      {/* Call to Action */}
-      <Box
-        sx={{
-          bgcolor: "primary.main",
-          color: "white",
-          py: { xs: 6, md: 8 },
-          textAlign: "center",
-        }}
-      >
-        <Container maxWidth="md">
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            Ready to Get Started?
-          </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.9, mb: 4 }}>
-            Browse our extensive catalog and place your first order today
-          </Typography>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            justifyContent="center"
-          >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate("/products")}
-              sx={{
-                bgcolor: "white",
-                color: "primary.main",
-                px: 4,
-                py: 1.5,
-                borderRadius: 3,
-                "&:hover": {
-                  bgcolor: "grey.100",
-                },
-              }}
-            >
-              Browse Products
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={() => navigate("/order-history")}
-              sx={{
-                borderColor: "white",
-                color: "white",
-                px: 4,
-                py: 1.5,
-                borderRadius: 3,
-                borderWidth: 2,
-                "&:hover": {
-                  borderWidth: 2,
-                  bgcolor: "rgba(255,255,255,0.1)",
-                },
-              }}
-            >
-              View Orders
-            </Button>
-          </Stack>
+      {/* System Features */}
+      <Box sx={{ bgcolor: "#f8f9fa", py: { xs: 6, md: 8 } }}>
+        <Container maxWidth="lg">
+          <SectionTitle subtitle="System capabilities" align="center">
+            <AssessmentIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+            Management Features
+          </SectionTitle>
+          
+          <Grid container spacing={3} sx={{ mt: 2 }}>
+            {features.map((feature, index) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                <Card
+                  elevation={2}
+                  sx={{
+                    p: 2.5,
+                    textAlign: "center",
+                    borderRadius: 2,
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    transition: "all 0.3s ease-in-out",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: 4,
+                    },
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      bgcolor: feature.color,
+                      width: 48,
+                      height: 48,
+                      mx: "auto",
+                      mb: 1.5,
+                    }}
+                  >
+                    {feature.icon}
+                  </Avatar>
+                  <Typography variant="h6" fontWeight={600} gutterBottom sx={{ fontSize: '1rem' }}>
+                    {feature.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                    {feature.description}
+                  </Typography>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
         </Container>
       </Box>
+
+      {/* Translation Status Indicator */}
+      {isTranslating && (
+        <Box sx={{ 
+          position: 'fixed', 
+          top: 80, 
+          right: 20, 
+          zIndex: 1300,
+          bgcolor: 'rgba(102, 126, 234, 0.9)',
+          color: 'white',
+          px: 3,
+          py: 1,
+          borderRadius: 3,
+          boxShadow: 3,
+        }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <CircularProgress size={16} color="inherit" />
+            <Typography variant="body2" fontWeight={500}>
+              {currentLanguage === 'en' ? 'Translating content...' : 'Đang dịch nội dung...'}
+            </Typography>
+          </Stack>
+        </Box>
+      )}
       </Box>
       {process.env.NODE_ENV === 'development' && (
         <DebugInfo 

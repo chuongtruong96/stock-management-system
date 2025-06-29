@@ -89,18 +89,66 @@ api.interceptors.request.use(
         // Add timestamp for request tracking
         config.metadata = { startTime: new Date() };
         
-        // Get authentication token
-        try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const token = user?.token;
-            
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            } else if (!config.url?.includes('/auth/')) {
-                console.warn('No authentication token found for protected endpoint');
+        // Define public endpoints that don't need authentication
+        const publicEndpoints = [
+            '/orders/order-window/status',
+            '/orders/check-period',
+            '/auth/login',
+            '/auth/forgot',
+            '/auth/register',
+            '/products/translate'
+        ];
+        
+        const isPublicEndpoint = publicEndpoints.some(endpoint => 
+            config.url?.includes(endpoint)
+        );
+        
+        // Only add auth token for non-public endpoints
+        if (!isPublicEndpoint) {
+            // Get authentication token
+            try {
+                const userString = localStorage.getItem('user');
+                if (userString) {
+                    const user = JSON.parse(userString);
+                    const token = user?.token;
+                    
+                    if (token) {
+                        // Validate token format (JWT should have 3 parts separated by dots)
+                        if (typeof token === 'string' && token.split('.').length === 3) {
+                            // Additional validation: check if token is not expired (basic check)
+                            try {
+                                const payload = JSON.parse(atob(token.split('.')[1]));
+                                const currentTime = Math.floor(Date.now() / 1000);
+                                
+                                if (payload.exp && payload.exp < currentTime) {
+                                    console.warn('🔍 API: Token expired, removing from localStorage');
+                                    localStorage.removeItem('user');
+                                } else {
+                                    config.headers.Authorization = `Bearer ${token}`;
+                                    console.log('🔍 API: Valid token added to request for:', config.url);
+                                }
+                            } catch (tokenParseError) {
+                                // If we can't parse the token payload, still try to use it
+                                // (backend will validate it properly)
+                                config.headers.Authorization = `Bearer ${token}`;
+                                console.log('🔍 API: Token added to request (payload parse failed) for:', config.url);
+                            }
+                        } else {
+                            console.error('🔍 API: Invalid token format, removing from localStorage');
+                            localStorage.removeItem('user');
+                        }
+                    } else {
+                        console.warn('��� API: No token found for protected endpoint:', config.url);
+                    }
+                } else {
+                    console.warn('🔍 API: No user data found for protected endpoint:', config.url);
+                }
+            } catch (error) {
+                console.error('🔍 API: Error parsing user data from localStorage:', error);
+                localStorage.removeItem('user');
             }
-        } catch (error) {
-            console.error('Error parsing user data from localStorage:', error);
+        } else {
+            console.log('🔍 API: Public endpoint, skipping auth token for:', config.url);
         }
 
         // Note: Custom headers like X-Request-ID removed due to CORS restrictions
@@ -130,6 +178,14 @@ api.interceptors.response.use(
     (response) => {
         // Calculate request duration
         const duration = new Date() - response.config.metadata.startTime;
+        
+        // Reset consecutive auth failures on successful requests
+        if (window.consecutiveAuthFailures > 0) {
+            console.log('🔍 API: Successful request, resetting auth failure counter');
+            console.log('🔍 API: Previously failed endpoints:', window.failedEndpoints || []);
+            window.consecutiveAuthFailures = 0;
+            window.failedEndpoints = [];
+        }
         
         // Log response in development
         if (process.env.NODE_ENV === 'development') {
@@ -163,11 +219,115 @@ api.interceptors.response.use(
             
             switch (status) {
                 case 401:
-                    // Unauthorized - clear auth and redirect to login
-                    localStorage.removeItem('user');
-                    toast.error('Session expired. Please login again.');
-                    if (!window.location.pathname.includes('/auth/')) {
-                        window.location.href = '/auth/login';
+                    // Unauthorized - be extremely careful about when to logout
+                    console.error('🔍 API: 401 Unauthorized received for:', error.config?.url);
+                    console.error('🔍 API: Current token:', localStorage.getItem('user') ? 'Present' : 'Missing');
+                    
+                    // Define public endpoints that should NEVER trigger logout
+                    const publicEndpoints = [
+                        '/orders/order-window/status',
+                        '/orders/check-period',
+                        '/auth/login',
+                        '/auth/forgot',
+                        '/auth/register',
+                        '/categories',
+                        '/products',
+                        '/departments',
+                        '/products/translate'
+                    ];
+                    
+                    // Define critical endpoints that should trigger immediate logout
+                    const criticalEndpoints = ['/auth/refresh', '/auth/verify'];
+                    
+                    const currentEndpoint = error.config?.url;
+                    
+                    // If it's a public endpoint, don't count it as an auth failure
+                    const isPublicEndpoint = publicEndpoints.some(endpoint => 
+                        currentEndpoint?.includes(endpoint)
+                    );
+                    
+                    if (isPublicEndpoint) {
+                        console.warn('🔍 API: 401 on public endpoint, this should not happen:', currentEndpoint);
+                        // Don't count public endpoint failures toward logout
+                        break;
+                    }
+                    
+                    const isCriticalEndpoint = criticalEndpoints.some(endpoint => 
+                        currentEndpoint?.includes(endpoint)
+                    );
+                    
+                    // Special handling for /users/me - only logout if it's the ONLY failing endpoint
+                    // and we're on a page that absolutely requires user info
+                    const isUserMeEndpoint = currentEndpoint?.includes('/users/me');
+                    const isOnOrderForm = window.location.pathname.includes('/order-form');
+                    const isOnProtectedPage = window.location.pathname.includes('/admin') || 
+                                            window.location.pathname.includes('/order-history') ||
+                                            window.location.pathname.includes('/profile');
+                    
+                    // Initialize tracking if not exists
+                    if (!window.consecutiveAuthFailures) {
+                        window.consecutiveAuthFailures = 0;
+                        window.failedEndpoints = [];
+                        window.lastAuthFailureTime = 0;
+                    }
+                    
+                    // Reset counter if it's been more than 60 seconds since last failure
+                    const now = Date.now();
+                    if (now - window.lastAuthFailureTime > 60000) {
+                        console.log('🔍 API: Resetting auth failure counter due to time gap');
+                        window.consecutiveAuthFailures = 0;
+                        window.failedEndpoints = [];
+                    }
+                    window.lastAuthFailureTime = now;
+                    
+                    // Track failed endpoints to avoid counting the same endpoint multiple times
+                    if (!window.failedEndpoints.includes(currentEndpoint)) {
+                        window.failedEndpoints.push(currentEndpoint);
+                        window.consecutiveAuthFailures++;
+                    }
+                    
+                    // Only logout in very specific scenarios:
+                    // 1. Critical auth endpoints fail (refresh, verify)
+                    // 2. User is on a protected admin page and /users/me fails
+                    // 3. Multiple different protected endpoints fail (7+ endpoints)
+                    if (isCriticalEndpoint) {
+                        console.warn('🔍 API: Critical auth endpoint failed, logging out immediately');
+                        localStorage.removeItem('user');
+                        window.consecutiveAuthFailures = 0;
+                        window.failedEndpoints = [];
+                        toast.error('Session expired. Please login again.');
+                        if (!window.location.pathname.includes('/auth/')) {
+                            window.location.href = '/auth/login';
+                        }
+                    } else if (isUserMeEndpoint && isOnProtectedPage && window.consecutiveAuthFailures === 1) {
+                        // Only logout if /users/me fails on a protected page and it's the first failure
+                        console.warn('🔍 API: /users/me failed on protected page, logging out');
+                        localStorage.removeItem('user');
+                        window.consecutiveAuthFailures = 0;
+                        window.failedEndpoints = [];
+                        toast.error('Session expired. Please login again.');
+                        if (!window.location.pathname.includes('/auth/')) {
+                            window.location.href = '/auth/login';
+                        }
+                    } else if (window.consecutiveAuthFailures >= 7) {
+                        console.warn('🔍 API: Too many different endpoints failing, logging out');
+                        localStorage.removeItem('user');
+                        window.consecutiveAuthFailures = 0;
+                        window.failedEndpoints = [];
+                        toast.error('Multiple authentication failures. Please login again.');
+                        if (!window.location.pathname.includes('/auth/')) {
+                            window.location.href = '/auth/login';
+                        }
+                    } else {
+                        console.warn(`🔍 API: Non-critical endpoint failed (${window.consecutiveAuthFailures}/7 unique endpoints), not logging out yet`);
+                        
+                        // Special handling for order form - show a more helpful message
+                        if (isOnOrderForm && isUserMeEndpoint) {
+                            console.log('🔍 API: /users/me failed on order form, but allowing user to continue');
+                            // Don't show any toast - let the component handle the fallback
+                        } else if (window.consecutiveAuthFailures === 4) {
+                            toast.warning('Some features may not work properly. Please refresh if problems persist.');
+                        }
                     }
                     break;
                     
@@ -431,12 +591,12 @@ export const productApi = {
 export const orderApi = {
   all: () => api.get("/orders").then(unwrapPage),
   byDepartment: (deptId) => api.get(`/orders/department/${deptId}`).then(unwrap),
-  detail: (id) => api.get(`/orders/${id}/items`).then(unwrap),
+  detail: (id) => api.get(`/orders/${id}`).then(unwrap),
   getItems: (id) => api.get(`/orders/${id}/items`).then(unwrap),
   track: (page = 0, size = 10) => api.get("/orders/mine", { params: { page, size } }).then(unwrap),
   create: (body) => api.post("/orders", body).then(unwrap),
-  exportPdf: (id) => api.post(`/orders/${id}/export`, null, { responseType: "blob" }).then(unwrap),
-  export: (id) => api.post(`/orders/${id}/export`, null, { responseType: "blob" }).then(unwrap), // Alias for backward compatibility
+  exportPdf: (id) => api.post(`/orders/${id}/export`, null, { responseType: "blob" }).then(response => response.data),
+  export: (id) => api.post(`/orders/${id}/export`, null, { responseType: "blob" }).then(response => response.data), // Alias for backward compatibility
   uploadSignedPdf: (id, formData) =>
     api.put(`/orders/${id}/submit-signed`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -462,7 +622,7 @@ export const orderApi = {
   getSubmitted: () => api.get("/orders/submitted").then(unwrap),
   getReports: (month, year) => api.get("/orders/reports", { params: { month, year } }).then(unwrap),
   getLatestByDepartment: (departmentId) => api.get(`/orders/department/${departmentId}/latest`).then(unwrap),
-  downloadSignedFile: (id) => api.get(`/orders/${id}/signed-file`, { responseType: "blob" }).then(unwrap),
+  downloadSignedFile: (id) => api.get(`/orders/${id}/signed-file`, { responseType: "blob" }).then(response => response.data),
   // Legacy endpoints for backward compatibility
   getHistory: () => api.get("/orders/pending").then(unwrap),
   getHistoryByDepartment: (departmentId) => api.get(`/orders/department/${departmentId}`).then(unwrap),
@@ -475,15 +635,22 @@ export const orderApi = {
 
 // Order Window API
 export const orderWindowApi = {
-  getStatus: () => api.get("/orders/order-window/status").then((response) => {
-    // Handle ApiResponse wrapper for status
+  getStatus: () => api.get("/orders/check-period").then((response) => {
+    // Handle ApiResponse wrapper for enhanced status
     if (response.data && response.data.success && response.data.data) {
       return response.data.data;
     }
     return response.data;
   }),
-  check: () => api.get("/orders/order-window/status").then((response) => {
+  check: () => api.get("/orders/check-period").then((response) => {
     // Handle ApiResponse wrapper for check (alias)
+    if (response.data && response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    return response.data;
+  }),
+  getSimpleStatus: () => api.get("/orders/order-window/status").then((response) => {
+    // Simple status endpoint for backward compatibility
     if (response.data && response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -612,8 +779,28 @@ export const dashboardApi = {
 export const reportApi = {
   getSummary: (year, month) => api.get("/reports", { params: { year, month } }).then(unwrap),
   getFull: (year, month) => api.get("/reports/full", { params: { year, month } }).then(unwrap),
-  exportExcel: (month) => api.get("/reports/export/excel", { params: { month }, responseType: "blob" }).then(unwrap),
-  exportPdf: (month) => api.get("/reports/export/pdf", { params: { month }, responseType: "blob" }).then(unwrap),
+  exportExcel: (month) => api.get("/reports/export/excel", { params: { month }, responseType: "blob" }).then(response => response.data),
+  exportPdf: (month) => api.get("/reports/export/pdf", { params: { month }, responseType: "blob" }).then(response => response.data),
+};
+
+// Translation API - LibreTranslate integration
+export const translationApi = {
+  translateText: (text, targetLang = 'en') => 
+    api.post("/products/translate", { 
+      text, 
+      targetLang 
+    }).then(response => response.data.translatedText || response.data),
+  
+  translateProduct: (productId, targetLang = 'en') =>
+    api.get(`/products/${productId}/translate`, { 
+      params: { targetLang } 
+    }).then(unwrap),
+    
+  translateCategory: (categoryName, targetLang = 'en') =>
+    api.post("/products/translate", { 
+      text: categoryName, 
+      targetLang 
+    }).then(response => response.data.translatedText || response.data),
 };
 
 export default api;

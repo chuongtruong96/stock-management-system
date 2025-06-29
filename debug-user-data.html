@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug User Data</title>
+</head>
+<body>
+    <h1>Debug User Data</h1>
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        try {
+            const userString = localStorage.getItem('user');
+            if (userString) {
+                const user = JSON.parse(userString);
+                output.innerHTML = `
+                    <h2>Stored User Data:</h2>
+                    <pre>${JSON.stringify(user, null, 2)}</pre>
+                    
+                    <h2>Analysis:</h2>
+                    <ul>
+                        <li>Username: ${user.username || 'Not found'}</li>
+                        <li>Department Name: ${user.departmentName || 'Not found'}</li>
+                        <li>Department Object: ${user.department ? JSON.stringify(user.department) : 'Not found'}</li>
+                        <li>Token Present: ${user.token ? 'Yes' : 'No'}</li>
+                        <li>Token Length: ${user.token ? user.token.length : 'N/A'}</li>
+                    </ul>
+                `;
+            } else {
+                output.innerHTML = '<p>No user data found in localStorage</p>';
+            }
+        } catch (error) {
+            output.innerHTML = `<p>Error parsing user data: ${error.message}</p>`;
+        }
+    </script>
+</body>
+</html>

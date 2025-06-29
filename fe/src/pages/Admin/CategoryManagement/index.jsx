@@ -30,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 import { toastUtils } from "utils/toastUtils";
 
 import { categoryApi } from "services/api";
+import { getCategoryIconUrl } from "utils/apiUtils";
 
 export default function CategoryManagement({ language = "en" }) {
   const navigate = useNavigate();
@@ -278,7 +279,7 @@ export default function CategoryManagement({ language = "en" }) {
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
           {row.icon && row.icon !== 'null' && row.icon !== 'undefined' ? (
             <img 
-              src={`/icons/${row.icon}`}
+              src={getCategoryIconUrl(row.icon)}
               alt={row.nameEn || 'Category'}
               style={{ 
                 width: 48, 
@@ -710,7 +711,7 @@ export default function CategoryManagement({ language = "en" }) {
                     iconFile
                       ? URL.createObjectURL(iconFile)
                       : (draft.icon && draft.icon !== 'null' && draft.icon !== 'undefined') 
-                        ? `/icons/${draft.icon}`
+                        ? getCategoryIconUrl(draft.icon)
                         : undefined
                   }
                   sx={{ 

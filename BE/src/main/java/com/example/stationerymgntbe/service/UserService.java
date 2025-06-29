@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,10 +47,35 @@ public class UserService {
     @Transactional
     public User getCurrentUserEntity() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
+        System.out.println("🔍 USER_SERVICE: Getting current user entity");
+        System.out.println("🔍 USER_SERVICE: Authentication: " + auth);
+        System.out.println("🔍 USER_SERVICE: Principal: " + auth.getPrincipal());
+        System.out.println("🔍 USER_SERVICE: Authorities: " + auth.getAuthorities());
         
-        return userRepository.findByUsernameWithDepartmentAndRole(username)
-            .orElseThrow(() -> new ResourceNotFoundException("Current user not found: " + username));
+        String username = auth.getName();
+        System.out.println("🔍 USER_SERVICE: Username from auth: " + username);
+        
+        Optional<User> userOpt = userRepository.findByUsernameWithDepartmentAndRole(username);
+        System.out.println("🔍 USER_SERVICE: User found: " + userOpt.isPresent());
+        
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            System.out.println("🔍 USER_SERVICE: User details - ID: " + user.getUserId() + ", Username: " + user.getUsername());
+            System.out.println("🔍 USER_SERVICE: User department: " + (user.getDepartment() != null ? user.getDepartment().getName() : "null"));
+            System.out.println("🔍 USER_SERVICE: User role: " + user.getRole());
+            return user;
+        } else {
+            System.out.println("🔍 USER_SERVICE: User not found, trying fallback method");
+            // Try fallback method
+            Optional<User> fallbackUser = userRepository.findByUsername(username);
+            if (fallbackUser.isPresent()) {
+                System.out.println("🔍 USER_SERVICE: Fallback user found");
+                return fallbackUser.get();
+            } else {
+                System.out.println("🔍 USER_SERVICE: No user found with username: " + username);
+                throw new ResourceNotFoundException("Current user not found: " + username);
+            }
+        }
     }
 
     @Transactional

@@ -20,6 +20,15 @@ import {
   Card,
   CardContent,
   Grid,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent,
+  StepButton,
+  Fade,
+  Slide,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import {
   Download as DownloadIcon,
@@ -30,6 +39,12 @@ import {
   Refresh as RefreshIcon,
   History as HistoryIcon,
   Assignment as AssignmentIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Description as DescriptionIcon,
+  CloudUpload as CloudUploadIcon,
+  Approval as ApprovalIcon,
+  ArrowForward as ArrowForwardIcon,
+  ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 
@@ -41,48 +56,115 @@ import UploadSignedDialog from "components/dialogs/UploadSignedDialog";
 import OrderProgress from "components/indicators/OrderProgress";
 import { useOrderExport } from "./useOrderExport";
 import { useTranslation } from "react-i18next";
+import { getProductImageUrl } from "utils/apiUtils";
+
+// Enhanced Order Flow Steps Configuration
+const ORDER_STEPS = [
+  {
+    id: 'cart',
+    label: 'Review Cart',
+    description: 'Review your selected items',
+    icon: <ShoppingCartIcon />,
+    status: null, // Always available when items exist
+  },
+  {
+    id: 'create',
+    label: 'Create Order',
+    description: 'Generate your order request',
+    icon: <AssignmentIcon />,
+    status: null, // Available when cart has items
+  },
+  {
+    id: 'export',
+    label: 'Export PDF',
+    description: 'Download order form for signature',
+    icon: <DescriptionIcon />,
+    status: 'pending', // Available when order is created
+  },
+  {
+    id: 'upload',
+    label: 'Upload Signed PDF',
+    description: 'Submit signed document',
+    icon: <CloudUploadIcon />,
+    status: 'exported', // Available when PDF is exported
+  },
+  {
+    id: 'submit',
+    label: 'Submit Order',
+    description: 'Send order to admin for approval',
+    icon: <SendIcon />,
+    status: 'uploaded', // Available when signed PDF is uploaded
+  },
+  {
+    id: 'approval',
+    label: 'Admin Approval',
+    description: 'Waiting for approval',
+    icon: <ApprovalIcon />,
+    status: 'submitted', // Available when order is submitted
+  },
+];
 
 // Order status mapping for better UX
 const ORDER_STATUS_CONFIG = {
   pending: {
     label: "Order Created",
     color: "info",
-    progress: 25,
+    progress: 20,
+    step: 2,
     description: "Your order has been created and is ready for PDF export"
   },
   exported: {
     label: "PDF Exported",
     color: "warning", 
-    progress: 50,
+    progress: 40,
+    step: 3,
     description: "PDF has been exported. Please get it signed and upload back"
+  },
+  uploaded: {
+    label: "Signed PDF Uploaded",
+    color: "secondary",
+    progress: 60,
+    step: 4,
+    description: "Signed PDF uploaded. Ready to submit to admin"
   },
   submitted: {
     label: "Submitted for Approval",
     color: "primary",
-    progress: 75,
-    description: "Signed PDF uploaded. Waiting for admin approval"
+    progress: 80,
+    step: 5,
+    description: "Order submitted to admin. Waiting for approval"
   },
   approved: {
     label: "Approved",
     color: "success",
     progress: 100,
+    step: 5,
     description: "Your order has been approved and will be processed"
   },
   rejected: {
     label: "Rejected",
     color: "error",
     progress: 100,
+    step: 5,
     description: "Your order has been rejected. Please check admin comments"
   }
 };
 
 export default function OrderForm() {
+  console.log('🔍 ORDER_FORM: Component mounting...');
+  console.log('🔍 ORDER_FORM: Auth state on mount:', localStorage.getItem('user') ? 'Authenticated' : 'Not authenticated');
+  
   const [user, setUser] = useState(null);
   const [dept, setDept] = useState("");
   const [canOrder, setCanOrder] = useState(true);
   const [order, setOrder] = useState(null);
   const [upOpen, setUpOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Enhanced Stepper State
+  const [activeStep, setActiveStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [stepperExpanded, setStepperExpanded] = useState(true);
 
   const { subscribe } = useContext(WsContext);
   const { items, clear, updateQuantity, removeItem } = useCart();
@@ -91,39 +173,128 @@ export default function OrderForm() {
 
   const { exportPDF, markSubmitted } = useOrderExport(order, setOrder);
 
+  // Calculate current step based on order status and cart state
+  const getCurrentStep = () => {
+    if (!items.length) return 0; // Cart step
+    if (!order) return 1; // Create order step
+    if (order.status === 'pending') return 2; // Export PDF step
+    if (order.status === 'exported') return 3; // Upload signed PDF step
+    if (order.status === 'uploaded') return 4; // Submit order step
+    if (['submitted', 'approved', 'rejected'].includes(order.status)) return 5; // Approval step
+    return 1;
+  };
+
+  // Update active step when order status changes
   useEffect(() => {
+    const newStep = getCurrentStep();
+    setActiveStep(newStep);
+    
+    // Mark previous steps as completed
+    const completed = new Set();
+    for (let i = 0; i < newStep; i++) {
+      completed.add(i);
+    }
+    setCompletedSteps(completed);
+  }, [order, items.length]);
+
+  useEffect(() => {
+    console.log('🔍 ORDER_FORM: fetchUserData useEffect triggered');
+    
     const fetchUserData = async () => {
       try {
-        const userResponse = await userApi.getUserInfo();
-        console.log("User response:", userResponse);
-        setUser(userResponse);
+        console.log('🔍 ORDER_FORM: Starting fetchUserData...');
         
-        // Enhanced department name resolution
-        const departmentName = userResponse?.departmentName || 
-                              userResponse?.department?.name || 
-                              userResponse?.department?.departmentName ||
-                              userResponse?.dept?.name ||
-                              "Unknown Department";
-        setDept(departmentName);
+        // Check if user is authenticated before making API call
+        const storedUser = localStorage.getItem('user');
+        console.log('🔍 ORDER_FORM: Stored user check:', storedUser ? 'Found' : 'Not found');
+        
+        if (!storedUser) {
+          console.warn("🔍 ORDER_FORM: No stored user found, using fallback");
+          setDept("Guest User");
+          setUser({ username: "Guest", departmentName: "Guest User" });
+          return;
+        }
+
+        const parsedUser = JSON.parse(storedUser);
+        console.log('🔍 ORDER_FORM: Parsed user:', parsedUser);
+        
+        // Set fallback user info immediately from stored data
+        const fallbackUser = {
+          username: parsedUser?.username || "User",
+          departmentName: parsedUser?.departmentName || parsedUser?.department?.name || "Unknown Department"
+        };
+        setUser(fallbackUser);
+        setDept(fallbackUser.departmentName);
+        
+        console.log('🔍 ORDER_FORM: Fallback user set:', fallbackUser);
+        
+        if (!parsedUser?.token) {
+          console.warn("🔍 ORDER_FORM: No token found, using fallback data only");
+          return;
+        }
+
+        console.log("🔍 ORDER_FORM: Attempting to fetch fresh user info...");
+        
+        // Try to get fresh user info, but don't fail if it doesn't work
+        try {
+          const userResponse = await userApi.getUserInfo();
+          console.log("🔍 ORDER_FORM: Fresh user response:", userResponse);
+          
+          // Update with fresh data if successful
+          setUser(userResponse);
+          
+          // Enhanced department name resolution
+          const departmentName = userResponse?.departmentName || 
+                                userResponse?.department?.name || 
+                                userResponse?.department?.departmentName ||
+                                userResponse?.dept?.name ||
+                                parsedUser?.departmentName ||
+                                "Unknown Department";
+          console.log("🔍 ORDER_FORM: Fresh department resolved:", departmentName);
+          setDept(departmentName);
+        } catch (freshDataError) {
+          console.warn("🔍 ORDER_FORM: Fresh user info failed, using fallback data:", freshDataError.message);
+          // Keep the fallback data we already set - don't show error to user
+          // The order form can still function with basic user info
+        }
       } catch (error) {
-        console.error("User info error:", error);
-        toast.error(t('messages.userInfoError') || 'Failed to load user information');
+        console.error("🔍 ORDER_FORM: Critical user data error:", error);
+        
+        // Set minimal fallback data to keep the form functional
+        setUser({ username: "User", departmentName: "Unknown Department" });
         setDept("Unknown Department");
+        
+        // Only show error for non-auth issues
+        if (error.response?.status !== 401) {
+          console.warn("🔍 ORDER_FORM: Showing user info error toast");
+          toast.warning('Some user information could not be loaded, but you can still place orders.');
+        }
       }
     };
 
     const fetchOrderWindow = async () => {
       try {
+        console.log('🔍 ORDER_FORM: Checking order window status...');
         const windowResponse = await orderWindowApi.check();
+        console.log('🔍 ORDER_FORM: Order window response:', windowResponse);
         setCanOrder(windowResponse?.canOrder ?? windowResponse?.open ?? true);
       } catch (error) {
-        console.warn("Failed to check order window status:", error);
+        console.warn("🔍 ORDER_FORM: Order window check failed:", error.message);
+        // Default to allowing orders if check fails
         setCanOrder(true);
       }
     };
 
-    fetchUserData();
-    fetchOrderWindow();
+    // Stagger the API calls to avoid overwhelming the server
+    const timer = setTimeout(async () => {
+      // Run both calls concurrently but handle failures independently
+      await Promise.allSettled([
+        fetchUserData(),
+        fetchOrderWindow()
+      ]);
+    }, 100); // Reduced delay since we're handling failures better
+
+    return () => clearTimeout(timer);
   }, [t]);
 
   useEffect(() => {
@@ -183,11 +354,25 @@ export default function OrderForm() {
   };
 
   const handleSubmitOrder = async () => {
+    if (!order) {
+      toast.error('No order found to submit');
+      return;
+    }
+
+    setLoading(true);
     try {
-      toast.success(t('messages.orderSubmittedSuccess') || 'Order submitted successfully! Redirecting to order history...');
-      setTimeout(() => navigate("/order-history"), 1500);
-    } catch (e) {
-      toast.error(t('messages.failedToSubmitOrder') || 'Failed to submit order');
+      // Call the API to submit the order (change status from 'uploaded' to 'submitted')
+      await orderApi.confirm(order.id || order.orderId);
+      
+      // Update local order state
+      setOrder(prev => ({ ...prev, status: 'submitted' }));
+      
+      toast.success(t('messages.orderSubmittedSuccess') || 'Order submitted successfully! Admin will review your request.');
+    } catch (error) {
+      console.error('Submit order error:', error);
+      toast.error(error.response?.data?.message || t('messages.failedToSubmitOrder') || 'Failed to submit order');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -211,8 +396,8 @@ export default function OrderForm() {
   const today = new Date().toLocaleDateString();
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto", minHeight: "100vh", bgcolor: "#f8f9fa" }}>
-      {/* Header */}
+    <Box sx={{ p: 3, maxWidth: 1400, mx: "auto", minHeight: "100vh", bgcolor: "#f8f9fa" }}>
+      {/* Enhanced Header with Stepper Toggle */}
       <Paper 
         elevation={3}
         sx={{ 
@@ -228,19 +413,32 @@ export default function OrderForm() {
             📋 {t('order.orderForm') || 'Order Form'}
           </Typography>
           
-          {order && (
-            <Chip
-              label={ORDER_STATUS_CONFIG[order.status]?.label || order.status}
-              color={ORDER_STATUS_CONFIG[order.status]?.color || 'default'}
-              variant="filled"
+          <Stack direction="row" spacing={2} alignItems="center">
+            {order && (
+              <Chip
+                label={ORDER_STATUS_CONFIG[order.status]?.label || order.status}
+                color={ORDER_STATUS_CONFIG[order.status]?.color || 'default'}
+                variant="filled"
+                sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)', 
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.9rem'
+                }}
+              />
+            )}
+            
+            <IconButton
+              onClick={() => setStepperExpanded(!stepperExpanded)}
               sx={{ 
-                bgcolor: 'rgba(255,255,255,0.2)', 
                 color: 'white',
-                fontWeight: 600,
-                fontSize: '0.9rem'
+                bgcolor: 'rgba(255,255,255,0.1)',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }
               }}
-            />
-          )}
+            >
+              {stepperExpanded ? <ArrowBackIcon /> : <ArrowForwardIcon />}
+            </IconButton>
+          </Stack>
         </Stack>
         
         <Grid container spacing={3} sx={{ mb: 2 }}>
@@ -311,6 +509,289 @@ export default function OrderForm() {
         )}
       </Paper>
 
+      {/* Enhanced Integrated Stepper */}
+      <Collapse in={stepperExpanded}>
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 4, 
+            mb: 3, 
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+            border: '2px solid',
+            borderColor: 'primary.light',
+          }}
+        >
+          <Typography variant="h5" gutterBottom fontWeight={600} color="primary.main" sx={{ mb: 3 }}>
+            🚀 Order Progress Stepper
+          </Typography>
+          
+          <Stepper 
+            activeStep={activeStep} 
+            orientation="horizontal"
+            sx={{
+              '& .MuiStepLabel-root .Mui-completed': {
+                color: 'success.main',
+              },
+              '& .MuiStepLabel-root .Mui-active': {
+                color: 'primary.main',
+              },
+            }}
+          >
+            {ORDER_STEPS.map((step, index) => (
+              <Step key={step.id} completed={completedSteps.has(index)}>
+                <StepLabel
+                  StepIconComponent={({ active, completed }) => (
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: completed 
+                          ? 'success.main' 
+                          : active 
+                            ? 'primary.main' 
+                            : 'grey.300',
+                        color: 'white',
+                        transition: 'all 0.3s ease-in-out',
+                        transform: active ? 'scale(1.1)' : 'scale(1)',
+                        boxShadow: active ? '0 4px 12px rgba(102, 126, 234, 0.4)' : 'none',
+                      }}
+                    >
+                      {completed ? <CheckCircleIcon /> : step.icon}
+                    </Box>
+                  )}
+                >
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {step.label}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {step.description}
+                  </Typography>
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          {/* Step-specific Action Buttons */}
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+            {/* Debug Information */}
+            {process.env.NODE_ENV === 'development' && (
+              <Box sx={{ 
+                position: 'absolute', 
+                top: 10, 
+                right: 10, 
+                bgcolor: 'rgba(0,0,0,0.8)', 
+                color: 'white', 
+                p: 1, 
+                borderRadius: 1,
+                fontSize: '0.8rem',
+                fontFamily: 'monospace'
+              }}>
+                <div>activeStep: {activeStep}</div>
+                <div>order: {order ? 'exists' : 'null'}</div>
+                <div>order.status: {order?.status || 'undefined'}</div>
+                <div>items.length: {items.length}</div>
+                <div>canOrder: {canOrder ? 'true' : 'false'}</div>
+              </Box>
+            )}
+            {activeStep === 0 && items.length === 0 && (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<ShoppingCartIcon />}
+                onClick={() => navigate("/products")}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  fontSize: "1.1rem",
+                  fontWeight: 600,
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white !important",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                Start Shopping
+              </Button>
+            )}
+
+            {activeStep === 1 && items.length > 0 && !order && (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<AssignmentIcon />}
+                onClick={handleSubmit}
+                disabled={!canOrder || loading}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  fontSize: "1.1rem",
+                  fontWeight: 600,
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white !important",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                Create Order
+              </Button>
+            )}
+
+            {activeStep === 2 && order?.status === "pending" && (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<DescriptionIcon />}
+                onClick={handleExportPDF}
+                disabled={loading}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  fontSize: "1.1rem",
+                  fontWeight: 600,
+                  background: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
+                  color: "white !important",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #f57c00 0%, #ef6c00 100%)",
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                Export PDF
+              </Button>
+            )}
+
+            {/* Debug: Show Export PDF button with conditions */}
+            {process.env.NODE_ENV === 'development' && order && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(255,193,7,0.1)', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Debug: Export PDF Button Conditions
+                </Typography>
+                <Typography variant="body2">
+                  activeStep === 2: {activeStep === 2 ? '✅' : '❌'} (current: {activeStep})
+                </Typography>
+                <Typography variant="body2">
+                  order exists: {order ? '✅' : '❌'}
+                </Typography>
+                <Typography variant="body2">
+                  order.status === "pending": {order?.status === "pending" ? '✅' : '❌'} (current: {order?.status})
+                </Typography>
+                {order?.status === "pending" && activeStep === 2 && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<DescriptionIcon />}
+                    onClick={handleExportPDF}
+                    disabled={loading}
+                    sx={{ mt: 1 }}
+                  >
+                    Debug Export PDF
+                  </Button>
+                )}
+              </Box>
+            )}
+
+            {activeStep === 3 && order?.status === "exported" && (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<CloudUploadIcon />}
+                onClick={handleUploadSigned}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  fontSize: "1.1rem",
+                  fontWeight: 600,
+                  background: "linear-gradient(135deg, #4caf50 0%, #388e3c 100%)",
+                  color: "white !important",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)",
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                Upload Signed PDF
+              </Button>
+            )}
+
+            {activeStep === 4 && order?.status === "uploaded" && (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<SendIcon />}
+                onClick={handleSubmitOrder}
+                disabled={loading}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  fontSize: "1.1rem",
+                  fontWeight: 600,
+                  background: "linear-gradient(135deg, #9c27b0 0%, #673ab7 100%)",
+                  color: "white !important",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #7b1fa2 0%, #512da8 100%)",
+                    transform: "translateY(-2px)",
+                  },
+                  "&:disabled": {
+                    background: "linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%)",
+                    color: "rgba(255, 255, 255, 0.7)",
+                  },
+                }}
+              >
+                {loading ? 'Submitting...' : 'Submit Order to Admin'}
+              </Button>
+            )}
+
+            {activeStep === 5 && (
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<HistoryIcon />}
+                  onClick={() => navigate("/order-history")}
+                  sx={{
+                    py: 1.5,
+                    px: 4,
+                    fontSize: "1.1rem",
+                    fontWeight: 600,
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    color: "white !important",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
+                >
+                  View Order History
+                </Button>
+                
+                {order?.status === 'approved' && (
+                  <Chip
+                    label="✅ Order Approved!"
+                    color="success"
+                    variant="filled"
+                    sx={{ 
+                      py: 2,
+                      px: 2,
+                      fontSize: "1rem",
+                      fontWeight: 600,
+                    }}
+                  />
+                )}
+              </Stack>
+            )}
+          </Box>
+        </Paper>
+      </Collapse>
+
       {/* Order Progress */}
       {order && (
         <Paper 
@@ -335,11 +816,42 @@ export default function OrderForm() {
               📋 Next Steps:
             </Typography>
             {order.status === "pending" && (
-              <Typography variant="body1" color="text.secondary">
-                1. Click "Export PDF" to download your order form<br/>
-                2. Get it signed by your department head<br/>
-                3. Upload the signed PDF back to the system
-              </Typography>
+              <>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                  1. Click "Export PDF" to download your order form<br/>
+                  2. Get it signed by your department head<br/>
+                  3. Upload the signed PDF back to the system
+                </Typography>
+                
+                {/* Export PDF Button in Order Progress Section */}
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<DescriptionIcon />}
+                    onClick={handleExportPDF}
+                    disabled={loading}
+                    sx={{
+                      py: 1.5,
+                      px: 4,
+                      fontSize: "1.1rem",
+                      fontWeight: 600,
+                      background: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
+                      color: "white !important",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #f57c00 0%, #ef6c00 100%)",
+                        transform: "translateY(-2px)",
+                      },
+                      "&:disabled": {
+                        background: "linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%)",
+                        color: "rgba(255, 255, 255, 0.7)",
+                      },
+                    }}
+                  >
+                    {loading ? 'Exporting...' : '📄 Export PDF'}
+                  </Button>
+                </Box>
+              </>
             )}
             {order.status === "exported" && (
               <Typography variant="body1" color="text.secondary">
@@ -444,9 +956,9 @@ export default function OrderForm() {
                         <Stack direction="row" spacing={2} alignItems="center">
                           <Box
                             component="img"
-                            src={product?.image 
-                              ? `/uploads/product-img/${product.image}` 
-                              : "/placeholder-prod.png"}
+                            src={product?.image
+                            ? getProductImageUrl(product.image)
+                            : "/placeholder-prod.png"}
                             alt={product.name}
                             sx={{ 
                               width: 56, 
@@ -497,182 +1009,56 @@ export default function OrderForm() {
         )}
       </Paper>
 
-      {/* Action Buttons */}
+      {/* Quick Actions */}
       <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
         <Typography variant="h5" gutterBottom fontWeight={600} color="primary">
-          ⚡ Actions
+          🔗 Quick Actions
         </Typography>
         
-        {/* Step-by-step Action Flow */}
-        <Box sx={{ mb: 3 }}>
-          {!order && (
-            <Box sx={{ textAlign: 'center', p: 3, bgcolor: 'primary.light', borderRadius: 2, mb: 2 }}>
-              <Typography variant="h6" fontWeight={600} color="white" gutterBottom>
-                Step 1: Create Your Order
-              </Typography>
-              <Typography variant="body2" color="rgba(255,255,255,0.9)" sx={{ mb: 2 }}>
-                Review your items and create the order to begin the approval process
-              </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                disabled={!items.length || !canOrder}
-                onClick={handleSubmit}
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  bgcolor: "white",
-                  color: "primary.main",
-                  "&:hover": {
-                    bgcolor: "grey.100",
-                  },
-                  "&:disabled": {
-                    bgcolor: "rgba(255,255,255,0.3)",
-                    color: "rgba(255,255,255,0.5)"
-                  }
-                }}
-              >
-                🚀 {t('order.createOrder') || 'Create Order'}
-              </Button>
-            </Box>
-          )}
-
-          {order?.status === "pending" && (
-            <Box sx={{ textAlign: 'center', p: 3, bgcolor: 'info.light', borderRadius: 2, mb: 2 }}>
-              <Typography variant="h6" fontWeight={600} color="white" gutterBottom>
-                Step 2: Export PDF for Signature
-              </Typography>
-              <Typography variant="body2" color="rgba(255,255,255,0.9)" sx={{ mb: 2 }}>
-                Download the order form PDF and get it signed by your department head
-              </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleExportPDF}
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  bgcolor: "white",
-                  color: "info.main",
-                  "&:hover": {
-                    bgcolor: "grey.100",
-                  }
-                }}
-              >
-                📄 {t('order.exportPDF') || 'Export PDF'}
-              </Button>
-            </Box>
-          )}
-
-          {order?.status === "exported" && (
-            <Box sx={{ textAlign: 'center', p: 3, bgcolor: 'warning.light', borderRadius: 2, mb: 2 }}>
-              <Typography variant="h6" fontWeight={600} color="white" gutterBottom>
-                Step 3: Upload Signed PDF
-              </Typography>
-              <Typography variant="body2" color="rgba(255,255,255,0.9)" sx={{ mb: 2 }}>
-                Upload the signed PDF to submit your order for admin approval
-              </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleUploadSigned}
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  bgcolor: "white",
-                  color: "warning.main",
-                  "&:hover": {
-                    bgcolor: "grey.100",
-                  }
-                }}
-              >
-                📤 {t('order.uploadSigned') || 'Upload Signed PDF'}
-              </Button>
-            </Box>
-          )}
-
-          {order?.status === "submitted" && (
-            <Box sx={{ textAlign: 'center', p: 3, bgcolor: 'success.light', borderRadius: 2, mb: 2 }}>
-              <Typography variant="h6" fontWeight={600} color="white" gutterBottom>
-                Step 4: Waiting for Admin Approval
-              </Typography>
-              <Typography variant="body2" color="rgba(255,255,255,0.9)" sx={{ mb: 2 }}>
-                Your order has been submitted and is waiting for admin approval
-              </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                disabled
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  bgcolor: "white",
-                  color: "success.main",
-                }}
-              >
-                ⏳ {t('messages.waitingForAdminApproval') || 'Waiting for Admin Approval'}
-              </Button>
-            </Box>
-          )}
-
-          {order?.status === "approved" && (
-            <Box sx={{ textAlign: 'center', p: 3, bgcolor: 'success.main', borderRadius: 2, mb: 2 }}>
-              <Typography variant="h6" fontWeight={600} color="white" gutterBottom>
-                ✅ Order Approved!
-              </Typography>
-              <Typography variant="body2" color="rgba(255,255,255,0.9)" sx={{ mb: 2 }}>
-                Your order has been approved and will be processed
-              </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => navigate("/order-history")}
-                sx={{
-                  py: 1.5,
-                  px: 4,
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  bgcolor: "white",
-                  color: "success.main",
-                  "&:hover": {
-                    bgcolor: "grey.100",
-                  }
-                }}
-              >
-                📋 View Order History
-              </Button>
-            </Box>
-          )}
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-        
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
           <Button
-            variant="text"
+            variant="outlined"
             size="large"
+            startIcon={<ShoppingCartIcon />}
             onClick={() => navigate("/products")}
-            sx={{ fontWeight: 500 }}
+            sx={{ 
+              fontWeight: 600,
+              borderWidth: 2,
+              "&:hover": { borderWidth: 2 }
+            }}
           >
             🛍️ {t('cart.continueShopping') || 'Continue Shopping'}
           </Button>
           
           <Button
-            variant="text"
+            variant="outlined"
             size="large"
+            startIcon={<HistoryIcon />}
             onClick={() => navigate("/order-history")}
-            sx={{ fontWeight: 500 }}
+            sx={{ 
+              fontWeight: 600,
+              borderWidth: 2,
+              "&:hover": { borderWidth: 2 }
+            }}
           >
             📋 {t('order.orderHistory') || 'Order History'}
           </Button>
+
+          {order && (
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<RefreshIcon />}
+              onClick={() => window.location.reload()}
+              sx={{ 
+                fontWeight: 600,
+                borderWidth: 2,
+                "&:hover": { borderWidth: 2 }
+              }}
+            >
+              🔄 Refresh Status
+            </Button>
+          )}
         </Stack>
       </Paper>
 
@@ -682,10 +1068,25 @@ export default function OrderForm() {
           open={upOpen}
           order={order}
           onClose={() => setUpOpen(false)}
-          onDone={() => {
-            markSubmitted();
-            setUpOpen(false);
-            toast.success(t('messages.signedPdfUploaded') || 'Signed PDF uploaded successfully');
+          onUpload={async (file) => {
+            try {
+              // Create FormData for file upload
+              const formData = new FormData();
+              formData.append('file', file);
+              
+              // Upload the signed PDF
+              const orderId = order.orderId || order.id;
+              await orderApi.uploadSignedPdf(orderId, formData);
+              
+              // Update order status to 'uploaded'
+              setOrder(prev => ({ ...prev, status: 'uploaded' }));
+              setUpOpen(false);
+              toast.success(t('messages.signedPdfUploaded') || 'Signed PDF uploaded successfully! You can now submit your order to admin.');
+            } catch (error) {
+              console.error('Upload error:', error);
+              toast.error(`Upload failed: ${error.message}`);
+              throw error; // Re-throw so the dialog can handle it
+            }
           }}
         />
       )}

@@ -25,6 +25,7 @@ import {
   FavoriteBorder as FavoriteBorderIcon,
   Share as ShareIcon,
   LocalOffer as OfferIcon,
+  DoNotDisturb as DoNotDisturbIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -32,7 +33,9 @@ import CardBase from "../common/CardBase";
 import QuantitySelector from "./QuantitySelector";
 import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "../../context/LanguageContext";
+import { useUniversalTranslation } from "../../context/UniversalTranslationContext";
+import { useOrderWindow } from "../../context/OrderWindowContext";
+import { getProductImageUrl } from "utils/apiUtils";
 
 /** Enhanced Single product tile with improved UI/UX and advanced features */
 function ProductCard({ 
@@ -56,17 +59,27 @@ function ProductCard({
   const [isFavorite, setIsFavorite] = useState(false);
   const { isInCart, getCartItemQty } = useCart();
   const { t } = useTranslation();
-  const { getDisplayName } = useLanguage();
+  const { translateText, currentLanguage } = useUniversalTranslation();
+  const { canOrder, reason, isAdminOverride } = useOrderWindow();
 
   // Memoized values for better performance
   const productData = useMemo(() => {
     if (!data) return null;
     
-    const { id, name, image, unit, description, price, discount, stock, isNew, isFeatured } = data;
+    const { id, name, nameVn, nameEn, image, unit, description, price, discount, stock, isNew, isFeatured } = data;
+    
+    // Get display name based on current language
+    const getDisplayName = () => {
+      if (currentLanguage === 'vi') {
+        return nameVn || nameEn || name || 'Unnamed Product';
+      } else {
+        return nameEn || nameVn || name || 'Unnamed Product';
+      }
+    };
     
     return {
       id,
-      name: getDisplayName(data) || name || 'Unnamed Product',
+      name: getDisplayName(),
       image,
       unit,
       description: description || '',
@@ -76,7 +89,7 @@ function ProductCard({
       isNew: isNew || false,
       isFeatured: isFeatured || false,
     };
-  }, [data, getDisplayName]);
+  }, [data, currentLanguage]);
 
   const inCart = useMemo(() => productData ? isInCart(productData.id) : false, [productData, isInCart]);
   const cartQty = useMemo(() => productData ? getCartItemQty(productData.id) : 0, [productData, getCartItemQty]);
@@ -93,7 +106,7 @@ function ProductCard({
     if (!productData?.image) return "/placeholder-prod.png";
     return productData.image.startsWith('http') 
       ? productData.image 
-      : `/uploads/product-img/${productData.image}`;
+      : getProductImageUrl(productData.image);
   }, [productData?.image]);
 
   // Callbacks for better performance
@@ -177,23 +190,24 @@ function ProductCard({
         <CardBase 
           className={className}
           sx={{ 
-            height: compact ? 280 : 360, 
-            borderRadius: 2,
+            height: compact ? 280 : 350, 
+            borderRadius: 2.5,
             position: 'relative',
             overflow: 'hidden',
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             border: inCart ? "2px solid #4caf50" : "1px solid #e0e0e0",
             boxShadow: inCart 
               ? "0 8px 32px rgba(76, 175, 80, 0.2)" 
-              : "0 4px 16px rgba(0,0,0,0.08)",
+              : "0 2px 8px rgba(0,0,0,0.06)",
             "&:hover": {
-              transform: "translateY(-4px)",
+              transform: "translateY(-6px)",
               boxShadow: inCart 
                 ? "0 16px 48px rgba(76, 175, 80, 0.3)" 
-                : "0 12px 32px rgba(0,0,0,0.15)",
+                : "0 8px 24px rgba(0,0,0,0.12)",
             },
             display: 'flex',
             flexDirection: 'column',
+            bgcolor: 'background.paper',
           }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
@@ -295,28 +309,42 @@ function ProductCard({
             </Box>
 
             {/* Product Image */}
-            <Box sx={{ position: 'relative' }}>
+            <Box 
+              sx={{ 
+                position: 'relative',
+                height: compact ? 110 : 140,
+                overflow: 'hidden',
+                bgcolor: 'grey.50',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               {!imageLoaded && !imageError && (
                 <Skeleton
                   variant="rectangular"
                   width="100%"
-                  height={compact ? 120 : 160}
+                  height="100%"
                   animation="wave"
+                  sx={{ position: 'absolute', top: 0, left: 0 }}
                 />
               )}
               
               <CardMedia
                 component="img"
-                height={compact ? 120 : 160}
                 image={imageError ? "/placeholder-prod.png" : imageSrc}
                 alt={productData.name}
                 sx={{
-                  objectFit: "cover",
+                  width: '100%',
+                  height: '100%',
+                  objectFit: "contain",
+                  objectPosition: "center",
                   cursor: "pointer",
                   transition: "all 0.3s ease-in-out",
                   transform: isHovered ? "scale(1.05)" : "scale(1)",
                   filter: inCart ? "brightness(0.95)" : "brightness(1)",
                   display: imageLoaded ? 'block' : 'none',
+                  padding: '8px',
                 }}
                 onClick={handleViewProduct}
                 onLoad={handleImageLoad}
@@ -381,7 +409,7 @@ function ProductCard({
             )}
           </Box>
 
-          <CardContent sx={{ flexGrow: 1, p: compact ? 1.5 : 2, display: 'flex', flexDirection: 'column' }}>
+          <CardContent sx={{ flexGrow: 1, p: compact ? 2 : 2.5, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography
                 variant={compact ? "subtitle1" : "h6"}
@@ -392,10 +420,10 @@ function ProductCard({
                   WebkitLineClamp: 2,
                   overflow: "hidden",
                   color: inCart ? "success.main" : "text.primary",
-                  mb: 1,
-                  minHeight: compact ? 40 : 48,
-                  fontSize: compact ? '0.9rem' : '1rem',
-                  lineHeight: 1.2,
+                  mb: 1.5,
+                  minHeight: compact ? 44 : 52,
+                  fontSize: compact ? '0.95rem' : '1.05rem',
+                  lineHeight: 1.3,
                   cursor: 'pointer',
                   '&:hover': {
                     color: 'primary.main',
@@ -427,13 +455,13 @@ function ProductCard({
 
               {/* Price Display */}
               {productData.price > 0 && (
-                <Box sx={{ mb: 1 }}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
+                <Box sx={{ mb: 1.5 }}>
+                  <Stack direction="row" alignItems="baseline" spacing={1}>
                     <Typography
                       variant="h6"
                       fontWeight={700}
                       color="primary.main"
-                      sx={{ fontSize: compact ? '1rem' : '1.1rem' }}
+                      sx={{ fontSize: compact ? '1.1rem' : '1.25rem' }}
                     >
                       ${productData.price.toFixed(2)}
                     </Typography>
@@ -443,7 +471,8 @@ function ProductCard({
                         color="text.secondary"
                         sx={{
                           textDecoration: 'line-through',
-                          fontSize: '0.8rem',
+                          fontSize: '0.85rem',
+                          opacity: 0.7,
                         }}
                       >
                         ${(productData.price / (1 - productData.discount / 100)).toFixed(2)}
@@ -474,9 +503,9 @@ function ProductCard({
           </CardContent>
 
           {showActions && (
-            <CardActions sx={{ p: compact ? 1.5 : 2, pt: 0 }}>
+            <CardActions sx={{ p: compact ? 2 : 2.5, pt: 0 }}>
               {!inCart ? (
-                <Stack direction="row" spacing={1} alignItems="center" width="100%">
+                <Stack direction="row" spacing={1.5} alignItems="center" width="100%">
                   {!compact && (
                     <Box
                       sx={{
@@ -484,29 +513,36 @@ function ProductCard({
                         alignItems: "center",
                         border: "1px solid",
                         borderColor: "divider",
-                        borderRadius: 2,
+                        borderRadius: 2.5,
                         bgcolor: "background.paper",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                       }}
                     >
                       <IconButton
                         size="small"
                         onClick={() => handleQuantityChange(qty - 1)}
                         disabled={qty <= 1}
-                        sx={{ borderRadius: 1 }}
+                        sx={{ 
+                          borderRadius: 1.5,
+                          '&:hover': { bgcolor: 'action.hover' }
+                        }}
                       >
                         <RemoveIcon fontSize="small" />
                       </IconButton>
                       <Typography
                         variant="body2"
                         fontWeight={600}
-                        sx={{ minWidth: 32, textAlign: "center" }}
+                        sx={{ minWidth: 36, textAlign: "center", px: 0.5 }}
                       >
                         {qty}
                       </Typography>
                       <IconButton
                         size="small"
                         onClick={() => handleQuantityChange(qty + 1)}
-                        sx={{ borderRadius: 1 }}
+                        sx={{ 
+                          borderRadius: 1.5,
+                          '&:hover': { bgcolor: 'action.hover' }
+                        }}
                       >
                         <AddIcon fontSize="small" />
                       </IconButton>
@@ -516,27 +552,42 @@ function ProductCard({
                   <Button
                     fullWidth
                     variant="contained"
-                    startIcon={<ShoppingCartIcon />}
+                    startIcon={canOrder ? <ShoppingCartIcon /> : <DoNotDisturbIcon />}
                     onClick={handleAddToCart}
-                    disabled={productData.stock === 0}
+                    disabled={!canOrder}
                     sx={{
-                      borderRadius: 2,
-                      py: 1,
-                      background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                      boxShadow: "0 4px 12px rgba(33, 150, 243, 0.3)",
+                      borderRadius: 2.5,
+                      py: 1.2,
+                      fontWeight: 600,
+                      fontSize: compact ? '0.85rem' : '0.9rem',
+                      background: canOrder 
+                        ? "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)"
+                        : "linear-gradient(45deg, #f44336 30%, #ff5722 90%)",
+                      boxShadow: canOrder 
+                        ? "0 3px 10px rgba(33, 150, 243, 0.25)"
+                        : "0 3px 10px rgba(244, 67, 54, 0.25)",
                       "&:hover": {
-                        background: "linear-gradient(45deg, #1976D2 30%, #1BA3D3 90%)",
-                        boxShadow: "0 6px 16px rgba(33, 150, 243, 0.4)",
+                        background: canOrder 
+                          ? "linear-gradient(45deg, #1976D2 30%, #1BA3D3 90%)"
+                          : "linear-gradient(45deg, #d32f2f 30%, #f57c00 90%)",
+                        boxShadow: canOrder 
+                          ? "0 5px 15px rgba(33, 150, 243, 0.35)"
+                          : "0 5px 15px rgba(244, 67, 54, 0.35)",
                         transform: "translateY(-1px)",
                       },
                       "&:disabled": {
-                        background: "grey.300",
-                        color: "grey.500",
+                        background: !canOrder 
+                          ? "linear-gradient(45deg, #f44336 30%, #ff5722 90%)"
+                          : "grey.300",
+                        color: !canOrder ? "white" : "grey.500",
+                        boxShadow: !canOrder 
+                          ? "0 3px 10px rgba(244, 67, 54, 0.25)"
+                          : "none",
                       },
                     }}
                   >
-                    {productData.stock === 0 
-                      ? t('product.outOfStock', 'Out of Stock')
+                    {!canOrder 
+                      ? t('product.orderWindowClosed', 'Order Window Closed')
                       : t('product.addToCart', 'Add to Cart')
                     }
                   </Button>
@@ -550,9 +601,10 @@ function ProductCard({
                   onClick={() => navigate("/order-form")}
                   sx={{
                     borderWidth: 2,
-                    borderRadius: 2,
-                    py: 1,
+                    borderRadius: 2.5,
+                    py: 1.2,
                     fontWeight: 600,
+                    fontSize: compact ? '0.85rem' : '0.9rem',
                     "&:hover": {
                       borderWidth: 2,
                       background: "rgba(76, 175, 80, 0.08)",
@@ -577,26 +629,28 @@ function ProductCard({
 const ProductCardSkeleton = ({ compact = false }) => (
   <CardBase
     sx={{
-      height: compact ? 280 : 360,
-      borderRadius: 2,
+      height: compact ? 280 : 350,
+      borderRadius: 2.5,
       display: 'flex',
       flexDirection: 'column',
+      bgcolor: 'background.paper',
     }}
   >
     <Skeleton
       variant="rectangular"
       width="100%"
-      height={compact ? 120 : 160}
+      height={compact ? 110 : 140}
       animation="wave"
+      sx={{ bgcolor: 'grey.100' }}
     />
     
-    <CardContent sx={{ flexGrow: 1, p: compact ? 1.5 : 2 }}>
+    <CardContent sx={{ flexGrow: 1, p: compact ? 2 : 2.5 }}>
       <Skeleton
         variant="text"
-        width="80%"
-        height={compact ? 24 : 28}
+        width="85%"
+        height={compact ? 26 : 30}
         animation="wave"
-        sx={{ mb: 1 }}
+        sx={{ mb: 1.5, bgcolor: 'grey.200' }}
       />
       
       {!compact && (
@@ -606,40 +660,42 @@ const ProductCardSkeleton = ({ compact = false }) => (
             width="100%"
             height={20}
             animation="wave"
-            sx={{ mb: 0.5 }}
+            sx={{ mb: 0.5, bgcolor: 'grey.100' }}
           />
           <Skeleton
             variant="text"
-            width="60%"
+            width="65%"
             height={20}
             animation="wave"
-            sx={{ mb: 1 }}
+            sx={{ mb: 1.5, bgcolor: 'grey.100' }}
           />
         </>
       )}
       
       <Skeleton
         variant="text"
-        width="40%"
-        height={24}
+        width="45%"
+        height={28}
         animation="wave"
-        sx={{ mb: 1 }}
+        sx={{ mb: 1.5, bgcolor: 'grey.200' }}
       />
       
       <Skeleton
         variant="rounded"
-        width={80}
-        height={22}
+        width={90}
+        height={24}
         animation="wave"
+        sx={{ bgcolor: 'grey.100' }}
       />
     </CardContent>
     
-    <CardActions sx={{ p: compact ? 1.5 : 2, pt: 0 }}>
+    <CardActions sx={{ p: compact ? 2 : 2.5, pt: 0 }}>
       <Skeleton
         variant="rounded"
         width="100%"
-        height={36}
+        height={40}
         animation="wave"
+        sx={{ borderRadius: 2.5, bgcolor: 'grey.200' }}
       />
     </CardActions>
   </CardBase>

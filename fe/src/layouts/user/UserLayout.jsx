@@ -31,6 +31,7 @@ import SearchBar from "components/common/SearchBar";
 import { useCart } from "../../context/CartContext/useCart";
 import { useNotifications } from "context/NotificationContext";
 import { useTranslation } from "react-i18next";
+import { useUniversalTranslation } from "context/UniversalTranslationContext";
 import { AuthContext } from "context/AuthContext";
 
 const SearchBox = styled("div")(({ theme }) => ({
@@ -59,6 +60,7 @@ export default function UserLayout() {
   const { pathname } = useLocation();
   const { cartCount, openCart } = useCart();
   const { t, i18n } = useTranslation();
+  const { toggleLanguage, currentLanguage, isTranslating } = useUniversalTranslation();
   const { auth } = useContext(AuthContext);
 
   const [profEl, setProfEl] = useState(null);
@@ -66,9 +68,11 @@ export default function UserLayout() {
   const { items } = useNotifications();
   const unreadCount = items.filter((n) => !n.read).length;
 
-  const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng);
+  const handleLanguageChange = async (lng) => {
     setLangEl(null);
+    if (lng !== currentLanguage) {
+      toggleLanguage();
+    }
   };
 
   return (
@@ -78,25 +82,36 @@ export default function UserLayout() {
         position="fixed" 
         elevation={0}
         sx={{
-          bgcolor: 'rgba(255, 255, 255, 0.98)',
-          backdropFilter: 'blur(20px)',
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(24px)',
           borderBottom: '1px solid',
-          borderColor: 'divider',
+          borderColor: 'rgba(102, 126, 234, 0.08)',
           color: 'text.primary',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
+          boxShadow: '0 4px 32px rgba(102, 126, 234, 0.08)',
+          transition: 'all 0.3s ease-in-out',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%)',
+            pointerEvents: 'none',
+          },
         }}
       >
-        <Toolbar sx={{ px: { xs: 2, md: 3 }, py: 1, minHeight: { xs: 64, sm: 70 } }}>
-          {/* Logo/Brand */}
+        <Toolbar sx={{ px: { xs: 2, md: 3 }, py: 1, minHeight: { xs: 64, sm: 70 }, display: 'flex', alignItems: 'center' }}>
+          {/* Logo/Brand - Fixed Left */}
           <Box
             component={Link}
-            to="/dashboard"
+            to="/"
             sx={{
               display: 'flex',
               alignItems: 'center',
               textDecoration: 'none',
               color: 'inherit',
-              mr: { xs: 2, md: 4 },
+              flexShrink: 0,
               transition: 'transform 0.2s ease-in-out',
               '&:hover': {
                 transform: 'scale(1.02)',
@@ -160,21 +175,51 @@ export default function UserLayout() {
             </Box>
           </Box>
 
-          {/* Search Bar */}
-          <Box sx={{ flexGrow: 1, maxWidth: { xs: 300, sm: 400, md: 600 }, mx: { xs: 1, md: 3 } }}>
-            <SearchBar
-              placeholder={t('common.search') + " products, categories..."}
-              size="small"
-            />
+          {/* Spacer to push everything to the right */}
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Search Bar - Center/Right Area */}
+          <Box sx={{ 
+            display: { xs: 'none', md: 'block' },
+            maxWidth: 400,
+            width: '100%',
+            mr: 3,
+            position: 'relative',
+            zIndex: 2,
+          }}>
+            <Box sx={{
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: -2,
+                left: -2,
+                right: -2,
+                bottom: -2,
+                background: 'linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                borderRadius: 3,
+                opacity: 0,
+                transition: 'opacity 0.3s ease',
+                zIndex: -1,
+              },
+              '&:focus-within::before': {
+                opacity: 1,
+              },
+            }}>
+              <SearchBar
+                placeholder={t('common.search') + " products, categories..."}
+                size="small"
+              />
+            </Box>
           </Box>
 
-          {/* Action Icons */}
-          <Stack direction="row" spacing={{ xs: 0.5, sm: 1 }} alignItems="center">
-            <OrderWindowIndicator />
-            
+          {/* Action Icons - Fixed Right */}
+          <Stack direction="row" spacing={{ xs: 0.5, sm: 1 }} alignItems="center" sx={{ flexShrink: 0 }}>
+            {/* Mobile Search Icon */}
             <IconButton
-              onClick={() => navigate('/notifications')}
+              onClick={() => navigate('/products')}
               sx={{
+                display: { xs: 'flex', md: 'none' },
                 bgcolor: 'rgba(102, 126, 234, 0.08)',
                 border: '1px solid rgba(102, 126, 234, 0.12)',
                 width: { xs: 38, sm: 42 },
@@ -184,7 +229,44 @@ export default function UserLayout() {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
                 },
-                transition: 'all 0.3s ease-in-out',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <SearchIcon fontSize="small" sx={{ color: '#667eea' }} />
+            </IconButton>
+
+            <OrderWindowIndicator />
+            
+            <IconButton
+              onClick={() => navigate('/notifications')}
+              sx={{
+                bgcolor: 'rgba(102, 126, 234, 0.08)',
+                border: '1px solid rgba(102, 126, 234, 0.12)',
+                width: { xs: 38, sm: 42 },
+                height: { xs: 38, sm: 42 },
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease',
+                },
+                '&:hover': {
+                  bgcolor: 'rgba(102, 126, 234, 0.15)',
+                  transform: 'translateY(-3px) scale(1.05)',
+                  boxShadow: '0 8px 20px rgba(102, 126, 234, 0.25)',
+                  borderColor: 'rgba(102, 126, 234, 0.3)',
+                },
+                '&:hover::before': {
+                  opacity: 1,
+                },
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               <Badge 
@@ -196,10 +278,16 @@ export default function UserLayout() {
                     minWidth: 18,
                     height: 18,
                     fontWeight: 600,
+                    animation: unreadCount > 0 ? 'pulse 2s infinite' : 'none',
+                    '@keyframes pulse': {
+                      '0%': { transform: 'scale(1)' },
+                      '50%': { transform: 'scale(1.1)' },
+                      '100%': { transform: 'scale(1)' },
+                    },
                   },
                 }}
               >
-                <NotificationsIcon fontSize="small" sx={{ color: '#667eea' }} />
+                <NotificationsIcon fontSize="small" sx={{ color: '#667eea', position: 'relative', zIndex: 1 }} />
               </Badge>
             </IconButton>
 
@@ -211,14 +299,33 @@ export default function UserLayout() {
                 borderColor: cartCount > 0 ? 'rgba(76, 175, 80, 0.12)' : 'rgba(102, 126, 234, 0.12)',
                 width: { xs: 38, sm: 42 },
                 height: { xs: 38, sm: 42 },
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: cartCount > 0 
+                    ? 'linear-gradient(45deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))'
+                    : 'linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease',
+                },
                 '&:hover': {
                   bgcolor: cartCount > 0 ? 'rgba(76, 175, 80, 0.15)' : 'rgba(102, 126, 234, 0.15)',
-                  transform: 'translateY(-2px)',
+                  transform: 'translateY(-3px) scale(1.05)',
                   boxShadow: cartCount > 0 
-                    ? '0 4px 12px rgba(76, 175, 80, 0.2)' 
-                    : '0 4px 12px rgba(102, 126, 234, 0.2)',
+                    ? '0 8px 20px rgba(76, 175, 80, 0.25)' 
+                    : '0 8px 20px rgba(102, 126, 234, 0.25)',
+                  borderColor: cartCount > 0 ? 'rgba(76, 175, 80, 0.3)' : 'rgba(102, 126, 234, 0.3)',
                 },
-                transition: 'all 0.3s ease-in-out',
+                '&:hover::before': {
+                  opacity: 1,
+                },
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               <Badge 
@@ -253,15 +360,32 @@ export default function UserLayout() {
                 border: '1px solid rgba(102, 126, 234, 0.12)',
                 width: { xs: 38, sm: 42 },
                 height: { xs: 38, sm: 42 },
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease',
+                },
                 '&:hover': {
                   bgcolor: 'rgba(102, 126, 234, 0.15)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
+                  transform: 'translateY(-3px) scale(1.05)',
+                  boxShadow: '0 8px 20px rgba(102, 126, 234, 0.25)',
+                  borderColor: 'rgba(102, 126, 234, 0.3)',
                 },
-                transition: 'all 0.3s ease-in-out',
+                '&:hover::before': {
+                  opacity: 1,
+                },
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
-              <TranslateIcon fontSize="small" sx={{ color: '#667eea' }} />
+              <TranslateIcon fontSize="small" sx={{ color: '#667eea', position: 'relative', zIndex: 1 }} />
             </IconButton>
 
             <Box sx={{ ml: { xs: 1, sm: 1.5 } }}>
@@ -269,23 +393,45 @@ export default function UserLayout() {
                 onClick={(e) => setProfEl(e.currentTarget)}
                 sx={{
                   p: 0,
+                  position: 'relative',
                   '&:hover': {
-                    transform: 'scale(1.05)',
+                    transform: 'scale(1.08) translateY(-2px)',
                   },
-                  transition: 'all 0.2s ease-in-out',
+                  '&:hover .avatar-glow': {
+                    opacity: 1,
+                    transform: 'scale(1.2)',
+                  },
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
+                <Box
+                  className="avatar-glow"
+                  sx={{
+                    position: 'absolute',
+                    top: -4,
+                    left: -4,
+                    right: -4,
+                    bottom: -4,
+                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%)',
+                    borderRadius: '50%',
+                    opacity: 0,
+                    transition: 'all 0.4s ease',
+                    filter: 'blur(8px)',
+                    zIndex: -1,
+                  }}
+                />
                 <Avatar 
                   sx={{ 
                     width: { xs: 36, sm: 40 }, 
                     height: { xs: 36, sm: 40 },
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     fontSize: { xs: '0.9rem', sm: '1rem' },
-                    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                    border: '2px solid rgba(255, 255, 255, 0.9)',
+                    boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
+                    border: '3px solid rgba(255, 255, 255, 0.95)',
                     position: 'relative',
                     overflow: 'hidden',
+                    transition: 'all 0.3s ease',
                     '&::before': {
                       content: '""',
                       position: 'absolute',
@@ -293,7 +439,22 @@ export default function UserLayout() {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      background: 'linear-gradient(45deg, rgba(255,255,255,0.2) 0%, transparent 50%)',
+                      background: 'linear-gradient(45deg, rgba(255,255,255,0.3) 0%, transparent 50%)',
+                      transition: 'opacity 0.3s ease',
+                    },
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: -50,
+                      left: -50,
+                      width: 100,
+                      height: 100,
+                      background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)',
+                      transform: 'rotate(45deg)',
+                      transition: 'transform 0.6s ease',
+                    },
+                    '&:hover::after': {
+                      transform: 'rotate(45deg) translate(100px, 100px)',
                     },
                   }}
                 >
@@ -373,35 +534,37 @@ export default function UserLayout() {
         }}
       >
         <MenuItem 
-          onClick={() => changeLanguage('en')}
+          onClick={() => handleLanguageChange('en')}
+          disabled={isTranslating}
           sx={{ 
             py: 1.5,
             px: 2,
-            fontWeight: i18n.language === 'en' ? 600 : 400,
-            bgcolor: i18n.language === 'en' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
+            fontWeight: currentLanguage === 'en' ? 600 : 400,
+            bgcolor: currentLanguage === 'en' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
             '&:hover': {
               bgcolor: 'rgba(102, 126, 234, 0.12)',
             },
           }}
         >
           <Typography variant="body2">
-            🇺🇸 English
+            🇺🇸 English {isTranslating && currentLanguage !== 'en' ? '(Translating...)' : ''}
           </Typography>
         </MenuItem>
         <MenuItem 
-          onClick={() => changeLanguage('vi')}
+          onClick={() => handleLanguageChange('vi')}
+          disabled={isTranslating}
           sx={{ 
             py: 1.5,
             px: 2,
-            fontWeight: i18n.language === 'vi' ? 600 : 400,
-            bgcolor: i18n.language === 'vi' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
+            fontWeight: currentLanguage === 'vi' ? 600 : 400,
+            bgcolor: currentLanguage === 'vi' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
             '&:hover': {
               bgcolor: 'rgba(102, 126, 234, 0.12)',
             },
           }}
         >
           <Typography variant="body2">
-            🇻🇳 Tiếng Việt
+            🇻🇳 Tiếng Việt {isTranslating && currentLanguage !== 'vi' ? '(Đang dịch...)' : ''}
           </Typography>
         </MenuItem>
       </Menu>
@@ -410,9 +573,17 @@ export default function UserLayout() {
         {/* This gives the exact height of the AppBar on every breakpoint */}
         <Toolbar sx={{ minHeight: { xs: 64, sm: 70 } }} />
         <Box sx={{ width: "100%", mb: 4, flex: 1 }}>
-          <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
-            <Outlet />
-          </Container>
+          {pathname === '/products' ? (
+            // Full width for products page
+            <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+              <Outlet />
+            </Box>
+          ) : (
+            // Constrained width for other pages
+            <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+              <Outlet />
+            </Container>
+          )}
         </Box>
         <Footer />
       </Box>

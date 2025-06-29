@@ -6,19 +6,30 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "../../context/LanguageContext";
+import { useUniversalTranslation } from "../../context/UniversalTranslationContext";
+import { getProductImageUrl } from "utils/apiUtils";
 
 export default function ProductRow({ data, onAdd }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const { isInCart, getCartItemQty } = useCart();
   const { t } = useTranslation();
-  const { getDisplayName } = useLanguage();
+  const { translateText, currentLanguage } = useUniversalTranslation();
 
   const id = data.id ?? data.productId;
   const inCart = isInCart(id);
   const cartQty = getCartItemQty(id);
-  const displayName = getDisplayName(data);
+  
+  // Get display name based on current language
+  const getDisplayName = () => {
+    if (currentLanguage === 'vi') {
+      return data.nameVn || data.nameEn || data.name || 'Unnamed Product';
+    } else {
+      return data.nameEn || data.nameVn || data.name || 'Unnamed Product';
+    }
+  };
+  
+  const displayName = getDisplayName();
 
   return (
     <Paper
@@ -39,7 +50,7 @@ export default function ProductRow({ data, onAdd }) {
       <Box sx={{ position: "relative" }}>
         <Box
           component="img"
-          src={data.image ? `/uploads/product-img/${data.image}` : "/placeholder-prod.png"}
+          src={data.image ? getProductImageUrl(data.image) : "/placeholder-prod.png"}
           alt={data.name}
           sx={{ 
             width: 96, 

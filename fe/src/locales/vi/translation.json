@@ -125,7 +125,8 @@
     "addToCart": "Thêm vào giỏ",
     "inCart": "Trong giỏ",
     "outOfStock": "Hết hàng",
-    "available": "Có sẵn"
+    "available": "Có sẵn",
+    "orderWindowClosed": "Cửa sổ đặt hàng đã đóng"
   },
 
   "order": {

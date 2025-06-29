@@ -16,15 +16,26 @@ public interface ProductMapper {
     @Mapping(source = "code", target = "code")
     @Mapping(source = "image", target = "image")
     @Mapping(target = "categoryId", ignore = true)
+    @Mapping(target = "categoryName", ignore = true)
     @Mapping(target = "unitId", ignore = true)
     @Mapping(target = "unit", ignore = true)
     ProductDTO toDto(Product product);
 
     @AfterMapping
     default void setCategoryAndUnit(@MappingTarget ProductDTO dto, Product product) {
-        // Set categoryId safely
+        // Set categoryId and categoryName safely
         if (product.getCategory() != null) {
             dto.setCategoryId(product.getCategory().getCategoryId());
+            String categoryName = product.getCategory().getNameVn();
+            if (categoryName == null || categoryName.trim().isEmpty()) {
+                categoryName = product.getCategory().getNameEn();
+            }
+            if (categoryName == null || categoryName.trim().isEmpty()) {
+                categoryName = "Uncategorized";
+            }
+            dto.setCategoryName(categoryName);
+        } else {
+            dto.setCategoryName("Uncategorized");
         }
         
         // Set unitId and unit name safely

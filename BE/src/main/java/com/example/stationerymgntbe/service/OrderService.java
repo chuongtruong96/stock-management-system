@@ -496,21 +496,132 @@ public class OrderService {
     }
 
     public boolean isOrderWindowOpen() {
-        return windowOpen;
+        // Window is open if either:
+        // 1. We're in the natural ordering period (first week of month), OR
+        // 2. Admin has manually opened it
+        return isWithinFirstWeek() || windowOpen;
     }
 
     public Map<String, Object> checkOrderPeriod() {
+        LocalDateTime now = LocalDateTime.now();
+        boolean isNaturalPeriod = isWithinFirstWeek();
+        boolean isAdminOverride = windowOpen && !isNaturalPeriod;
+        boolean isOpen = isOrderWindowOpen();
+        
+        // Calculate time remaining for natural period
+        LocalDateTime endOfNaturalPeriod = LocalDateTime.of(now.getYear(), now.getMonth(), 7, 23, 59, 59);
+        long secondsRemaining = 0;
+        
+        if (isNaturalPeriod && now.isBefore(endOfNaturalPeriod)) {
+            secondsRemaining = java.time.Duration.between(now, endOfNaturalPeriod).getSeconds();
+        }
+        
+        // Determine the reason and message
+        String reason;
+        String message;
+        
+        if (isNaturalPeriod) {
+            reason = "natural_period";
+            message = "Order window is open - Natural ordering period (first week of month)";
+        } else if (isAdminOverride) {
+            reason = "admin_override";
+            message = "Order window is open - Admin override for urgent orders";
+        } else {
+            reason = "closed";
+            message = "Order window is closed - Outside ordering period and no admin override";
+        }
+        
         return Map.of(
-            "isOpen", isOrderWindowOpen(),
-            "currentDate", LocalDateTime.now(),
-            "message", "Order period is currently " + (isOrderWindowOpen() ? "open" : "closed")
+            "open", isOpen,
+            "reason", reason,
+            "isNaturalPeriod", isNaturalPeriod,
+            "isAdminOverride", isAdminOverride,
+            "secondsRemaining", secondsRemaining,
+            "currentDate", now,
+            "endOfNaturalPeriod", endOfNaturalPeriod,
+            "message", message
         );
     }
 
     public byte[] generateOrderPDF(Integer orderId) {
         log.info("Generating PDF for order: {}", orderId);
-        // Return empty byte array for now - implement actual PDF generation later
-        return new byte[0];
+        
+        try {
+            // Get order details
+            Order order = orderRepo.findByIdWithDetails(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+            
+            // Use ReportService to generate the PDF
+            return reportService.exportSingleOrder(order);
+            
+        } catch (Exception e) {
+            log.error("Error generating PDF for order: {}", orderId, e);
+            // Return a simple error PDF instead of empty bytes
+            return createErrorPDF("Failed to generate PDF: " + e.getMessage());
+        }
+    }
+    
+    private byte[] createErrorPDF(String errorMessage) {
+        try {
+            // Create a simple text-based PDF content
+            String pdfContent = String.format(
+                "%%PDF-1.4\n" +
+                "1 0 obj\n" +
+                "<<\n" +
+                "/Type /Catalog\n" +
+                "/Pages 2 0 R\n" +
+                ">>\n" +
+                "endobj\n" +
+                "2 0 obj\n" +
+                "<<\n" +
+                "/Type /Pages\n" +
+                "/Kids [3 0 R]\n" +
+                "/Count 1\n" +
+                ">>\n" +
+                "endobj\n" +
+                "3 0 obj\n" +
+                "<<\n" +
+                "/Type /Page\n" +
+                "/Parent 2 0 R\n" +
+                "/MediaBox [0 0 612 792]\n" +
+                "/Contents 4 0 R\n" +
+                ">>\n" +
+                "endobj\n" +
+                "4 0 obj\n" +
+                "<<\n" +
+                "/Length 44\n" +
+                ">>\n" +
+                "stream\n" +
+                "BT\n" +
+                "/F1 12 Tf\n" +
+                "100 700 Td\n" +
+                "(%s) Tj\n" +
+                "ET\n" +
+                "endstream\n" +
+                "endobj\n" +
+                "xref\n" +
+                "0 5\n" +
+                "0000000000 65535 f \n" +
+                "0000000009 00000 n \n" +
+                "0000000074 00000 n \n" +
+                "0000000120 00000 n \n" +
+                "0000000179 00000 n \n" +
+                "trailer\n" +
+                "<<\n" +
+                "/Size 5\n" +
+                "/Root 1 0 R\n" +
+                ">>\n" +
+                "startxref\n" +
+                "238\n" +
+                "%%%%EOF",
+                errorMessage
+            );
+            
+            return pdfContent.getBytes();
+        } catch (Exception e) {
+            log.error("Failed to create error PDF", e);
+            return "PDF generation failed".getBytes();
+        }
     }
 
     public byte[] getSignedPDF(Integer orderId) {
@@ -524,7 +635,7 @@ public class OrderService {
     // ============================================================================
 
     private void validateOrderWindow() {
-        if (!windowOpen && !isWithinFirstWeek()) {
+        if (!isOrderWindowOpen()) {
             throw new InvalidOrderStateException("Order window is currently closed");
         }
     }

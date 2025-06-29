@@ -6,25 +6,25 @@ import {
   Stack,
   Divider,
   Link,
-  IconButton,
-  Chip,
 } from "@mui/material";
 import {
   Favorite as FavoriteIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
   LocationOn as LocationIcon,
-  GitHub as GitHubIcon,
-  LinkedIn as LinkedInIcon,
 } from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 /**
- * Enhanced Footer component with modern design
+ * Compact Footer component for internal use
  */
 function Footer({ company }) {
-  const { t } = useTranslation();
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
+
+  const handleLinkClick = (path) => {
+    navigate(path);
+  };
 
   return (
     <Box
@@ -32,16 +32,16 @@ function Footer({ company }) {
       sx={{
         bgcolor: "grey.900",
         color: "white",
-        py: { xs: 4, md: 6 },
+        py: { xs: 3, md: 4 },
         mt: "auto",
       }}
     >
       <Container maxWidth="lg">
-        <Stack spacing={4}>
+        <Stack spacing={3}>
           {/* Main Footer Content */}
           <Stack
             direction={{ xs: "column", md: "row" }}
-            spacing={4}
+            spacing={3}
             justifyContent="space-between"
             alignItems={{ xs: "center", md: "flex-start" }}
           >
@@ -50,22 +50,21 @@ function Footer({ company }) {
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
                 <Box
                   sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 3,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 2,
                     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 4px 16px rgba(102, 126, 234, 0.3)",
                   }}
                 >
-                  <Typography variant="h5" fontWeight={700} color="white">
+                  <Typography variant="h6" fontWeight={700} color="white">
                     📋
                   </Typography>
                 </Box>
                 <Box>
-                  <Typography variant="h6" fontWeight={700} color="white">
+                  <Typography variant="subtitle1" fontWeight={600} color="white">
                     Stationery Management
                   </Typography>
                   <Typography variant="caption" color="grey.400">
@@ -73,23 +72,19 @@ function Footer({ company }) {
                   </Typography>
                 </Box>
               </Stack>
-              
-              <Typography variant="body2" color="grey.300" sx={{ maxWidth: 300, mb: 2 }}>
-                Streamline your office supplies with our comprehensive stationery management system.
-              </Typography>
 
               {/* Contact Info */}
-              <Stack spacing={1}>
+              <Stack spacing={0.5}>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <EmailIcon fontSize="small" sx={{ color: "grey.400" }} />
                   <Typography variant="body2" color="grey.300">
-                    support@stationery.com
+                    nguyenchuong@pmh.com.vn
                   </Typography>
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <PhoneIcon fontSize="small" sx={{ color: "grey.400" }} />
                   <Typography variant="body2" color="grey.300">
-                    +84 123 456 789
+                    +84 903 803 396
                   </Typography>
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
@@ -103,97 +98,60 @@ function Footer({ company }) {
 
             {/* Quick Links */}
             <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
-              <Typography variant="h6" fontWeight={600} color="white" sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight={600} color="white" sx={{ mb: 1.5 }}>
                 Quick Links
               </Typography>
-              <Stack spacing={1}>
-                <Link href="/products" color="grey.300" underline="hover">
-                  Products
+              <Stack spacing={0.5}>
+                <Link 
+                  component="button"
+                  onClick={() => handleLinkClick("/products")}
+                  color="grey.300" 
+                  underline="hover"
+                  variant="body2"
+                  sx={{ textAlign: "left" }}
+                >
+                  Browse Catalog
                 </Link>
-                <Link href="/order-history" color="grey.300" underline="hover">
-                  Order History
+                <Link 
+                  component="button"
+                  onClick={() => handleLinkClick("/order-history")}
+                  color="grey.300" 
+                  underline="hover"
+                  variant="body2"
+                  sx={{ textAlign: "left" }}
+                >
+                  My Requests
                 </Link>
-                <Link href="/profile" color="grey.300" underline="hover">
+                <Link 
+                  component="button"
+                  onClick={() => handleLinkClick("/order-form")}
+                  color="grey.300" 
+                  underline="hover"
+                  variant="body2"
+                  sx={{ textAlign: "left" }}
+                >
+                  New Order
+                </Link>
+                <Link 
+                  component="button"
+                  onClick={() => handleLinkClick("/profile")}
+                  color="grey.300" 
+                  underline="hover"
+                  variant="body2"
+                  sx={{ textAlign: "left" }}
+                >
                   Profile
                 </Link>
-                <Link href="/notifications" color="grey.300" underline="hover">
+                <Link 
+                  component="button"
+                  onClick={() => handleLinkClick("/notifications")}
+                  color="grey.300" 
+                  underline="hover"
+                  variant="body2"
+                  sx={{ textAlign: "left" }}
+                >
                   Notifications
                 </Link>
-              </Stack>
-            </Box>
-
-            {/* Features */}
-            <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
-              <Typography variant="h6" fontWeight={600} color="white" sx={{ mb: 2 }}>
-                Features
-              </Typography>
-              <Stack spacing={1}>
-                <Chip
-                  label="Fast Delivery"
-                  size="small"
-                  variant="outlined"
-                  sx={{ color: "grey.300", borderColor: "grey.600" }}
-                />
-                <Chip
-                  label="Secure Ordering"
-                  size="small"
-                  variant="outlined"
-                  sx={{ color: "grey.300", borderColor: "grey.600" }}
-                />
-                <Chip
-                  label="24/7 Support"
-                  size="small"
-                  variant="outlined"
-                  sx={{ color: "grey.300", borderColor: "grey.600" }}
-                />
-                <Chip
-                  label="Real-time Tracking"
-                  size="small"
-                  variant="outlined"
-                  sx={{ color: "grey.300", borderColor: "grey.600" }}
-                />
-              </Stack>
-            </Box>
-
-            {/* Social Links */}
-            <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
-              <Typography variant="h6" fontWeight={600} color="white" sx={{ mb: 2 }}>
-                Connect
-              </Typography>
-              <Stack direction="row" spacing={1} justifyContent={{ xs: "center", md: "flex-start" }}>
-                <IconButton
-                  sx={{
-                    color: "grey.400",
-                    "&:hover": {
-                      color: "white",
-                      bgcolor: "rgba(255,255,255,0.1)",
-                    },
-                  }}
-                >
-                  <GitHubIcon />
-                </IconButton>
-                <IconButton
-                  sx={{
-                    color: "grey.400",
-                    "&:hover": {
-                      color: "white",
-                      bgcolor: "rgba(255,255,255,0.1)",
-                    },
-                  }}
-                >
-                  <LinkedInIcon />
-                </IconButton>
-                <IconButton
-                  sx={{
-                    color: "grey.400",
-                    "&:hover": {
-                      color: "white",
-                      bgcolor: "rgba(255,255,255,0.1)",
-                    },
-                  }}
-                >
-                  <EmailIcon />
-                </IconButton>
               </Stack>
             </Box>
           </Stack>

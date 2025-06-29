@@ -1,6 +1,6 @@
 // src/pages/User/Products/ProductsPage.jsx
 import { useState } from "react";
-import { Container, Alert, Box } from "@mui/material";
+import { Alert, Box } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { categoryApi, productApi } from "services/api";
@@ -41,7 +41,7 @@ export default function ProductsPage() {
     queryFn : () =>
       productApi.listMultiCats(catParam, pageParam, pageSize, sort, keyword),
     keepPreviousData: true,
-      });
+  });
 
   /* helpers for updating the URL params */
   const mutateParams = (fn) =>
@@ -76,63 +76,58 @@ export default function ProductsPage() {
 
   /* ============================== render ============================== */
   return (
-    <Container
-      maxWidth={false}          /* ❶ full-width, no 1280 px cap        */
-      disableGutters
-      sx={{ px: 0, mb: 6 }} 
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", md: "row" },
+        gap: 2,
+        mb: 6,
+      }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          gap: 2,
-        }}
-      >
-        {/* ---------- sidebar ---------- */}
-        <Box sx={{ width: { xs: "100%", md: 240 }, flexShrink: 0 }}>
-          <CategorySidebar
-            list={cats}
-            active={catParam}
-            onSelect={selectSingleCategory}
-          />
-        </Box>
+      {/* ---------- sidebar ---------- */}
+      <Box sx={{ width: { xs: "100%", md: 240 }, flexShrink: 0 }}>
+        <CategorySidebar
+          list={cats}
+          active={catParam}
+          onSelect={selectSingleCategory}
+        />
+      </Box>
 
-        {/* ---------- main ---------- */}
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          <ToolbarFilter
-            keyword={keyword}
-            setKeyword={changeKeyword}
-            view={view}
-            setView={(v) => { setView(v); changeView(v); }}
+      {/* ---------- main ---------- */}
+      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        <ToolbarFilter
+          keyword={keyword}
+          setKeyword={changeKeyword}
+          view={view}
+          setView={(v) => { setView(v); changeView(v); }}
+          pageSize={pageSize}
+          setPageSize={(s) => { setPageSize(s); changePageSize(s); }}
+          sort={sort}
+          setSort={(s) => { setSort(s); changeSort(s); }}
+          categories={cats}
+          selectedCats={catParam}
+          onToggleCat={toggleCategory}
+          totalProducts={prodPage?.totalElements || prodPage?.content?.length || 0}
+          currentPageProducts={prodPage?.content?.length || 0}
+        />
+
+        <ProductGrid
+          products={prodPage?.content ?? []}
+          loading={isLoading}
+          view={view}
+          onAddToCart={(p, q) => addItem(p, q)}
+        />
+
+        {prodPage && (
+          <PaginationBar
+            page={pageParam}
+            totalPages={prodPage.totalPages}
+            onPageChange={changePage}
             pageSize={pageSize}
             setPageSize={(s) => { setPageSize(s); changePageSize(s); }}
-            sort={sort}
-            setSort={(s) => { setSort(s); changeSort(s); }}
-            categories={cats}
-            selectedCats={catParam}
-            onToggleCat={toggleCategory}
-            totalProducts={prodPage?.totalElements || prodPage?.content?.length || 0}
-            currentPageProducts={prodPage?.content?.length || 0}
           />
-
-          <ProductGrid
-            products={prodPage?.content ?? []}
-            loading={isLoading}
-            view={view}
-            onAddToCart={(p, q) => addItem(p, q)}
-          />
-
-          {prodPage && (
-            <PaginationBar
-              page={pageParam}
-              totalPages={prodPage.totalPages}
-              onPageChange={changePage}
-              pageSize={pageSize}
-              setPageSize={(s) => { setPageSize(s); changePageSize(s); }}
-            />
-          )}
-        </Box>
+        )}
       </Box>
-    </Container>
+    </Box>
   );
 }

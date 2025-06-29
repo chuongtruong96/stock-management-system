@@ -110,20 +110,42 @@ export default function SignIn() {
 
     setLoading(true);
     try {
+      console.log('🔍 LOGIN: Starting login process...');
+      console.log('🔍 LOGIN: Username:', formData.username);
+      console.log('🔍 LOGIN: Password length:', formData.password.length);
+      
       const response = await authApi.login({
         username: formData.username,
         password: formData.password
       });
       
+      console.log('🔍 LOGIN: Login response:', response);
+      
       const token = response.token;
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+      
+      console.log('🔍 LOGIN: Token received:', token ? 'Yes' : 'No');
+      console.log('🔍 LOGIN: Token preview:', token.substring(0, 20) + '...');
+      
       const decoded = jwtDecode(token);
+      console.log('🔍 LOGIN: Decoded token:', decoded);
 
-      // Save authentication data
-      authLogin({
+      const loginData = {
         token,
         username: decoded.sub ?? formData.username,
         roles: decoded.role ? [decoded.role] : decoded.roles,
-      });
+      };
+      
+      console.log('🔍 LOGIN: Login data to save:', loginData);
+
+      // Save authentication data
+      authLogin(loginData);
+      
+      // Verify it was saved
+      const savedUser = localStorage.getItem('user');
+      console.log('🔍 LOGIN: Saved user in localStorage:', savedUser);
 
       // Save remember me preference
       localStorage.setItem("rememberMe", rememberMe);
@@ -137,11 +159,15 @@ export default function SignIn() {
       
       // Smooth redirect with delay
       setTimeout(() => {
+        console.log('🔍 LOGIN: Redirecting to home...');
         navigate("/", { replace: true });
       }, 1000);
       
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("🔍 LOGIN ERROR:", err);
+      console.error("🔍 LOGIN ERROR Response:", err?.response?.data);
+      console.error("🔍 LOGIN ERROR Status:", err?.response?.status);
+      
       toast.error(err?.response?.data?.message || err?.message || "Login failed");
       setErrors({
         general: "Invalid username or password"

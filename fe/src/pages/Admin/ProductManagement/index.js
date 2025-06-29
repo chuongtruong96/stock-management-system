@@ -22,6 +22,8 @@ import AdminLayout from "layouts/AdminLayout";
 
 import { WsContext } from "context/WsContext";
 import { productApi, unitApi, categoryApi } from "services/api";
+import { getProductImageUrl } from "utils/apiUtils";
+import { toastUtils } from "utils/toastUtils";
 
 import ProductDialog from "./ProductDialog";
 
@@ -53,6 +55,9 @@ export default function ProductManagement({ language = "en" }) {
         const products = Array.isArray(p) ? p : p?.content || [];
         const unitsData = Array.isArray(u) ? u : [];
         const categoriesData = Array.isArray(c) ? c : [];
+        
+        console.log('🔍 ProductManagement: Categories data:', categoriesData);
+        console.log('🔍 ProductManagement: Sample category:', categoriesData[0]);
         
         setRows(products);
         setUnits(unitsData);
@@ -104,7 +109,7 @@ export default function ProductManagement({ language = "en" }) {
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
           {row.image && row.image !== 'null' ? (
             <img 
-              src={`/assets/prod/${row.image}`}
+              src={getProductImageUrl(row.image)}
               alt={row.name}
               style={{ 
                 width: 48, 
@@ -218,15 +223,64 @@ export default function ProductManagement({ language = "en" }) {
     },
   ];
 
-  const saveProduct = async (draft) => {
+  const saveProduct = async (draft, imageFile) => {
     try {
+      let saved;
+      
+      // First save the product data
       if (editRow) {
-        const response = await productApi.update(editRow.id, draft);
-        setRows((p) => p.map((r) => (r.id === response.id ? response : r)));
+        console.log('🔍 ProductManagement: Updating existing product:', editRow.id);
+        saved = await productApi.update(editRow.id, draft);
       } else {
-        const response = await productApi.add(draft);
-        setRows((p) => [...p, response]);
+        console.log('🔍 ProductManagement: Creating new product');
+        saved = await productApi.add(draft);
       }
+      
+      console.log('🔍 ProductManagement: Product saved:', saved);
+      
+      // Handle image upload if present
+      if (imageFile && saved?.id) {
+        const fd = new FormData();
+        fd.append("file", imageFile);
+        let tId = null;
+        
+        try {
+          console.log('🔍 ProductManagement: Starting image upload for product:', saved.id);
+          
+          tId = toastUtils.loading("Uploading image…");
+          
+          const productWithImage = await productApi.uploadImage(saved.id, fd);
+          console.log('✅ ProductManagement: Image upload successful:', productWithImage);
+          
+          toastUtils.updateToSuccess(tId, "Image uploaded successfully!");
+          
+          // Update saved object with image info if available
+          if (productWithImage && typeof productWithImage === 'object') {
+            saved = {
+              ...saved,
+              ...productWithImage,
+              id: productWithImage.id || saved.id
+            };
+          }
+          
+        } catch (uploadError) {
+          console.error('❌ ProductManagement: Image upload failed:', uploadError);
+          
+          const errorMessage = uploadError.response?.data?.message || uploadError.message || 'Unknown upload error';
+          toastUtils.updateToError(tId, `Image upload failed: ${errorMessage}`);
+          
+          // Continue without the image - don't fail the entire save
+          console.warn('⚠️ ProductManagement: Continuing without image due to upload failure');
+        }
+      }
+      
+      // Update the rows state
+      if (editRow) {
+        setRows((p) => p.map((r) => (r.id === saved.id ? saved : r)));
+      } else {
+        setRows((p) => [...p, saved]);
+      }
+      
       setDlgOpen(false);
       toast.success(editRow ? (t("productUpdated") || "Product updated") : (t("productAdded") || "Product added"));
     } catch (e) {

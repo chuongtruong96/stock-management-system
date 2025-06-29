@@ -46,6 +46,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/assets/**").permitAll() // Allow access to static assets
+                        .requestMatchers("/icons/**").permitAll() // Allow access to category icons
+                        .requestMatchers("/uploads/**").permitAll() // Allow access to uploaded files
+                        .requestMatchers("/placeholder-prod.png").permitAll() // Allow access to placeholder images
+                        .requestMatchers("/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg").permitAll() // Allow access to static images
+                        .requestMatchers("/static/**").permitAll() // Allow access to static resources
                         .requestMatchers(HttpMethod.GET, "/api/departments").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/{id}").permitAll()
@@ -54,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/category/{categoryId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/top-ordered").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/translate").permitAll() // Allow translation for all users
                         .requestMatchers(HttpMethod.GET, "/api/orders/order-window/status").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/orders/check-period").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -81,8 +87,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/orders/{id}/reject").hasAuthority("ADMIN")
                         .requestMatchers("/api/notifications/announce").hasAuthority("ADMIN")
                         
-                        // Authenticated user endpoints
-                        .requestMatchers("/api/users/me").authenticated()
+                        // Authenticated user endpoints - allow both ADMIN and USER roles
+                        .requestMatchers("/api/users/me").hasAnyAuthority("ADMIN", "USER")
                         .requestMatchers("/api/orders/mine").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/orders/{id}").authenticated()
@@ -99,11 +105,16 @@ public class SecurityConfig {
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("Authentication failed: " + authException.getMessage());
+                            String requestURI = request.getRequestURI();
+                            String method = request.getMethod();
+                            System.out.println("🔒 SECURITY: Authentication failed for " + method + " " + requestURI + ": " + authException.getMessage());
+                            System.out.println("🔒 SECURITY: Auth header: " + request.getHeader("Authorization"));
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            System.out.println("Access denied: " + accessDeniedException.getMessage());
+                            String requestURI = request.getRequestURI();
+                            String method = request.getMethod();
+                            System.out.println("🔒 SECURITY: Access denied for " + method + " " + requestURI + ": " + accessDeniedException.getMessage());
                             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
                         }));
 

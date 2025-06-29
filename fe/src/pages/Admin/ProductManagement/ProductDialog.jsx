@@ -20,6 +20,7 @@ import {
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { getProductImageUrl } from "utils/apiUtils";
 import MDButton from "components/template/MDButton";
 
 export default function ProductDialog({
@@ -66,7 +67,7 @@ export default function ProductDialog({
       return;
     }
     
-    onSave(draft);
+    onSave(draft, imageFile);
   };
 
   const resetForm = () => {
@@ -104,7 +105,7 @@ export default function ProductDialog({
         gap: 2,
         py: 3
       }}>
-        <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)' }}>
+        <Avatar sx={{ bgcolor: 'rgba(205, 228, 101, 0.2)' }}>
           <InventoryIcon />
         </Avatar>
         <Typography variant="h6" fontWeight="bold">
@@ -183,6 +184,7 @@ export default function ProductDialog({
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
                 fontSize: '1.1rem',
+                minHeight: '56px', // Match TextField height
                 '& fieldset': {
                   borderWidth: 2,
                 },
@@ -196,6 +198,10 @@ export default function ProductDialog({
               '& .MuiInputLabel-root': {
                 fontSize: '1.1rem',
                 fontWeight: 500,
+              },
+              '& .MuiSelect-select': {
+                padding: '16.5px 14px', // Match TextField padding
+                fontSize: '1.1rem',
               },
             }}
           >
@@ -224,6 +230,7 @@ export default function ProductDialog({
               '& .MuiOutlinedInput-root': {
                 borderRadius: 2,
                 fontSize: '1.1rem',
+                minHeight: '56px', // Match TextField height
                 '& fieldset': {
                   borderWidth: 2,
                 },
@@ -238,6 +245,10 @@ export default function ProductDialog({
                 fontSize: '1.1rem',
                 fontWeight: 500,
               },
+              '& .MuiSelect-select': {
+                padding: '16.5px 14px', // Match TextField padding
+                fontSize: '1.1rem',
+              },
             }}
           >
             <InputLabel>{t("category") || "Category"}</InputLabel>
@@ -249,12 +260,31 @@ export default function ProductDialog({
               <MenuItem value="">
                 <em>{t("selectCategory") || "Select Category"}</em>
               </MenuItem>
-              {categories.map((category) => (
-                <MenuItem key={category.categoryId || category.id} value={category.categoryId || category.id}>
-                  {category.nameEn || category.categoryName || category.name}
-                  {category.nameVn && ` (${category.nameVn})`}
-                </MenuItem>
-              ))}
+              {categories.map((category) => {
+                // Handle category name properly
+                let categoryName = 'Unknown Category';
+                if (typeof category.nameEn === 'string') {
+                  categoryName = category.nameEn;
+                } else if (typeof category.nameEn === 'object' && category.nameEn) {
+                  categoryName = category.nameEn.en || category.nameEn.nameEn || category.nameEn.name || 'Unknown Category';
+                } else if (category.categoryName) {
+                  categoryName = category.categoryName;
+                } else if (category.name) {
+                  categoryName = category.name;
+                }
+
+                // Handle Vietnamese name
+                let vietnameseName = '';
+                if (category.nameVn && typeof category.nameVn === 'string') {
+                  vietnameseName = ` (${category.nameVn})`;
+                }
+
+                return (
+                  <MenuItem key={category.categoryId || category.id} value={category.categoryId || category.id}>
+                    {categoryName}{vietnameseName}
+                  </MenuItem>
+                );
+              })}
             </Select>
           </FormControl>
           
@@ -296,7 +326,7 @@ export default function ProductDialog({
                 src={
                   imageFile
                     ? URL.createObjectURL(imageFile)
-                    : `/assets/images/${draft.image}`
+                    : draft.image ? getProductImageUrl(draft.image) : undefined
                 }
                 sx={{ 
                   width: 80, 

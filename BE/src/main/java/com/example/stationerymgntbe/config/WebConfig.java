@@ -23,6 +23,15 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:" + uploadDir + "/cat-icons/")
                 .setCachePeriod(3600); // Cache for 1 hour
         
+        // Serve uploaded files (backward compatibility)
+        registry.addResourceHandler("/uploads/product-img/**")
+                .addResourceLocations("file:" + uploadDir + "/product-img/")
+                .setCachePeriod(3600); // Cache for 1 hour
+        
+        registry.addResourceHandler("/uploads/cat-icons/**")
+                .addResourceLocations("file:" + uploadDir + "/cat-icons/")
+                .setCachePeriod(3600); // Cache for 1 hour
+        
         // Serve other static assets if needed
         registry.addResourceHandler("/assets/**")
                 .addResourceLocations("classpath:/static/assets/")

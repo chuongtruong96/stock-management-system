@@ -1,51 +1,148 @@
 /* src/css/components/CategoryCard.css */
 .category-card {
   height: 220px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #ffffff;
+  border: 1px solid #e3f2fd;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   overflow: hidden;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.category-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
 }
 
 .category-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.category-card:hover::before {
+  opacity: 1;
+}
+
+.category-card .MuiCardActionArea-root {
+  height: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .category-card .MuiCardMedia-root {
-  height: 140px;
-  object-fit: cover;
-  background-color: #f5f5f5;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.category-card:hover .MuiCardMedia-root {
+  transform: scale(1.05) translateY(-2px);
+  filter: drop-shadow(0 4px 16px rgba(102, 126, 234, 0.15));
+}
+
+/* Animate decorative dots on hover */
+.category-card:hover .category-dot {
+  transform: scale(1) !important;
+  animation: pulse-dot 2s infinite;
+}
+
+.category-card:hover .category-dot-small {
+  transform: scale(1) !important;
+  animation: pulse-dot-small 2.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { 
+    opacity: 0.6; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2);
+  }
+}
+
+@keyframes pulse-dot-small {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.3);
+  }
 }
 
 .category-card .MuiCardContent-root {
-  background-color: #fafafa;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   text-align: center;
-  padding: 4px 8px !important;
+  padding: 12px 16px !important;
+  border-top: 1px solid rgba(102, 126, 234, 0.08);
+  position: relative;
 }
 
 .category-card .MuiTypography-subtitle2 {
   font-weight: 600;
-  color: #212121;
+  color: #1a1a1a;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2 !important;
-  margin-bottom: 4px !important;
-  font-size: 0.875rem !important;
+  line-height: 1.3 !important;
+  margin-bottom: 6px !important;
+  font-size: 0.9rem !important;
+  transition: color 0.3s ease;
+}
+
+.category-card:hover .MuiTypography-subtitle2 {
+  color: #667eea;
 }
 
 .category-card .MuiTypography-caption {
-  color: #757575;
+  color: #6b7280;
   font-size: 0.75rem !important;
-  line-height: 1 !important;
+  line-height: 1.2 !important;
   margin: 0 !important;
+  font-weight: 500;
+  background: linear-gradient(45deg, #667eea 30%, #764ba2 90%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .category-card.Mui-disabled {
   opacity: 0.4;
   pointer-events: none;
+  filter: grayscale(100%);
+}
+
+/* Add subtle animation for the card content */
+.category-card .MuiCardContent-root::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(45deg, #667eea 30%, #764ba2 90%);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.category-card:hover .MuiCardContent-root::after {
+  width: 60%;
 }

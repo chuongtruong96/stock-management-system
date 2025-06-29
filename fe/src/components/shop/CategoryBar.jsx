@@ -1,5 +1,6 @@
 import { Grid, Avatar, Typography } from "@mui/material";
 import MDBox from "components/template/MDBox";
+import { getCategoryIconUrl } from "utils/apiUtils";
 
 export default function CategoryBar({ list = [], active, onSelect }) {
   return (
@@ -17,10 +18,10 @@ export default function CategoryBar({ list = [], active, onSelect }) {
           >
             <Avatar
               src={
-                c?.icon // có null-check
+                c?.icon && c.icon !== 'null' && c.icon !== 'undefined'
                   ? c.icon.startsWith("http")
                     ? c.icon
-                    : `/assets/icons/${c.icon}`
+                    : getCategoryIconUrl(c.icon)
                   : "/assets/icons/placeholder.svg" // fallback ảnh mặc định
               }
               sx={{ width: 64, height: 64, mx: "auto", mb: 1 }}

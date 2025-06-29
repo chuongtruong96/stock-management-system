@@ -19,6 +19,7 @@ import { useCart } from "context/CartContext/useCart";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { getProductImageUrl } from "utils/apiUtils";
 
 export default function CartDrawer() {
   const {
@@ -33,9 +34,30 @@ export default function CartDrawer() {
   const { t } = useTranslation();
 
   const handleCheckout = () => {
-    if (!items.length) return toast.info(t('cart.emptyCart'));
-    closeCart();
-    navigate("/order-form");
+    console.log('🔍 CART: handleCheckout called');
+    console.log('🔍 CART: Items count:', items.length);
+    console.log('🔍 CART: Current auth state:', localStorage.getItem('user') ? 'Authenticated' : 'Not authenticated');
+    
+    if (!items.length) {
+      console.log('🔍 CART: No items in cart, showing toast');
+      toast.info(t('cart.emptyCart'));
+      return;
+    }
+    
+    try {
+      console.log('🔍 CART: Closing cart drawer...');
+      closeCart();
+      
+      // Use setTimeout to ensure cart closes before navigation
+      setTimeout(() => {
+        console.log('🔍 CART: Navigating to /order-form...');
+        console.log('🔍 CART: Auth state before navigation:', localStorage.getItem('user') ? 'Still authenticated' : 'Lost authentication');
+        navigate("/order-form", { replace: false });
+      }, 100);
+    } catch (error) {
+      console.error("🔍 CART: Navigation error:", error);
+      toast.error("Failed to navigate to order form");
+    }
   };
 
   return (
@@ -46,10 +68,10 @@ export default function CartDrawer() {
       PaperProps={{
         sx: {
           width: { xs: 400, sm: 600 },
-          background: "rgba(20, 30, 60, 0.9)",
-          backdropFilter: "blur(10px)",
-          border: "1px solid rgba(0, 255, 255, 0.5)",
-          boxShadow: "0 0 20px rgba(0, 255, 255, 0.3)",
+          background: "linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%)",
+          backdropFilter: "blur(20px)",
+          border: "2px solid rgba(255, 255, 255, 0.2)",
+          boxShadow: "0 20px 60px rgba(102, 126, 234, 0.3)",
           color: "#ffffff",
           overflowX: "hidden",
         },
@@ -61,27 +83,31 @@ export default function CartDrawer() {
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 600,
-              background: "linear-gradient(90deg, #00ffff, #ff00ff)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              fontWeight: 700,
+              color: "white",
+              textShadow: "0 2px 4px rgba(0,0,0,0.3)",
             }}
           >
-            {t('cart.cart')} ({totalItems})
+            🛒 {t('cart.cart')} ({totalItems})
           </Typography>
           <IconButton
             size="small"
             onClick={closeCart}
             sx={{
-              color: "#00ffff",
-              "&:hover": { color: "#ff00ff" },
+              color: "white",
+              bgcolor: "rgba(255,255,255,0.1)",
+              "&:hover": { 
+                bgcolor: "rgba(255,255,255,0.2)",
+                transform: "scale(1.1)"
+              },
+              transition: "all 0.2s ease-in-out"
             }}
           >
             <CloseIcon />
           </IconButton>
         </Box>
 
-        <Divider sx={{ my: 2, background: "rgba(0, 255, 255, 0.3)" }} />
+        <Divider sx={{ my: 2, background: "rgba(255, 255, 255, 0.3)" }} />
 
         {/* Cart Items */}
         <List dense sx={{ maxHeight: "60vh", overflowY: "auto" }}>
@@ -92,7 +118,7 @@ export default function CartDrawer() {
                 ? product.unit.name || product.unit.nameVn
                 : product.unit;
             const imageSrc = product?.image
-              ? `/uploads/product-img/${product.image}`
+              ? getProductImageUrl(product.image)
               : "/placeholder-prod.png";
 
             return (
@@ -114,7 +140,8 @@ export default function CartDrawer() {
                     width: 48,
                     height: 48,
                     mr: 2,
-                    border: "2px solid #00ffff",
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                   }}
                 />
                 <ListItemText
@@ -139,8 +166,14 @@ export default function CartDrawer() {
                     size="small"
                     onClick={() => removeItem(product.id)}
                     sx={{
-                      color: "#ff00ff",
-                      "&:hover": { color: "#00ffff" },
+                      color: "rgba(255,255,255,0.7)",
+                      bgcolor: "rgba(255,255,255,0.1)",
+                      "&:hover": { 
+                        color: "#ff4444",
+                        bgcolor: "rgba(255,68,68,0.1)",
+                        transform: "scale(1.1)"
+                      },
+                      transition: "all 0.2s ease-in-out"
                     }}
                   >
                     <DeleteIcon />
@@ -163,7 +196,7 @@ export default function CartDrawer() {
           )}
         </List>
 
-        <Divider sx={{ my: 2, background: "rgba(0, 255, 255, 0.3)" }} />
+        <Divider sx={{ my: 2, background: "rgba(255, 255, 255, 0.3)" }} />
 
         {/* Proceed Button */}
         <Button
@@ -172,22 +205,30 @@ export default function CartDrawer() {
           disabled={!items.length}
           onClick={handleCheckout}
           sx={{
-            background: "linear-gradient(90deg, #00ffff, #ff00ff)",
-            color: "#ffffff",
-            fontWeight: 600,
-            boxShadow: "0 0 10px rgba(0, 255, 255, 0.5)",
+            py: 2,
+            fontSize: "1.1rem",
+            fontWeight: 700,
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white !important",
+            borderRadius: 3,
+            boxShadow: "0 8px 32px rgba(102, 126, 234, 0.4)",
+            border: "2px solid rgba(255,255,255,0.2)",
             "&:hover": {
-              background: "linear-gradient(90deg, #ff00ff, #00ffff)",
-              boxShadow: "0 0 15px rgba(0, 255, 255, 0.7)",
+              background: "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
+              boxShadow: "0 12px 40px rgba(102, 126, 234, 0.6)",
+              transform: "translateY(-2px)",
+              color: "white !important",
             },
             "&:disabled": {
-              background: "rgba(227, 200, 200, 0.1)",
+              background: "rgba(255, 255, 255, 0.1)",
               color: "rgba(255, 255, 255, 0.3)",
               boxShadow: "none",
+              transform: "none",
             },
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
-          {t('cart.proceedToOrder')}
+          🚀 {t('cart.proceedToOrder')}
         </Button>
       </Box>
     </Drawer>

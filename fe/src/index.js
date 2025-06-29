@@ -12,9 +12,13 @@ import WsProvider from "context/WsContext";
 import { NotificationProvider } from "context/NotificationContext";
 import { CartProvider } from "context/CartContext/CartProvider";
 import { OrderWindowProvider } from "context/OrderWindowContext";
+import { debugAuth } from "utils/debugAuth";
 
 import App from "./App";
 import Loading from "components/common/Loading";
+
+// Make debug function available globally
+window.debugAuth = debugAuth;
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 

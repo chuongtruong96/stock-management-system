@@ -1,54 +1,97 @@
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { Chip, Tooltip } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { useOrderWindow } from "../../context/OrderWindowContext";
 
-function getClosingTimestamp() {
-  const now = dayjs();
-  return dayjs(new Date(now.year(), now.month(), 7, 23, 59, 59));
-}
-
 export default function OrderWindowIndicator() {
-  const { canOrder } = useOrderWindow();
-  const [secondsLeft, setSecondsLeft] = useState(
-    getClosingTimestamp().diff(dayjs(), "second")
-  );
+  const { canOrder, reason, isNaturalPeriod, isAdminOverride, secondsRemaining, message } = useOrderWindow();
+  const [currentSecondsLeft, setCurrentSecondsLeft] = useState(secondsRemaining);
 
   useEffect(() => {
-    if (!canOrder) return;
+    // Only start countdown if we're in natural period and have time remaining
+    if (!canOrder || !isNaturalPeriod || secondsRemaining <= 0) {
+      setCurrentSecondsLeft(0);
+      return;
+    }
+
+    // Initialize with the seconds from backend
+    setCurrentSecondsLeft(secondsRemaining);
+
+    // Start countdown timer
     const id = setInterval(() => {
-      setSecondsLeft(getClosingTimestamp().diff(dayjs(), "second"));
+      setCurrentSecondsLeft(prev => {
+        const newValue = Math.max(prev - 1, 0);
+        if (newValue <= 0) {
+          clearInterval(id);
+        }
+        return newValue;
+      });
     }, 1000);
+
     return () => clearInterval(id);
-  }, [canOrder]);
+  }, [canOrder, isNaturalPeriod, secondsRemaining]);
 
-  const sec = Math.max(secondsLeft, 0);
-  const fmt =
-    String(Math.floor(sec / 3600)).padStart(2, "0") +
-    ":" +
-    String(Math.floor((sec % 3600) / 60)).padStart(2, "0") +
-    ":" +
-    String(sec % 60).padStart(2, "0");
+  // Format time display
+  const formatTime = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
 
-  return canOrder ? (
-    <Tooltip title="Ordering window is open">
+  // Determine display based on reason
+  if (!canOrder) {
+    return (
+      <Tooltip title={message || "Ordering window is closed"}>
+        <Chip
+          sx={{ mr: 2 }}
+          color="error"
+          icon={<DoNotDisturbIcon />}
+          label="Order window closed"
+          size="small"
+        />
+      </Tooltip>
+    );
+  }
+
+  if (isAdminOverride) {
+    return (
+      <Tooltip title="Admin has opened the order window for urgent orders">
+        <Chip
+          sx={{ mr: 2 }}
+          color="warning"
+          icon={<AdminPanelSettingsIcon />}
+          label="Admin Override Active"
+          size="small"
+        />
+      </Tooltip>
+    );
+  }
+
+  if (isNaturalPeriod) {
+    return (
+      <Tooltip title="Natural ordering period - First week of the month">
+        <Chip
+          sx={{ mr: 2 }}
+          color="success"
+          icon={<AccessTimeIcon />}
+          label={`Time left: ${formatTime(currentSecondsLeft)}`}
+          size="small"
+        />
+      </Tooltip>
+    );
+  }
+
+  // Fallback - should not happen but just in case
+  return (
+    <Tooltip title={message || "Order window status unknown"}>
       <Chip
         sx={{ mr: 2 }}
-        color="success"
+        color="info"
         icon={<AccessTimeIcon />}
-        label={`Time left: ${fmt}`}
-        size="small"
-      />
-    </Tooltip>
-  ) : (
-    <Tooltip title="Ordering window closed">
-      <Chip
-        sx={{ mr: 2 }}
-        color="error"
-        icon={<DoNotDisturbIcon />}
-        label="Order window closed"
+        label="Order window open"
         size="small"
       />
     </Tooltip>

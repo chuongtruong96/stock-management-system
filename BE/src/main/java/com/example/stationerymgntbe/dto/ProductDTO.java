@@ -10,5 +10,6 @@ public class ProductDTO {
     private String unit;
     private String image;
     private Integer categoryId;
+    private String categoryName; // Category name for display
     private Integer unitId;
 }

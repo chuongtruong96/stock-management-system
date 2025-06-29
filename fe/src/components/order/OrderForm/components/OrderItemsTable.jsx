@@ -14,6 +14,7 @@ import {
   Chip,
 } from '@mui/material';
 import PropTypes from 'prop-types';
+import { getProductImageUrl } from 'utils/apiUtils';
 
 /**
  * Enhanced order items table with proper alignment and responsive design
@@ -136,7 +137,7 @@ const OrderItemsTable = ({ items = [], loading = false, emptyMessage = "No items
                       component="img"
                       src={
                         product?.image
-                          ? `/uploads/product-img/${product.image}`
+                          ? getProductImageUrl(product.image)
                           : '/placeholder-prod.png'
                       }
                       alt={product.name || 'Product'}

@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import QuantitySelector from "components/shop/QuantitySelector";
+import { getProductImageUrl } from "utils/apiUtils";
 
 export function CartItem({ item, onUpdate, onRemove }) {
   const product = item?.product;
@@ -21,7 +22,7 @@ export function CartItem({ item, onUpdate, onRemove }) {
 
 
   const imageSrc = product.image
-    ? `/uploads/product-img/${product.image}`
+    ? getProductImageUrl(product.image)
     : "/placeholder-prod.png";
 
   return (

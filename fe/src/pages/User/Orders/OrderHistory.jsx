@@ -8,19 +8,25 @@ import {
   Alert,
   Stack,
   Container,
+  Button,
+  Chip,
 } from "@mui/material";
 import {
   History as HistoryIcon,
   Receipt as OrderIcon,
+  Assignment as AssignmentIcon,
+  PlayArrow as PlayArrowIcon,
 } from "@mui/icons-material";
-import { useCheckout } from "hooks/useCheckout";
+import { useNavigate } from "react-router-dom";
+import { useOrderHistory } from "hooks/useOrderHistory";
 import { useTranslation } from "react-i18next";
 import OrderHistoryItem from "./OrderHistoryItem";
 import LoadingSpinner from "components/common/LoadingSpinner";
 
 export default function OrderHistory() {
   const { t } = useTranslation();
-  const { history, loading, error } = useCheckout();
+  const navigate = useNavigate();
+  const { data: history, isLoading: loading, error } = useOrderHistory();
 
   if (loading) {
     return <LoadingSpinner message="Loading order history..." />;
@@ -43,6 +49,10 @@ export default function OrderHistory() {
   }
 
   const orders = Array.isArray(history) ? history : [];
+  
+  // Find pending order for quick access
+  const pendingStatuses = ['pending', 'exported', 'uploaded', 'submitted'];
+  const pendingOrder = orders.find(order => pendingStatuses.includes(order.status));
 
   return (
     <Container maxWidth="lg">
@@ -57,29 +67,56 @@ export default function OrderHistory() {
           mb: 3,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-            }}
-          >
-            <HistoryIcon />
-          </Box>
-          <Box>
-            <Typography variant="h4" fontWeight={700} color="text.primary">
-              {t('nav.orderHistory')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {orders.length} {orders.length === 1 ? 'order' : 'orders'} found
-            </Typography>
-          </Box>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+              }}
+            >
+              <HistoryIcon />
+            </Box>
+            <Box>
+              <Typography variant="h4" fontWeight={700} color="text.primary">
+                {t('nav.orderHistory')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {orders.length} {orders.length === 1 ? 'order' : 'orders'} found
+              </Typography>
+            </Box>
+          </Stack>
+
+          {/* Continue Pending Order Button */}
+          {pendingOrder && (
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Chip
+                label={`Order #${pendingOrder.orderId || pendingOrder.id} - ${pendingOrder.status}`}
+                color="warning"
+                variant="outlined"
+                size="small"
+              />
+              <Button
+                variant="contained"
+                startIcon={<PlayArrowIcon />}
+                onClick={() => navigate('/order-form')}
+                sx={{
+                  background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #f57c00 0%, #ef6c00 100%)',
+                  },
+                }}
+              >
+                Continue Pending Order
+              </Button>
+            </Stack>
+          )}
         </Stack>
       </Paper>
 

@@ -29,6 +29,7 @@ public class ProductService {
 
     private final ProductRepository repo;
     private final UnitRepository unitRepo;
+    private final CategoryRepository categoryRepo;
     private final ProductMapper map;
     
     @PersistenceContext
@@ -82,12 +83,29 @@ public class ProductService {
         if (repo.existsByCode(d.getCode()))
             throw new IllegalStateException("Product code duplicated");
 
-        Unit u = unitRepo.findByNameVnIgnoreCase(d.getUnit())
-                .or(() -> unitRepo.findByNameEnIgnoreCase(d.getUnit()))
-                .orElseThrow(() -> new ResourceNotFoundException("Unit " + d.getUnit()));
+        // Handle unit - prefer unitId if available, fallback to unit name
+        Unit u;
+        if (d.getUnitId() != null) {
+            u = unitRepo.findById(d.getUnitId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Unit " + d.getUnitId()));
+        } else if (d.getUnit() != null && !d.getUnit().trim().isEmpty()) {
+            u = unitRepo.findByNameVnIgnoreCase(d.getUnit())
+                    .or(() -> unitRepo.findByNameEnIgnoreCase(d.getUnit()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Unit " + d.getUnit()));
+        } else {
+            throw new IllegalArgumentException("Either unitId or unit name must be provided");
+        }
 
         Product p = map.toEntity(d);
         p.setUnit(u);
+        
+        // Handle category if provided
+        if (d.getCategoryId() != null) {
+            Category category = categoryRepo.findById(d.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category " + d.getCategoryId()));
+            p.setCategory(category);
+        }
+        
         p = repo.save(p);
 
         return map.toDto(p);
@@ -105,11 +123,27 @@ public class ProductService {
         p.setCode(d.getCode());
         p.setName(d.getName());
 
-        Unit u = unitRepo.findByNameVnIgnoreCase(d.getUnit())
-                .or(() -> unitRepo.findByNameEnIgnoreCase(d.getUnit()))
-                .orElseThrow(() -> new ResourceNotFoundException("Unit " + d.getUnit()));
+        // Handle unit - prefer unitId if available, fallback to unit name
+        Unit u;
+        if (d.getUnitId() != null) {
+            u = unitRepo.findById(d.getUnitId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Unit " + d.getUnitId()));
+        } else if (d.getUnit() != null && !d.getUnit().trim().isEmpty()) {
+            u = unitRepo.findByNameVnIgnoreCase(d.getUnit())
+                    .or(() -> unitRepo.findByNameEnIgnoreCase(d.getUnit()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Unit " + d.getUnit()));
+        } else {
+            throw new IllegalArgumentException("Either unitId or unit name must be provided");
+        }
 
         p.setUnit(u);
+        
+        // Handle category if provided
+        if (d.getCategoryId() != null) {
+            Category category = categoryRepo.findById(d.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category " + d.getCategoryId()));
+            p.setCategory(category);
+        }
 
         return map.toDto(repo.save(p));
     }

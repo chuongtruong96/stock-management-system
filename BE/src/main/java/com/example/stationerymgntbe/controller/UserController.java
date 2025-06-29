@@ -28,14 +28,20 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDetailDTO>> getCurrentUserInfo(Principal principal) {
         try {
-            log.info("Retrieving user info for: {}", principal.getName());
+            System.out.println("🔍 USER_CONTROLLER: /me endpoint called");
+            System.out.println("🔍 USER_CONTROLLER: Principal: " + principal);
+            System.out.println("🔍 USER_CONTROLLER: Principal name: " + (principal != null ? principal.getName() : "null"));
+            
+            log.info("Retrieving user info for: {}", principal != null ? principal.getName() : "unknown");
             
             UserDetailDTO userInfo = userService.getCurrentUserDetailInfo();
+            System.out.println("🔍 USER_CONTROLLER: User info retrieved successfully: " + userInfo.getUsername());
             
             return ResponseEntity.ok(ApiResponse.success("User information retrieved successfully", userInfo));
             
         } catch (Exception e) {
-            log.error("Error retrieving user info for: {}", principal.getName(), e);
+            System.out.println("🔍 USER_CONTROLLER: Error in /me endpoint: " + e.getMessage());
+            log.error("Error retrieving user info for: {}", principal != null ? principal.getName() : "unknown", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Failed to retrieve user information: " + e.getMessage()));
         }

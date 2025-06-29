@@ -63,11 +63,11 @@ export default function ProductGrid({
         {Array.from({ length: 12 }).map((_, i) => (
           <Grid 
             item 
-            xs={6}    // 2 products per row on mobile
-            sm={4}    // 3 products per row on small screens
-            md={3}    // 4 products per row on medium screens
-            lg={2.4}  // 5 products per row on large screens
-            xl={2}    // 6 products per row on extra large screens
+            xs={12}   // 1 product per row on mobile
+            sm={6}    // 2 products per row on small screens
+            md={4}    // 3 products per row on medium screens
+            lg={3}    // 4 products per row on large screens
+            xl={3}    // 4 products per row on extra large screens
             key={i}
           >
             <Paper
@@ -153,11 +153,11 @@ export default function ProductGrid({
       {valid.map((p, index) => (
         <Grid 
           item 
-          xs={6}    // 2 products per row on mobile
-          sm={4}    // 3 products per row on small screens
-          md={3}    // 4 products per row on medium screens
-          lg={2.4}  // 5 products per row on large screens
-          xl={2}    // 6 products per row on extra large screens
+          xs={12}   // 1 product per row on mobile
+          sm={6}    // 2 products per row on small screens
+          md={4}    // 3 products per row on medium screens
+          lg={3}    // 4 products per row on large screens
+          xl={3}    // 4 products per row on extra large screens
           key={p.id || p.productId || index}
         >
           <ProductCard

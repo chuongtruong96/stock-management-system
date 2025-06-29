@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { productApi, categoryApi } from "services/api";
+import { getProductImageUrl } from "utils/apiUtils";
 
 const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" }) => {
   const { t } = useTranslation();
@@ -218,7 +219,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
                     >
                       <ListItemAvatar>
                         <Avatar
-                          src={suggestion.image ? `/uploads/${suggestion.type}-img/${suggestion.image}` : undefined}
+                          src={suggestion.image ? getProductImageUrl(suggestion.image) : undefined}
                           sx={{ width: 32, height: 32 }}
                         >
                           {suggestion.title.charAt(0)}

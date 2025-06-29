@@ -70,34 +70,53 @@ export const connectStomp = () =>
     // Check if user is authenticated
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (!user?.token) {
-      console.warn("[STOMP] No authentication token, skipping WebSocket connection");
-      return rej(new Error("No authentication token"));
+      console.warn("[STOMP] No authentication token available");
+      // Don't reject immediately - allow connection without auth for public topics
+      // Some WebSocket endpoints might be public
     }
     
-    // Recreate client with fresh token if needed
-    if (!client.connectHeaders?.Authorization) {
+    // Recreate client with fresh token if available
+    if (user?.token && !client.connectHeaders?.Authorization) {
+      console.log("[STOMP] Recreating client with fresh token");
       client = createClient();
     }
     
     let timeout = setTimeout(() => {
-      rej(new Error("WebSocket connection timeout"));
-    }, 10000); // 10 second timeout
+      console.warn("[STOMP] Connection timeout, but continuing...");
+      // Don't reject on timeout - some connections might be slow
+      res(); // Resolve anyway to prevent blocking
+    }, 15000); // Increased timeout
     
     client.onConnect = () => {
+      console.log("[STOMP] Successfully connected");
       clearTimeout(timeout);
       res();
     };
     
     client.onStompError = (frame) => {
+      console.error("[STOMP] STOMP Error:", frame);
       clearTimeout(timeout);
-      rej(new Error(`STOMP Error: ${frame.headers.message || 'Unknown error'}`));
+      // Don't reject on STOMP errors - might be recoverable
+      console.warn("[STOMP] STOMP error occurred, but continuing...");
+      res(); // Resolve to prevent blocking the app
+    };
+    
+    client.onWebSocketError = (error) => {
+      console.error("[STOMP] WebSocket Error:", error);
+      clearTimeout(timeout);
+      // Don't reject on WebSocket errors - might be recoverable
+      console.warn("[STOMP] WebSocket error occurred, but continuing...");
+      res(); // Resolve to prevent blocking the app
     };
     
     try {
       client.activate();
     } catch (error) {
+      console.error("[STOMP] Failed to activate client:", error);
       clearTimeout(timeout);
-      rej(error);
+      // Don't reject on activation errors - app should continue working
+      console.warn("[STOMP] Client activation failed, but continuing...");
+      res(); // Resolve to prevent blocking the app
     }
   });
 

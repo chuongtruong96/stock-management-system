@@ -11,10 +11,12 @@ import {
   Language as LanguageIcon,
   Translate as TranslateIcon,
 } from '@mui/icons-material';
-import { useLanguage } from '../../context/LanguageContext';
+import { useUniversalTranslation } from '../../context/UniversalTranslationContext';
 
 const LanguageToggle = ({ size = 'small', showLabel = false, variant = 'outlined' }) => {
-  const { language, toggleLanguage, isVietnamese, isEnglish } = useLanguage();
+  const { currentLanguage, toggleLanguage } = useUniversalTranslation();
+  const isVietnamese = currentLanguage === 'vi';
+  const isEnglish = currentLanguage === 'en';
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -28,10 +30,10 @@ const LanguageToggle = ({ size = 'small', showLabel = false, variant = 'outlined
       <ToggleButtonGroup
         size={size}
         exclusive
-        value={language}
+        value={currentLanguage}
         onChange={(_, newLanguage) => {
           if (newLanguage) {
-            if (newLanguage !== language) {
+            if (newLanguage !== currentLanguage) {
               toggleLanguage();
             }
           }
@@ -52,7 +54,7 @@ const LanguageToggle = ({ size = 'small', showLabel = false, variant = 'outlined
           },
         }}
       >
-        <ToggleButton value="vn" aria-label="Vietnamese">
+      <ToggleButton value="vi" aria-label="Vietnamese">
           <Tooltip title="Tiếng Việt">
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               🇻🇳
