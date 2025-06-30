@@ -105,23 +105,47 @@ public class ProductController {
     /* ─────────── TRANSLATION ─────────── */
 
     @PostMapping("/translate")
-    public Map<String, String> translateProductName(@RequestBody Map<String, String> request) {
+    public Map<String, String> translateText(@RequestBody Map<String, String> request) {
         String text = request.get("text");
+        String sourceLang = request.getOrDefault("sourceLang", "auto");
         String targetLang = request.getOrDefault("targetLang", "en");
         
-        String translatedText;
-        if ("en".equals(targetLang)) {
-            translatedText = translationService.translateToEnglish(text);
-        } else {
-            // For now, we only support Vietnamese to English translation
-            // Vietnamese to Vietnamese just returns the original text
-            translatedText = text;
-        }
+        String translatedText = translationService.translateText(text, sourceLang, targetLang);
         
         return Map.of(
             "originalText", text,
             "translatedText", translatedText != null ? translatedText : text,
+            "sourceLanguage", sourceLang,
             "targetLanguage", targetLang
         );
+    }
+
+    @PostMapping("/translate/batch")
+    public Map<String, Object> batchTranslate(@RequestBody Map<String, Object> request) {
+        @SuppressWarnings("unchecked")
+        List<String> texts = (List<String>) request.get("texts");
+        String sourceLang = (String) request.getOrDefault("sourceLang", "auto");
+        String targetLang = (String) request.getOrDefault("targetLang", "en");
+        
+        Map<String, String> translations = translationService.batchTranslate(texts, sourceLang, targetLang);
+        
+        return Map.of(
+            "translations", translations,
+            "sourceLanguage", sourceLang,
+            "targetLanguage", targetLang,
+            "count", texts.size()
+        );
+    }
+
+    @GetMapping("/translate/stats")
+    public Map<String, Object> getTranslationStats() {
+        return translationService.getCacheStats();
+    }
+
+    @PostMapping("/translate/clear-cache")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, String> clearTranslationCache() {
+        translationService.clearCache();
+        return Map.of("message", "Translation cache cleared successfully");
     }
 }

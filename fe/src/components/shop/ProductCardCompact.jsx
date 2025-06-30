@@ -15,16 +15,27 @@ import {
 import { useNavigate } from "react-router-dom";
 import CardBase from "../common/CardBase";
 import { useTranslation } from "react-i18next";
+import BilingualText from "../translation/BilingualText";
 
 /** Compact product card for homepage/category display - view only */
 function ProductCardCompact({ data }) {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
-  const { t } = useTranslation();
+  const { t } = useTranslation('products');
 
   if (!data) return null;
 
-  const { id, name, image, unit, description } = data;
+  const { 
+    id, 
+    name, 
+    nameEn, 
+    nameVn, 
+    image, 
+    unit, 
+    description, 
+    descriptionEn, 
+    descriptionVn 
+  } = data;
 
   /* Always coerce unit to a string in case backend changes */
   const unitLabel = (() => {
@@ -211,9 +222,11 @@ function ProductCardCompact({ data }) {
       </Box>
 
       <CardContent sx={{ flexGrow: 1, p: 2, height: 140, position: 'relative', zIndex: 2 }}>
-        <Typography
-          variant="subtitle1"
-          fontWeight={700}
+        <BilingualText
+          en={nameEn || name}
+          vi={nameVn}
+          fallback="Unnamed Product"
+          component="subtitle1"
           sx={{
             display: "-webkit-box",
             WebkitBoxOrient: "vertical",
@@ -224,19 +237,21 @@ function ProductCardCompact({ data }) {
             minHeight: 44,
             lineHeight: 1.3,
             fontSize: '1rem',
+            fontWeight: 700,
             transition: "color 0.3s ease",
             "&:hover": {
               color: "#667eea",
             },
           }}
-        >
-          {name || "Unnamed Product"}
-        </Typography>
+          enableTranslation={true}
+        />
 
-        {description && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
+        {(descriptionEn || descriptionVn || description) && (
+          <BilingualText
+            en={descriptionEn || description}
+            vi={descriptionVn}
+            fallback=""
+            component="body2"
             sx={{
               display: "-webkit-box",
               WebkitBoxOrient: "vertical",
@@ -248,9 +263,8 @@ function ProductCardCompact({ data }) {
               lineHeight: 1.3,
               color: "#6b7280",
             }}
-          >
-            {description}
-          </Typography>
+            enableTranslation={true}
+          />
         )}
 
         {unitLabel && (

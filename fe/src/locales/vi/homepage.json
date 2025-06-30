@@ -1,0 +1,88 @@
+{
+  "welcome": "Chào mừng đến với Hệ thống Quản lý Văn phòng phẩm",
+  "subtitle": "Giải pháp toàn diện cho nhu cầu văn phòng phẩm của bạn",
+  
+  "hero": {
+    "title": "Tối ưu hóa Quản lý Văn phòng phẩm",
+    "subtitle": "Đặt hàng hiệu quả, theo dõi và quản lý tồn kho cho tổ chức của bạn",
+    "cta": "Bắt đầu"
+  },
+  
+  "search": {
+    "placeholder": "Tìm kiếm sản phẩm, danh mục...",
+    "button": "Tìm kiếm",
+    "noResults": "Không tìm thấy kết quả",
+    "suggestions": "Tìm kiếm phổ biến"
+  },
+  
+  "actions": {
+    "browseCatalog": "Duyệt Danh mục",
+    "myRequests": "Yêu cầu của tôi",
+    "browseAllItems": "Duyệt tất cả sản phẩm",
+    "viewAllFavorites": "Xem tất cả yêu thích",
+    "viewFullCatalog": "Xem toàn bộ danh mục"
+  },
+  
+  "quickActions": {
+    "title": "Thao tác nhanh",
+    "browseCatalog": "Duyệt Danh mục",
+    "viewOrders": "Xem Đơn hàng",
+    "manageInventory": "Quản lý Tồn kho",
+    "reports": "Báo cáo"
+  },
+  
+  "sections": {
+    "categories": {
+      "title": "Duyệt Danh mục",
+      "subtitle": "Duyệt",
+      "viewAll": "Xem tất cả danh mục"
+    },
+    "popular": {
+      "title": "Sản phẩm được đặt hàng thường xuyên",
+      "subtitle": "Được yêu cầu nhiều nhất",
+      "empty": "Chưa có sản phẩm phổ biến",
+      "viewAll": "Xem tất cả sản phẩm"
+    },
+    "recent": {
+      "title": "Đơn hàng gần đây",
+      "subtitle": "Yêu cầu mới nhất của bạn",
+      "viewAll": "Xem lịch sử đơn hàng"
+    },
+    "favorites": {
+      "title": "Sản phẩm yêu thích",
+      "subtitle": "Sản phẩm đã lưu của bạn",
+      "empty": "Chưa có sản phẩm yêu thích",
+      "viewAll": "Xem tất cả yêu thích"
+    },
+    "features": {
+      "title": "Tính năng Quản lý",
+      "subtitle": "Khả năng hệ thống"
+    }
+  },
+  
+  "features": {
+    "inventory": {
+      "title": "Theo dõi Tồn kho",
+      "description": "Mức tồn kho thời gian thực và cảnh báo đặt hàng tự động"
+    },
+    "ordering": {
+      "title": "Quản lý Đơn hàng",
+      "description": "Quy trình phê duyệt hợp lý và theo dõi đơn hàng"
+    },
+    "analytics": {
+      "title": "Phân tích Sử dụng",
+      "description": "Theo dõi mô hình tiêu thụ và tối ưu hóa đặt hàng"
+    },
+    "tracking": {
+      "title": "Theo dõi Đơn hàng",
+      "description": "Giám sát trạng thái đơn hàng từ yêu cầu đến giao hàng"
+    }
+  },
+  
+  "stats": {
+    "totalProducts": "Tổng số Sản phẩm",
+    "activeOrders": "Đơn hàng Đang hoạt động",
+    "categories": "Danh mục",
+    "users": "Người dùng"
+  }
+}

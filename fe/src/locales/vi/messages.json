@@ -1,0 +1,88 @@
+{
+  "success": {
+    "general": "Thao tác hoàn thành thành công",
+    "saved": "Đã lưu thành công",
+    "updated": "Đã cập nhật thành công",
+    "deleted": "Đã xóa thành công",
+    "created": "Đã tạo thành công",
+    "uploaded": "Đã tải lên thành công",
+    "sent": "Đã gửi thành công",
+    "copied": "Đã sao chép vào clipboard",
+    "loggedIn": "Đăng nhập thành công",
+    "loggedOut": "Đăng xuất thành công",
+    "passwordChanged": "Đã thay đổi mật khẩu thành công",
+    "profileUpdated": "Đã cập nhật hồ sơ thành công",
+    "settingsSaved": "Đã lưu cài đặt thành công"
+  },
+  
+  "error": {
+    "general": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "network": "Lỗi mạng. Vui lòng kiểm tra kết nối của bạn.",
+    "server": "Lỗi máy chủ. Vui lòng thử lại sau.",
+    "unauthorized": "Bạn không có quyền thực hiện hành động này.",
+    "forbidden": "Truy cập bị từ chối.",
+    "notFound": "Không tìm thấy tài nguyên được yêu cầu.",
+    "validation": "Vui lòng kiểm tra thông tin nhập và thử lại.",
+    "timeout": "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
+    "fileSize": "Kích thước tệp quá lớn.",
+    "fileType": "Loại tệp không hợp lệ.",
+    "required": "Trường này là bắt buộc.",
+    "invalid": "Thông tin nhập không hợp lệ.",
+    "duplicate": "Mục này đã tồn tại.",
+    "outOfStock": "Sản phẩm này đã hết hàng.",
+    "insufficientStock": "Không đủ hàng trong kho.",
+    "loginFailed": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.",
+    "sessionExpired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại."
+  },
+  
+  "warning": {
+    "general": "Vui lòng xem xét hành động của bạn trước khi tiếp tục.",
+    "unsavedChanges": "Bạn có thay đổi chưa được lưu. Bạn có chắc chắn muốn rời khỏi?",
+    "deleteConfirm": "Bạn có chắc chắn muốn xóa mục này?",
+    "irreversible": "Hành động này không thể hoàn tác.",
+    "lowStock": "Cảnh báo hàng tồn kho thấp.",
+    "expiringSoon": "Sản phẩm này sắp hết hạn.",
+    "maintenanceMode": "Hệ thống đang trong chế độ bảo trì.",
+    "browserSupport": "Trình duyệt của bạn có thể không hỗ trợ tất cả các tính năng."
+  },
+  
+  "info": {
+    "general": "Thông tin",
+    "loading": "Đang tải...",
+    "processing": "Đang xử lý...",
+    "saving": "Đang lưu...",
+    "uploading": "Đang tải lên...",
+    "downloading": "Đang tải xuống...",
+    "searching": "Đang tìm kiếm...",
+    "noData": "Không có dữ liệu",
+    "noResults": "Không tìm thấy kết quả",
+    "endOfList": "Bạn đã đến cuối danh sách",
+    "newVersion": "Có phiên bản mới",
+    "offline": "Bạn hiện đang ngoại tuyến",
+    "online": "Đã khôi phục kết nối"
+  },
+  
+  "confirmation": {
+    "delete": "Bạn có chắc chắn muốn xóa mục này?",
+    "cancel": "Bạn có chắc chắn muốn hủy?",
+    "logout": "Bạn có chắc chắn muốn đăng xuất?",
+    "clear": "Bạn có chắc chắn muốn xóa tất cả dữ liệu?",
+    "reset": "Bạn có chắc chắn muốn đặt lại về cài đặt mặc định?",
+    "submit": "Bạn có chắc chắn muốn gửi?",
+    "approve": "Bạn có chắc chắn muốn phê duyệt yêu cầu này?",
+    "reject": "Bạn có chắc chắn muốn từ chối yêu cầu này?"
+  },
+  
+  "actions": {
+    "ok": "OK",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "yes": "Có",
+    "no": "Không",
+    "retry": "Thử lại",
+    "close": "Đóng",
+    "dismiss": "Bỏ qua",
+    "continue": "Tiếp tục",
+    "goBack": "Quay lại"
+  }
+}

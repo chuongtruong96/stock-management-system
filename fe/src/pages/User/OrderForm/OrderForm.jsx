@@ -58,97 +58,7 @@ import { useOrderExport } from "./useOrderExport";
 import { useTranslation } from "react-i18next";
 import { getProductImageUrl } from "utils/apiUtils";
 
-// Enhanced Order Flow Steps Configuration
-const ORDER_STEPS = [
-  {
-    id: 'cart',
-    label: 'Review Cart',
-    description: 'Review your selected items',
-    icon: <ShoppingCartIcon />,
-    status: null, // Always available when items exist
-  },
-  {
-    id: 'create',
-    label: 'Create Order',
-    description: 'Generate your order request',
-    icon: <AssignmentIcon />,
-    status: null, // Available when cart has items
-  },
-  {
-    id: 'export',
-    label: 'Export PDF',
-    description: 'Download order form for signature',
-    icon: <DescriptionIcon />,
-    status: 'pending', // Available when order is created
-  },
-  {
-    id: 'upload',
-    label: 'Upload Signed PDF',
-    description: 'Submit signed document',
-    icon: <CloudUploadIcon />,
-    status: 'exported', // Available when PDF is exported
-  },
-  {
-    id: 'submit',
-    label: 'Submit Order',
-    description: 'Send order to admin for approval',
-    icon: <SendIcon />,
-    status: 'uploaded', // Available when signed PDF is uploaded
-  },
-  {
-    id: 'approval',
-    label: 'Admin Approval',
-    description: 'Waiting for approval',
-    icon: <ApprovalIcon />,
-    status: 'submitted', // Available when order is submitted
-  },
-];
 
-// Order status mapping for better UX
-const ORDER_STATUS_CONFIG = {
-  pending: {
-    label: "Order Created",
-    color: "info",
-    progress: 20,
-    step: 2,
-    description: "Your order has been created and is ready for PDF export"
-  },
-  exported: {
-    label: "PDF Exported",
-    color: "warning", 
-    progress: 40,
-    step: 3,
-    description: "PDF has been exported. Please get it signed and upload back"
-  },
-  uploaded: {
-    label: "Signed PDF Uploaded",
-    color: "secondary",
-    progress: 60,
-    step: 4,
-    description: "Signed PDF uploaded. Ready to submit to admin"
-  },
-  submitted: {
-    label: "Submitted for Approval",
-    color: "primary",
-    progress: 80,
-    step: 5,
-    description: "Order submitted to admin. Waiting for approval"
-  },
-  approved: {
-    label: "Approved",
-    color: "success",
-    progress: 100,
-    step: 5,
-    description: "Your order has been approved and will be processed"
-  },
-  rejected: {
-    label: "Rejected",
-    color: "error",
-    progress: 100,
-    step: 5,
-    description: "Your order has been rejected. Please check admin comments"
-  }
-};
 
 export default function OrderForm() {
   console.log('🔍 ORDER_FORM: Component mounting...');
@@ -169,9 +79,101 @@ export default function OrderForm() {
   const { subscribe } = useContext(WsContext);
   const { items, clear, updateQuantity, removeItem } = useCart();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation('orders');
 
   const { exportPDF, markSubmitted } = useOrderExport(order, setOrder);
+
+  // Enhanced Order Flow Steps Configuration with translations
+  const ORDER_STEPS = [
+    {
+      id: 'cart',
+      label: t('steps.cart.title'),
+      description: t('steps.cart.description'),
+      icon: <ShoppingCartIcon />,
+      status: null, // Always available when items exist
+    },
+    {
+      id: 'create',
+      label: t('steps.create.title'),
+      description: t('steps.create.description'),
+      icon: <AssignmentIcon />,
+      status: null, // Available when cart has items
+    },
+    {
+      id: 'export',
+      label: t('steps.export.title'),
+      description: t('steps.export.description'),
+      icon: <DescriptionIcon />,
+      status: 'pending', // Available when order is created
+    },
+    {
+      id: 'upload',
+      label: t('steps.upload.title'),
+      description: t('steps.upload.description'),
+      icon: <CloudUploadIcon />,
+      status: 'exported', // Available when PDF is exported
+    },
+    {
+      id: 'submit',
+      label: t('steps.submit.title'),
+      description: t('steps.submit.description'),
+      icon: <SendIcon />,
+      status: 'uploaded', // Available when signed PDF is uploaded
+    },
+    {
+      id: 'approval',
+      label: t('steps.approval.title'),
+      description: t('steps.approval.description'),
+      icon: <ApprovalIcon />,
+      status: 'submitted', // Available when order is submitted
+    },
+  ];
+
+  // Order status mapping for better UX with translations
+  const ORDER_STATUS_CONFIG = {
+    pending: {
+      label: t('status.orderCreated'),
+      color: "info",
+      progress: 20,
+      step: 2,
+      description: t('status.orderCreatedDescription')
+    },
+    exported: {
+      label: t('status.pdfExported'),
+      color: "warning", 
+      progress: 40,
+      step: 3,
+      description: t('status.pdfExportedDescription')
+    },
+    uploaded: {
+      label: t('status.signedPdfUploaded'),
+      color: "secondary",
+      progress: 60,
+      step: 4,
+      description: t('status.signedPdfUploadedDescription')
+    },
+    submitted: {
+      label: t('status.submittedForApproval'),
+      color: "primary",
+      progress: 80,
+      step: 5,
+      description: t('status.submittedForApprovalDescription')
+    },
+    approved: {
+      label: t('status.approved'),
+      color: "success",
+      progress: 100,
+      step: 5,
+      description: t('status.approvedDescription')
+    },
+    rejected: {
+      label: t('status.rejected'),
+      color: "error",
+      progress: 100,
+      step: 5,
+      description: t('status.rejectedDescription')
+    }
+  };
 
   // Calculate current step based on order status and cart state
   const getCurrentStep = () => {
@@ -210,8 +212,8 @@ export default function OrderForm() {
         
         if (!storedUser) {
           console.warn("🔍 ORDER_FORM: No stored user found, using fallback");
-          setDept("Guest User");
-          setUser({ username: "Guest", departmentName: "Guest User" });
+          setDept(t('labels.guestUser'));
+          setUser({ username: t('labels.guest'), departmentName: t('labels.guestUser') });
           return;
         }
 
@@ -220,8 +222,8 @@ export default function OrderForm() {
         
         // Set fallback user info immediately from stored data
         const fallbackUser = {
-          username: parsedUser?.username || "User",
-          departmentName: parsedUser?.departmentName || parsedUser?.department?.name || "Unknown Department"
+          username: parsedUser?.username || t('labels.user'),
+          departmentName: parsedUser?.departmentName || parsedUser?.department?.name || t('labels.unknownDepartment')
         };
         setUser(fallbackUser);
         setDept(fallbackUser.departmentName);
@@ -249,7 +251,7 @@ export default function OrderForm() {
                                 userResponse?.department?.departmentName ||
                                 userResponse?.dept?.name ||
                                 parsedUser?.departmentName ||
-                                "Unknown Department";
+                                t('labels.unknownDepartment');
           console.log("🔍 ORDER_FORM: Fresh department resolved:", departmentName);
           setDept(departmentName);
         } catch (freshDataError) {
@@ -261,13 +263,13 @@ export default function OrderForm() {
         console.error("🔍 ORDER_FORM: Critical user data error:", error);
         
         // Set minimal fallback data to keep the form functional
-        setUser({ username: "User", departmentName: "Unknown Department" });
-        setDept("Unknown Department");
+        setUser({ username: t('labels.user'), departmentName: t('labels.unknownDepartment') });
+        setDept(t('labels.unknownDepartment'));
         
         // Only show error for non-auth issues
         if (error.response?.status !== 401) {
           console.warn("🔍 ORDER_FORM: Showing user info error toast");
-          toast.warning('Some user information could not be loaded, but you can still place orders.');
+          toast.warning(t('messages.userInfoLoadError'));
         }
       }
     };
@@ -301,19 +303,19 @@ export default function OrderForm() {
     let off;
     subscribe("/topic/order-window", ({ open }) => {
       setCanOrder(open);
-      toast.info(open ? "✅ Window OPEN" : "⏰ Window CLOSED");
+      toast.info(open ? `✅ ${t('messages.windowOpen')}` : `⏰ ${t('messages.windowClosed')}`);
     }).then((o) => (off = o));
     return () => off && off();
   }, [subscribe]);
 
   const handleSubmit = async () => {
     if (!canOrder) {
-      toast.warning(t('messages.orderWindowClosed') || 'Order window is currently closed');
+      toast.warning(t('messages.orderWindowClosed'));
       return;
     }
 
     if (!items.length) {
-      toast.error(t('messages.noItemsInCart') || 'No items in cart');
+      toast.error(t('messages.noItemsInCart'));
       return;
     }
 
@@ -328,7 +330,7 @@ export default function OrderForm() {
       console.log("Order created:", response);
       setOrder(response);
       clear(); // Clear cart after successful order creation
-      toast.success(t('messages.orderCreatedSuccess') || 'Order created successfully! Please export PDF for signature.');
+      toast.success(t('messages.orderCreatedSuccess'));
     } catch (e) {
       console.error("Order creation error:", e);
       toast.error(e.response?.data?.message || e.message);
@@ -341,9 +343,9 @@ export default function OrderForm() {
     setLoading(true);
     try {
       await exportPDF();
-      toast.success(t('messages.pdfExportedSuccess') || 'PDF exported successfully! Please get it signed and upload back.');
+      toast.success(t('messages.pdfExportedSuccess'));
     } catch (e) {
-      toast.error(t('messages.failedToExportPdf') || 'Failed to export PDF');
+      toast.error(t('messages.failedToExportPdf'));
     } finally {
       setLoading(false);
     }
@@ -355,7 +357,7 @@ export default function OrderForm() {
 
   const handleSubmitOrder = async () => {
     if (!order) {
-      toast.error('No order found to submit');
+      toast.error(t('messages.noOrderToSubmit'));
       return;
     }
 
@@ -367,10 +369,10 @@ export default function OrderForm() {
       // Update local order state
       setOrder(prev => ({ ...prev, status: 'submitted' }));
       
-      toast.success(t('messages.orderSubmittedSuccess') || 'Order submitted successfully! Admin will review your request.');
+      toast.success(t('messages.orderSubmittedSuccess'));
     } catch (error) {
       console.error('Submit order error:', error);
-      toast.error(error.response?.data?.message || t('messages.failedToSubmitOrder') || 'Failed to submit order');
+      toast.error(error.response?.data?.message || t('messages.failedToSubmitOrder'));
     } finally {
       setLoading(false);
     }
@@ -378,7 +380,7 @@ export default function OrderForm() {
 
   const handleGoBack = () => {
     if (order && order.status !== 'approved' && order.status !== 'rejected') {
-      if (window.confirm('Are you sure you want to go back? Your current order progress will be lost.')) {
+      if (window.confirm(t('messages.confirmGoBack'))) {
         setOrder(null);
       }
     } else {
@@ -387,9 +389,9 @@ export default function OrderForm() {
   };
 
   const handleCancelOrder = () => {
-    if (window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+    if (window.confirm(t('messages.confirmCancelOrder'))) {
       setOrder(null);
-      toast.info('Order cancelled');
+      toast.info(t('messages.orderCancelled'));
     }
   };
 
@@ -410,7 +412,7 @@ export default function OrderForm() {
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
           <Typography variant="h3" fontWeight={700}>
-            📋 {t('order.orderForm') || 'Order Form'}
+            📋 {t('form.title')}
           </Typography>
           
           <Stack direction="row" spacing={2} alignItems="center">
@@ -451,10 +453,10 @@ export default function OrderForm() {
               height: '100%',
             }}>
               <Typography variant="h6" gutterBottom>
-                🏢 Department
+                🏢 {t('labels.department')}
               </Typography>
               <Typography variant="body1" fontWeight={500}>
-                {dept || "Loading..."}
+                {dept || t('ui.loading')}
               </Typography>
             </Box>
           </Grid>
@@ -468,10 +470,10 @@ export default function OrderForm() {
               height: '100%',
             }}>
               <Typography variant="h6" gutterBottom>
-                👤 Username
+                👤 {t('labels.username')}
               </Typography>
               <Typography variant="body1" fontWeight={500}>
-                {user?.username || "Loading..."}
+                {user?.username || t('ui.loading')}
               </Typography>
             </Box>
           </Grid>
@@ -485,7 +487,7 @@ export default function OrderForm() {
               height: '100%',
             }}>
               <Typography variant="h6" gutterBottom>
-                📅 Date
+                📅 {t('labels.date')}
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {today}
@@ -504,7 +506,7 @@ export default function OrderForm() {
               "& .MuiAlert-icon": { color: "#ffc107" }
             }}
           >
-            ⚠️ {t('messages.orderWindowClosed') || 'Order window is currently closed'}
+            ⚠️ {t('messages.orderWindowClosed')}
           </Alert>
         )}
       </Paper>
@@ -523,7 +525,7 @@ export default function OrderForm() {
           }}
         >
           <Typography variant="h5" gutterBottom fontWeight={600} color="primary.main" sx={{ mb: 3 }}>
-            🚀 Order Progress Stepper
+            🚀 {t('form.orderProgressStepper')}
           </Typography>
           
           <Stepper 
@@ -617,7 +619,7 @@ export default function OrderForm() {
                   },
                 }}
               >
-                Start Shopping
+                {t('actions.startShopping')}
               </Button>
             )}
 
@@ -641,7 +643,7 @@ export default function OrderForm() {
                   },
                 }}
               >
-                Create Order
+                {t('actions.createOrder')}
               </Button>
             )}
 
@@ -665,7 +667,7 @@ export default function OrderForm() {
                   },
                 }}
               >
-                Export PDF
+                {t('actions.exportPDF')}
               </Button>
             )}
 
@@ -718,7 +720,7 @@ export default function OrderForm() {
                   },
                 }}
               >
-                Upload Signed PDF
+                {t('actions.uploadSignedPdf')}
               </Button>
             )}
 
@@ -746,7 +748,7 @@ export default function OrderForm() {
                   },
                 }}
               >
-                {loading ? 'Submitting...' : 'Submit Order to Admin'}
+                {loading ? t('ui.submitting') : t('actions.submitOrderToAdmin')}
               </Button>
             )}
 
@@ -770,12 +772,12 @@ export default function OrderForm() {
                     },
                   }}
                 >
-                  View Order History
+                  {t('actions.viewOrderHistory')}
                 </Button>
                 
                 {order?.status === 'approved' && (
                   <Chip
-                    label="✅ Order Approved!"
+                    label={`✅ ${t('status.orderApproved')}`}
                     color="success"
                     variant="filled"
                     sx={{ 
@@ -806,21 +808,19 @@ export default function OrderForm() {
           }}
         >
           <Typography variant="h5" gutterBottom fontWeight={600} color="success.main">
-            🚀 {t('order.orderProgress') || 'Order Progress'}
+            🚀 {t('form.orderProgress')}
           </Typography>
           <OrderProgress status={order.status} />
           
           {/* Flow Instructions */}
           <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(255,255,255,0.7)', borderRadius: 2 }}>
             <Typography variant="h6" fontWeight={600} gutterBottom color="text.primary">
-              📋 Next Steps:
+              📋 {t('form.nextSteps')}:
             </Typography>
             {order.status === "pending" && (
               <>
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                  1. Click "Export PDF" to download your order form<br/>
-                  2. Get it signed by your department head<br/>
-                  3. Upload the signed PDF back to the system
+                  {t('instructions.exportPdfSteps')}
                 </Typography>
                 
                 {/* Export PDF Button in Order Progress Section */}
@@ -848,28 +848,24 @@ export default function OrderForm() {
                       },
                     }}
                   >
-                    {loading ? 'Exporting...' : '📄 Export PDF'}
+                    {loading ? t('ui.exporting') : `📄 ${t('actions.exportPDF')}`}
                   </Button>
                 </Box>
               </>
             )}
             {order.status === "exported" && (
               <Typography variant="body1" color="text.secondary">
-                1. ✅ PDF exported successfully<br/>
-                2. Get the PDF signed by your department head<br/>
-                3. Click "Upload Signed PDF" to submit your order
+                {t('instructions.uploadSignedSteps')}
               </Typography>
             )}
             {order.status === "submitted" && (
               <Typography variant="body1" color="text.secondary">
-                1. ✅ PDF exported<br/>
-                2. ✅ Signed PDF uploaded<br/>
-                3. ⏳ Waiting for admin approval
+                {t('instructions.submittedSteps')}
               </Typography>
             )}
             {order.status === "approved" && (
               <Typography variant="body1" color="success.main">
-                🎉 Your order has been approved and will be processed!
+                {t('instructions.approvedMessage')}
               </Typography>
             )}
           </Box>
@@ -910,7 +906,7 @@ export default function OrderForm() {
                       textAlign: "left"
                     }}
                   >
-                    Product Name
+                    {t('table.productName')}
                   </TableCell>
                   <TableCell 
                     sx={{ 
@@ -921,7 +917,7 @@ export default function OrderForm() {
                       textAlign: "center"
                     }}
                   >
-                    Quantity
+                    {t('table.quantity')}
                   </TableCell>
                   <TableCell 
                     sx={{ 
@@ -932,7 +928,7 @@ export default function OrderForm() {
                       textAlign: "center"
                     }}
                   >
-                    Unit
+                    {t('table.unit')}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -974,7 +970,7 @@ export default function OrderForm() {
                               {product.name}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              Item #{index + 1}
+                              {t('table.itemNumber', { number: index + 1 })}
                             </Typography>
                           </Box>
                         </Stack>
@@ -1012,7 +1008,7 @@ export default function OrderForm() {
       {/* Quick Actions */}
       <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
         <Typography variant="h5" gutterBottom fontWeight={600} color="primary">
-          🔗 Quick Actions
+          🔗 {t('form.quickActions')}
         </Typography>
         
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
@@ -1056,7 +1052,7 @@ export default function OrderForm() {
                 "&:hover": { borderWidth: 2 }
               }}
             >
-              🔄 Refresh Status
+              🔄 {t('actions.refreshStatus')}
             </Button>
           )}
         </Stack>
@@ -1084,7 +1080,7 @@ export default function OrderForm() {
               toast.success(t('messages.signedPdfUploaded') || 'Signed PDF uploaded successfully! You can now submit your order to admin.');
             } catch (error) {
               console.error('Upload error:', error);
-              toast.error(`Upload failed: ${error.message}`);
+              toast.error(t('messages.uploadFailed', { error: error.message }));
               throw error; // Re-throw so the dialog can handle it
             }
           }}

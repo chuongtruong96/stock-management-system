@@ -2,15 +2,14 @@ import { CardActionArea, CardContent, CardMedia, Typography } from "@mui/materia
 import CardBase from "../common/CardBase";
 import { Box } from "@mui/system";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getCategoryIconUrl } from "utils/apiUtils";
-import TranslatableText from "../translation/TranslatableText";
+import BilingualText from "../translation/BilingualText";
 import "../../css/components/CategoryCard.css"; // Import the CSS file
 
 export default function CategoryCard({ data, disabled = false }) {
   const navigate = useNavigate();
-  
-  // Get the display name (prefer Vietnamese, fallback to English)
-  const displayName = data?.nameVn || data?.nameEn || data?.code || 'Unknown';
+  const { t } = useTranslation('categories');
 
   return (
     <CardBase className="category-card" sx={{ height: 220}}>
@@ -117,7 +116,10 @@ export default function CategoryCard({ data, disabled = false }) {
           />
         </Box>
         <CardContent sx={{ bgcolor: "grey.100", textAlign: "center", py: 0.5, px: 1 }}>
-          <TranslatableText
+          <BilingualText
+            en={data?.nameEn}
+            vi={data?.nameVn}
+            fallback={data?.code || 'Unknown Category'}
             component="subtitle2"
             sx={{
               display: "-webkit-box",
@@ -129,9 +131,8 @@ export default function CategoryCard({ data, disabled = false }) {
               fontSize: "0.875rem",
               fontWeight: 600,
             }}
-          >
-            {displayName}
-          </TranslatableText>
+            enableTranslation={true}
+          />
           {data.productCount !== undefined && (
             <Typography 
               variant="caption" 
@@ -142,7 +143,7 @@ export default function CategoryCard({ data, disabled = false }) {
                 display: "block",
               }}
             >
-              {data.productCount} items
+              {data.productCount} {t('labels.items')}
             </Typography>
           )}
         </CardContent>

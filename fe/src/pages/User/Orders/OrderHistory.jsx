@@ -24,12 +24,12 @@ import OrderHistoryItem from "./OrderHistoryItem";
 import LoadingSpinner from "components/common/LoadingSpinner";
 
 export default function OrderHistory() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('orders');
   const navigate = useNavigate();
   const { data: history, isLoading: loading, error } = useOrderHistory();
 
   if (loading) {
-    return <LoadingSpinner message="Loading order history..." />;
+    return <LoadingSpinner message={t('page.loading')} />;
   }
 
   if (error) {
@@ -42,7 +42,7 @@ export default function OrderHistory() {
             boxShadow: '0 4px 12px rgba(244, 67, 54, 0.15)',
           }}
         >
-          {error.message || "Failed to load order history"}
+          {error.message || t('page.error')}
         </Alert>
       </Container>
     );
@@ -85,10 +85,10 @@ export default function OrderHistory() {
             </Box>
             <Box>
               <Typography variant="h4" fontWeight={700} color="text.primary">
-                {t('nav.orderHistory')}
+                {t('history.title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {orders.length} {orders.length === 1 ? 'order' : 'orders'} found
+                {t('history.ordersFound', { count: orders.length })}
               </Typography>
             </Box>
           </Stack>
@@ -97,7 +97,10 @@ export default function OrderHistory() {
           {pendingOrder && (
             <Stack direction="row" spacing={2} alignItems="center">
               <Chip
-                label={`Order #${pendingOrder.orderId || pendingOrder.id} - ${pendingOrder.status}`}
+                label={t('history.pendingOrderChip', { 
+                  orderNumber: pendingOrder.orderId || pendingOrder.id, 
+                  status: pendingOrder.status 
+                })}
                 color="warning"
                 variant="outlined"
                 size="small"
@@ -113,7 +116,7 @@ export default function OrderHistory() {
                   },
                 }}
               >
-                Continue Pending Order
+                {t('history.continuePendingOrder')}
               </Button>
             </Stack>
           )}
@@ -148,10 +151,10 @@ export default function OrderHistory() {
             <OrderIcon sx={{ fontSize: 40, color: 'text.secondary' }} />
           </Box>
           <Typography variant="h5" fontWeight={600} color="text.primary" gutterBottom>
-            No orders yet
+            {t('history.noOrdersTitle')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            You haven't placed any orders yet. Start shopping to see your order history here.
+            {t('history.noOrdersMessage')}
           </Typography>
         </Paper>
       ) : (

@@ -11,12 +11,17 @@ import {
   Language as LanguageIcon,
   Translate as TranslateIcon,
 } from '@mui/icons-material';
-import { useUniversalTranslation } from '../../context/UniversalTranslationContext';
+import { useTranslation } from 'react-i18next';
 
 const LanguageToggle = ({ size = 'small', showLabel = false, variant = 'outlined' }) => {
-  const { currentLanguage, toggleLanguage } = useUniversalTranslation();
-  const isVietnamese = currentLanguage === 'vi';
-  const isEnglish = currentLanguage === 'en';
+  const { i18n } = useTranslation();
+  const isVietnamese = i18n.language === 'vi';
+  
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'vi' : 'en';
+    i18n.changeLanguage(newLang);
+  };
+  const isEnglish = i18n.language === 'en';
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -30,11 +35,11 @@ const LanguageToggle = ({ size = 'small', showLabel = false, variant = 'outlined
       <ToggleButtonGroup
         size={size}
         exclusive
-        value={currentLanguage}
+        value={i18n.language}
         onChange={(_, newLanguage) => {
           if (newLanguage) {
-            if (newLanguage !== currentLanguage) {
-              toggleLanguage();
+            if (newLanguage !== i18n.language) {
+              i18n.changeLanguage(newLanguage);
             }
           }
         }}

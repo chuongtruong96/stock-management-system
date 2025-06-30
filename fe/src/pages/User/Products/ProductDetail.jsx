@@ -56,7 +56,7 @@ import { getProductImageUrl } from "utils/apiUtils";
 import RelatedProducts from "components/shop/RelatedProducts";
 
 // Enhanced Image Component with better error handling and loading states
-const ProductImage = ({ src, alt, onImageLoad, onImageError }) => {
+const ProductImage = ({ src, alt, onImageLoad, onImageError, t }) => {
   const [imageState, setImageState] = useState("loading"); // loading, loaded, error
   const [imageZoomOpen, setImageZoomOpen] = useState(false);
   const theme = useTheme();
@@ -141,10 +141,10 @@ const ProductImage = ({ src, alt, onImageLoad, onImageError }) => {
               <ImageNotSupportedIcon sx={{ fontSize: 40, color: "white" }} />
             </Box>
             <Typography variant="h6" fontWeight={600} color="text.primary" sx={{ mb: 1 }}>
-              No Image Available
+              {t('details.noImageAvailable')}
             </Typography>
             <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ px: 2 }}>
-              Product image will be displayed here when available
+              {t('details.imageWillDisplay')}
             </Typography>
           </Box>
         )}
@@ -301,7 +301,7 @@ const ProductDetailSkeleton = () => (
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation('products');
   const { addItem, isInCart, getCartItemQty } = useCart();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -369,14 +369,14 @@ export default function ProductDetail() {
         addItem(normalizedProduct, qty);
         setQty(1);
         toast.success(
-          `Added ${qty} ${qty > 1 ? "items" : "item"} to cart successfully!`,
+          t('cart.addedToCart'),
           {
             position: "bottom-right",
             autoClose: 3000,
           }
         );
       } catch (error) {
-        toast.error("Failed to add item to cart. Please try again.");
+        toast.error(t('errors.addToCartError'));
       } finally {
         setAddingToCart(false);
       }
@@ -401,7 +401,7 @@ export default function ProductDetail() {
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard!");
+      toast.success(t('sharing.linkCopied'));
     }
   };
 
@@ -416,11 +416,10 @@ export default function ProductDetail() {
           <Stack spacing={3} alignItems="center" textAlign="center">
             <WarningIcon sx={{ fontSize: 80, color: "error.main" }} />
             <Typography variant="h4" color="error.main" fontWeight={600}>
-              Product Not Found
+              {t('errors.notFound')}
             </Typography>
             <Alert severity="error" sx={{ maxWidth: 600 }}>
-              {error?.message ||
-                "The product you are looking for does not exist or has been removed."}
+              {error?.message || t('errors.productNotFoundDescription')}
             </Alert>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button
@@ -429,14 +428,14 @@ export default function ProductDetail() {
                 variant="outlined"
                 size="large"
               >
-                Go Back
+                {t('actions.goBack')}
               </Button>
               <Button
                 onClick={() => navigate("/products")}
                 variant="contained"
                 size="large"
               >
-                Browse Products
+                {t('actions.browseProducts')}
               </Button>
             </Stack>
           </Stack>
@@ -445,7 +444,7 @@ export default function ProductDetail() {
     );
   }
 
-  const productName = product.productName || product.name || "Unknown Product";
+  const productName = product.productName || product.name || t('product.unknownProduct');
   const productDesc = product.description || "";
   const productCode = product.code || product.productCode || "";
   const unitLabel =
@@ -548,7 +547,7 @@ export default function ProductDetail() {
                     "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                 }}
               >
-                Back to Products
+                {t('actions.backToProducts')}
               </Button>
 
               {/* Floating Quick Actions Hub */}
@@ -566,11 +565,11 @@ export default function ProductDetail() {
                     WebkitTextFillColor: "transparent",
                   }}
                 >
-                  Quick Actions
+                  {t('actions.quickActions')}
                 </Typography>
 
                 <Stack direction="row" spacing={1.5}>
-                  <Tooltip title="Continue Shopping" arrow>
+                  <Tooltip title={t('actions.continueShopping')} arrow>
                     <IconButton
                       onClick={() => navigate("/products")}
                       sx={{
@@ -591,7 +590,7 @@ export default function ProductDetail() {
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="View Cart" arrow>
+                  <Tooltip title={t('actions.viewCart')} arrow>
                     <Badge badgeContent={cartQty} color="error">
                       <IconButton
                         onClick={() => navigate("/order-form")}
@@ -614,7 +613,7 @@ export default function ProductDetail() {
                     </Badge>
                   </Tooltip>
 
-                  <Tooltip title="Order History" arrow>
+                  <Tooltip title={t('actions.orderHistory')} arrow>
                     <IconButton
                       onClick={() => navigate("/order-history")}
                       sx={{
@@ -739,6 +738,7 @@ export default function ProductDetail() {
                         src={getProductImageUrl(product.image)}
                         alt={productName}
                         onImageLoad={() => setImageLoaded(true)}
+                        t={t}
                       />
                     </Box>
                   </Fade>
@@ -757,13 +757,13 @@ export default function ProductDetail() {
                   >
                     <Slide direction="left" in timeout={1400}>
                       <Tooltip
-                        title={
-                          isFavorite
-                            ? "Remove from favorites"
-                            : "Add to favorites"
-                        }
-                        placement="left"
-                        arrow
+                      title={
+                      isFavorite
+                      ? t('actions.removeFromFavorites')
+                      : t('actions.addToFavorites')
+                      }
+                      placement="left"
+                      arrow
                       >
                         <IconButton
                           onClick={() => setIsFavorite(!isFavorite)}
@@ -793,7 +793,7 @@ export default function ProductDetail() {
                     </Slide>
 
                     <Slide direction="left" in timeout={1600}>
-                      <Tooltip title="Share product" placement="left" arrow>
+                      <Tooltip title={t('actions.shareProduct')} placement="left" arrow>
                         <IconButton
                           onClick={handleShare}
                           sx={{
@@ -843,10 +843,10 @@ export default function ProductDetail() {
                           <CheckCircleIcon sx={{ fontSize: 32 }} />
                           <Box>
                             <Typography variant="h6" fontWeight={700}>
-                              ✅ In Your Cart
+                              ✅ {t('status.inCart')}
                             </Typography>
                             <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                              Quantity: {cartQty} items
+                              {t('labels.quantity')}: {cartQty} {t('labels.items')}
                             </Typography>
                           </Box>
                         </Box>
@@ -946,7 +946,7 @@ export default function ProductDetail() {
                             fontWeight={600}
                             sx={{ opacity: 0.9 }}
                           >
-                            {product.categoryName || "Uncategorized"}
+                            {product.categoryName || t('product.uncategorized')}
                           </Typography>
                         </Box>
                       </Card>
@@ -984,7 +984,7 @@ export default function ProductDetail() {
                               </Box>
                               <Box>
                                 <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                  Product Code
+                                  {t('product.code')}
                                 </Typography>
                                 <Typography variant="h6" fontWeight={700} color="primary.main">
                                   {productCode}
@@ -1025,7 +1025,7 @@ export default function ProductDetail() {
                               </Box>
                               <Box>
                                 <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                  Unit of Measurement
+                                  {t('product.unit')}
                                 </Typography>
                                 <Typography variant="h6" fontWeight={700} color="secondary.main">
                                   {unitLabel}
@@ -1055,8 +1055,8 @@ export default function ProductDetail() {
                         }}
                       >
                         {product.available !== false
-                          ? "✅ Available for ordering"
-                          : "⚠️ Currently unavailable"}
+                          ? `✅ ${t('status.available')}`
+                          : `⚠️ ${t('status.unavailable')}`}
                       </Alert>
                     </Box>
 
@@ -1118,12 +1118,12 @@ export default function ProductDetail() {
           <Stack spacing={2}>
             <Box>
               <Typography variant="subtitle2" fontWeight={600} color="text.primary" mb={1}>
-                Select Quantity
+                {t('cart.selectQuantity')}
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <QuantitySelector value={qty} setValue={setQty} min={1} max={99} size="medium" />
                 <Typography variant="body2" color="text.secondary">
-                  {qty > 1 ? `${qty} items` : "1 item"}
+                  {qty > 1 ? t('cart.quantityItems', { count: qty }) : t('cart.oneItem')}
                 </Typography>
               </Box>
             </Box>
@@ -1164,7 +1164,7 @@ export default function ProductDetail() {
                 transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
-              {addingToCart ? "Adding..." : `Add ${qty} to Cart`}
+              {addingToCart ? t('cart.adding') : t('cart.addToCart', { count: qty })}
             </Button>
           </Stack>
         ) : (
@@ -1179,10 +1179,10 @@ export default function ProductDetail() {
               }}
             >
               <Typography variant="subtitle1" color="success.dark" fontWeight={600}>
-                ✅ Item in Cart
+                ✅ {t('status.itemInCart')}
               </Typography>
               <Typography variant="body2" color="success.dark">
-                Current quantity: <strong>{cartQty}</strong>
+                {t('labels.currentQuantity')}: <strong>{cartQty}</strong>
               </Typography>
             </Box>
 
@@ -1205,7 +1205,7 @@ export default function ProductDetail() {
                   transition: "all 0.2s ease-in-out",
                 }}
               >
-                🛒 View Cart ({cartQty})
+                🛒 {t('actions.viewCartWithCount', { count: cartQty })}
               </Button>
 
               <Button
@@ -1233,7 +1233,7 @@ export default function ProductDetail() {
                   transition: "all 0.2s ease-in-out",
                 }}
               >
-                {addingToCart ? "Adding..." : "Add More"}
+                {addingToCart ? t('cart.adding') : t('cart.addMore')}
               </Button>
             </Stack>
           </Stack>

@@ -28,7 +28,7 @@ import { productApi, categoryApi } from "services/api";
 import { getProductImageUrl } from "utils/apiUtils";
 
 const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -58,7 +58,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
         type: "product",
         id: p.id,
         title: p.name,
-        subtitle: p.category?.name || "Product",
+        subtitle: p.category?.name || t('search.product'),
         image: p.image,
       }));
 
@@ -72,7 +72,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
           type: "category",
           id: c.categoryId,
           title: c.nameEn || c.nameVn,
-          subtitle: "Category",
+          subtitle: t('search.category'),
           image: c.icon,
         }));
 
@@ -138,7 +138,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
         ref={searchRef}
         fullWidth={fullWidth}
         size={size}
-        placeholder={placeholder || t('common.search') + " products, categories..."}
+        placeholder={placeholder || t('search.placeholder')}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -193,7 +193,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
               <Box sx={{ p: 2, textAlign: "center" }}>
                 <CircularProgress size={24} />
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Searching...
+                  {t('search.searching')}
                 </Typography>
               </Box>
             )}
@@ -205,7 +205,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
                   variant="overline"
                   sx={{ px: 2, py: 1, display: "block", fontWeight: 600 }}
                 >
-                  Suggestions
+                  {t('search.suggestions')}
                 </Typography>
                 <List dense>
                   {suggestions.map((suggestion, index) => (
@@ -255,7 +255,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
                   }}
                 >
                   <Typography variant="overline" fontWeight={600}>
-                    Recent Searches
+                    {t('search.recentSearches')}
                   </Typography>
                   <IconButton size="small" onClick={clearRecentSearches}>
                     <ClearIcon fontSize="small" />
@@ -287,10 +287,10 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
             {!isLoading && query.length >= 2 && suggestions.length === 0 && (
               <Box sx={{ p: 3, textAlign: "center" }}>
                 <Typography variant="body2" color="text.secondary">
-                  No results found for "{query}"
+                  {t('search.noResults', { query })}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Try different keywords or browse categories
+                  {t('search.tryDifferent')}
                 </Typography>
               </Box>
             )}
@@ -300,7 +300,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
               <Box sx={{ p: 3, textAlign: "center" }}>
                 <TrendingIcon color="action" sx={{ fontSize: 32, mb: 1 }} />
                 <Typography variant="body2" color="text.secondary">
-                  Start typing to search products and categories
+                  {t('search.startTyping')}
                 </Typography>
               </Box>
             )}

@@ -1,0 +1,319 @@
+/* Enhanced Notifications Styles */
+
+.notification-card {
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.notification-card.unread {
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.02) 0%, rgba(25, 118, 210, 0.01) 100%);
+}
+
+.notification-card.selected {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.notification-unread-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #1976d2 0%, #42a5f5 100%);
+  border-radius: 0 4px 4px 0;
+}
+
+.notification-avatar {
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-avatar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: rotate(45deg);
+  transition: all 0.6s;
+  opacity: 0;
+}
+
+.notification-card:hover .notification-avatar::before {
+  opacity: 1;
+  transform: rotate(45deg) translate(50%, 50%);
+}
+
+.notification-priority-urgent {
+  animation: pulse-urgent 2s infinite;
+}
+
+@keyframes pulse-urgent {
+  0% {
+    box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(211, 47, 47, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
+  }
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notification-type-chip {
+  font-weight: 500;
+  font-size: 0.75rem;
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+
+.notification-priority-chip {
+  font-weight: 600;
+  font-size: 0.7rem;
+  border-radius: 10px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.notification-message {
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.notification-message.expanded {
+  max-height: none;
+  -webkit-line-clamp: unset;
+}
+
+.notification-actions {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.notification-card:hover .notification-actions {
+  opacity: 1;
+}
+
+.notification-bulk-actions {
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(25, 118, 210, 0.02) 100%);
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.notification-empty-state {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.01) 100%);
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-empty-state::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.notification-filter-chip {
+  background: rgba(25, 118, 210, 0.1);
+  color: #1976d2;
+  border: 1px solid rgba(25, 118, 210, 0.3);
+}
+
+.notification-search-input {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+}
+
+.notification-search-input:focus-within {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.notification-settings-dialog {
+  backdrop-filter: blur(10px);
+}
+
+.notification-settings-section {
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-settings-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.notification-fab {
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+}
+
+.notification-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 40px rgba(25, 118, 210, 0.4);
+}
+
+.notification-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.notification-group-header {
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  padding: 8px 16px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .notification-card {
+    margin-bottom: 8px;
+  }
+  
+  .notification-actions {
+    opacity: 1;
+  }
+  
+  .notification-bulk-actions {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    margin-bottom: 16px;
+  }
+  
+  .notification-search-input {
+    border-radius: 12px;
+  }
+  
+  .notification-fab {
+    bottom: 16px;
+    right: 16px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .notification-card.unread {
+    background: linear-gradient(135deg, rgba(144, 202, 249, 0.05) 0%, rgba(144, 202, 249, 0.02) 100%);
+  }
+  
+  .notification-time {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .notification-empty-state {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .notification-search-input {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  
+  .notification-search-input:focus-within {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  .notification-group-header {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .notification-card {
+    border: 2px solid;
+  }
+  
+  .notification-card.unread {
+    border-color: #1976d2;
+  }
+  
+  .notification-card.selected {
+    border-width: 3px;
+  }
+  
+  .notification-type-chip,
+  .notification-priority-chip {
+    border: 1px solid;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .notification-card,
+  .notification-avatar::before,
+  .notification-actions,
+  .notification-fab {
+    transition: none;
+  }
+  
+  .notification-priority-urgent {
+    animation: none;
+  }
+  
+  .notification-empty-state::before {
+    animation: none;
+  }
+  
+  .notification-skeleton {
+    animation: none;
+  }
+}

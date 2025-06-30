@@ -30,7 +30,7 @@ import { useTranslation } from "react-i18next";
 
 export default function OrderHistoryItem({ order }) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation('orders');
 
   if (!order) return null;
 
@@ -44,56 +44,56 @@ export default function OrderHistoryItem({ order }) {
         return {
           color: "info",
           icon: <HourglassEmptyIcon />,
-          label: "Order Created",
-          description: "Waiting for PDF export"
+          label: t('status.orderCreated'),
+          description: t('historyItem.waitingForPdfExport')
         };
       case "exported":
         return {
           color: "warning",
           icon: <PictureAsPdfIcon />,
-          label: "PDF Exported",
-          description: "Ready for signature"
+          label: t('status.pdfExported'),
+          description: t('historyItem.readyForSignature')
         };
       case "uploaded":
         return {
           color: "secondary",
           icon: <CloudUploadIcon />,
-          label: "Signed PDF Uploaded",
-          description: "Ready to submit"
+          label: t('status.signedPdfUploaded'),
+          description: t('historyItem.readyToSubmit')
         };
       case "submitted":
         return {
           color: "primary",
           icon: <SendIcon />,
-          label: "Submitted for Approval",
-          description: "Under admin review"
+          label: t('status.submittedForApproval'),
+          description: t('historyItem.underAdminReview')
         };
       case "approved":
         return {
           color: "success",
           icon: <CheckCircleIcon />,
-          label: "Approved",
-          description: "Order will be processed"
+          label: t('status.approved'),
+          description: t('historyItem.orderWillBeProcessed')
         };
       case "rejected":
         return {
           color: "error",
           icon: <CancelIcon />,
-          label: "Rejected",
-          description: "Order was declined"
+          label: t('status.rejected'),
+          description: t('historyItem.orderWasDeclined')
         };
       default:
         return {
           color: "default",
           icon: <AssignmentIcon />,
-          label: status || "Unknown",
-          description: "Status unknown"
+          label: status || t('status.unknownStatus'),
+          description: t('historyItem.statusUnknown')
         };
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return t('common.notAvailable');
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
@@ -104,7 +104,7 @@ export default function OrderHistoryItem({ order }) {
         minute: '2-digit'
       });
     } catch {
-      return "Invalid Date";
+      return t('common.invalidDate');
     }
   };
 
@@ -115,10 +115,10 @@ export default function OrderHistoryItem({ order }) {
       const now = new Date();
       const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
       
-      if (diffInHours < 1) return "Just now";
-      if (diffInHours < 24) return `${diffInHours}h ago`;
+      if (diffInHours < 1) return t('historyItem.justNow');
+      if (diffInHours < 24) return t('historyItem.hoursAgo', { hours: diffInHours });
       const diffInDays = Math.floor(diffInHours / 24);
-      if (diffInDays < 7) return `${diffInDays}d ago`;
+      if (diffInDays < 7) return t('historyItem.daysAgo', { days: diffInDays });
       return formatDate(dateString);
     } catch {
       return "";
@@ -161,7 +161,7 @@ export default function OrderHistoryItem({ order }) {
             </Avatar>
             <Box>
               <Typography variant="h6" fontWeight={600} color="text.primary">
-                Order #{order.orderId || order.id}
+                {t('historyItem.orderNumber', { number: order.orderId || order.id })}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {order.orderNumber || `ORD-${order.orderId || order.id}`}
@@ -201,7 +201,7 @@ export default function OrderHistoryItem({ order }) {
             <ScheduleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary" display="block">
-                Created
+                {t('historyItem.created')}
               </Typography>
               <Typography variant="body2" fontWeight={500}>
                 {formatDate(order.createdAt)}
@@ -213,10 +213,10 @@ export default function OrderHistoryItem({ order }) {
             <AssignmentIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
             <Box>
               <Typography variant="caption" color="text.secondary" display="block">
-                Items
+                {t('historyItem.items')}
               </Typography>
               <Typography variant="body2" fontWeight={500}>
-                {order.itemCount || 0} items
+                {t('historyItem.itemCount', { count: order.itemCount || 0 })}
               </Typography>
             </Box>
           </Stack>
@@ -226,7 +226,7 @@ export default function OrderHistoryItem({ order }) {
               <BusinessIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
               <Box>
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Department
+                  {t('historyItem.department')}
                 </Typography>
                 <Typography variant="body2" fontWeight={500}>
                   {order.departmentName}
@@ -240,7 +240,7 @@ export default function OrderHistoryItem({ order }) {
               <PersonIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
               <Box>
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Created by
+                  {t('historyItem.createdBy')}
                 </Typography>
                 <Typography variant="body2" fontWeight={500}>
                   {order.createdBy}
@@ -254,7 +254,7 @@ export default function OrderHistoryItem({ order }) {
         {order.adminComment && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="caption" color="text.secondary" display="block">
-              Admin Comment:
+              {t('historyItem.adminComment')}:
             </Typography>
             <Typography variant="body2" color="text.primary" sx={{ 
               bgcolor: 'grey.50', 
@@ -282,7 +282,7 @@ export default function OrderHistoryItem({ order }) {
               fontWeight: 600,
             }}
           >
-            View Details
+            {t('actions.viewDetails')}
           </Button>
         </Stack>
       </CardContent>

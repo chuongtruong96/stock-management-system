@@ -1,0 +1,286 @@
+{
+  "page": {
+    "title": "Đơn hàng",
+    "subtitle": "Quản lý đơn hàng và theo dõi tiến trình",
+    "description": "Xem lịch sử đơn hàng, theo dõi đơn hàng hiện tại và quản lý chi tiết đơn hàng",
+    "breadcrumb": "Đơn hàng",
+    "loading": "Đang tải đơn hàng...",
+    "error": "Lỗi khi tải đơn hàng",
+    "noOrders": "Không tìm thấy đơn hàng",
+    "createFirstOrder": "Tạo đơn hàng đầu tiên của bạn"
+  },
+  "form": {
+    "title": "Biểu mẫu đơn hàng",
+    "subtitle": "Xem lại và gửi đơn hàng của bạn",
+    "description": "Vui lòng xem lại chi tiết đơn hàng trước khi gửi",
+    "breadcrumb": "Biểu mẫu đơn hàng",
+    "createOrder": "Tạo đơn hàng",
+    "reviewOrder": "Xem lại đơn hàng",
+    "submitOrder": "Gửi đơn hàng",
+    "orderSummary": "Tóm tắt đơn hàng",
+    "orderDetails": "Chi tiết đơn hàng",
+    "orderItems": "Sản phẩm đơn hàng",
+    "orderInformation": "Thông tin đơn hàng",
+    "orderProgressStepper": "Tiến trình đơn hàng",
+    "orderProgress": "Tiến trình đơn hàng",
+    "nextSteps": "Các bước tiếp theo",
+    "quickActions": "Hành động nhanh"
+  },
+  "history": {
+    "title": "Lịch sử đơn hàng",
+    "subtitle": "Xem các đơn hàng trước đây",
+    "description": "Theo dõi và quản lý tất cả các đơn hàng trước đây của bạn",
+    "breadcrumb": "Lịch sử đơn hàng",
+    "allOrders": "Tất cả đơn hàng",
+    "recentOrders": "Đơn hàng gần đây",
+    "pendingOrders": "Đơn hàng đang chờ",
+    "completedOrders": "Đơn hàng đã hoàn thành",
+    "cancelledOrders": "Đơn hàng đã hủy",
+    "ordersFound": "Tìm thấy {{count}} đơn hàng",
+    "ordersFound_plural": "Tìm thấy {{count}} đơn hàng",
+    "pendingOrderChip": "Đơn hàng #{{orderNumber}} - {{status}}",
+    "continuePendingOrder": "Tiếp tục đơn hàng đang chờ",
+    "noOrdersTitle": "Chưa có đơn hàng nào",
+    "noOrdersMessage": "Bạn chưa đặt đơn hàng nào. Bắt đầu mua sắm để tạo đơn hàng đầu tiên!"
+  },
+  "historyItem": {
+    "orderNumber": "Đơn hàng #{{number}}",
+    "waitingForPdfExport": "Đang chờ xuất PDF",
+    "readyForSignature": "Sẵn sàng để ký",
+    "readyToSubmit": "Sẵn sàng để gửi",
+    "underAdminReview": "Đang được quản trị viên xem xét",
+    "orderWillBeProcessed": "Đơn hàng sẽ được xử lý",
+    "orderWasDeclined": "Đơn hàng đã bị từ chối",
+    "statusUnknown": "Trạng thái không xác định",
+    "justNow": "Vừa xong",
+    "hoursAgo": "{{hours}} giờ trước",
+    "daysAgo": "{{days}} ngày trước",
+    "created": "Đã tạo",
+    "items": "Sản phẩm",
+    "itemCount": "{{count}} sản phẩm",
+    "itemCount_plural": "{{count}} sản phẩm",
+    "department": "Phòng ban",
+    "createdBy": "Được tạo bởi",
+    "adminComment": "Nhận xét của quản trị viên"
+  },
+  "title": "Đơn hàng",
+  "myOrders": "Đơn hàng của tôi",
+  "orderHistory": "Lịch sử đơn hàng",
+  "createOrder": "Tạo đơn hàng",
+  "orderDetails": "Chi tiết đơn hàng",
+  "orderSummary": "Tóm tắt đơn hàng",
+  
+  "steps": {
+    "cart": {
+      "title": "Xem lại giỏ hàng",
+      "description": "Xem lại các sản phẩm đã chọn",
+      "action": "Xem lại sản phẩm"
+    },
+    "create": {
+      "title": "Tạo đơn hàng",
+      "description": "Tạo yêu cầu đơn hàng của bạn",
+      "action": "Tạo đơn hàng"
+    },
+    "export": {
+      "title": "Xuất PDF",
+      "description": "Tải xuống biểu mẫu đơn hàng để ký",
+      "action": "Xuất PDF"
+    },
+    "sign": {
+      "title": "Lấy chữ ký",
+      "description": "Lấy chữ ký trưởng phòng trên biểu m��u in",
+      "action": "Lấy chữ ký"
+    },
+    "upload": {
+      "title": "Tải lên PDF đã ký",
+      "description": "Gửi tài liệu đã ký",
+      "action": "Tải lên PDF"
+    },
+    "submit": {
+      "title": "Gửi đơn hàng",
+      "description": "Gửi đơn hàng cho quản trị viên để phê duyệt",
+      "action": "Gửi đơn hàng"
+    },
+    "approval": {
+      "title": "Phê duyệt quản trị",
+      "description": "Đang chờ phê duyệt",
+      "action": "Đang chờ phê duyệt"
+    },
+    "complete": {
+      "title": "Đơn hàng hoàn thành",
+      "description": "Đơn hàng đã được phê duyệt và xử lý",
+      "action": "Đã hoàn thành"
+    }
+  },
+  
+  "status": {
+    "pending": "Đang chờ",
+    "exported": "Đã xuất PDF",
+    "uploaded": "Đã tải lên PDF đã ký",
+    "submitted": "Đã gửi để phê duyệt",
+    "approved": "Đã phê duyệt",
+    "rejected": "Đã từ chối",
+    "processing": "Đang xử lý",
+    "shipped": "Đã giao hàng",
+    "delivered": "Đã giao",
+    "cancelled": "Đã hủy",
+    "pdfExportRequired": "Cần xuất PDF",
+    "uploadSignedPdf": "Tải lên PDF đã ký",
+    "submitToAdmin": "Gửi cho quản trị viên",
+    "awaitingApproval": "Đang chờ phê duyệt",
+    "unknownStatus": "Trạng thái đơn hàng không xác định",
+    "pdfExportDescription": "Đơn hàng của bạn đã sẵn sàng. Xuất PDF để ký.",
+    "uploadSignedDescription": "PDF đã xuất. Vui lòng ký và tải lên lại.",
+    "submitToAdminDescription": "PDF đã ký đã tải lên. Sẵn sàng gửi để phê duyệt.",
+    "awaitingApprovalDescription": "Đơn hàng đã gửi. Đang chờ phê duyệt của quản trị viên.",
+    "orderCreated": "Đơn hàng đã tạo",
+    "orderCreatedDescription": "Đơn hàng của bạn đã được tạo và s���n sàng để xuất PDF",
+    "pdfExported": "PDF đã xuất",
+    "pdfExportedDescription": "PDF đã được xuất. Vui lòng ký và tải lên lại",
+    "signedPdfUploaded": "PDF đã ký đã tải lên",
+    "signedPdfUploadedDescription": "PDF đã ký đã tải lên. Sẵn sàng gửi cho quản trị viên",
+    "submittedForApproval": "Đã gửi để phê duyệt",
+    "submittedForApprovalDescription": "Đơn hàng đã gửi cho quản trị viên. Đang chờ phê duyệt",
+    "approvedDescription": "Đơn hàng của bạn đã được phê duyệt và sẽ được xử lý",
+    "rejectedDescription": "Đơn hàng của bạn đã bị từ chối. Vui lòng kiểm tra nhận xét của quản trị viên",
+    "orderApproved": "Đơn hàng đã được phê duyệt!"
+  },
+  
+  "actions": {
+    "viewOrder": "Xem đơn hàng",
+    "editOrder": "Chỉnh sửa đơn hàng",
+    "cancelOrder": "Hủy đơn hàng",
+    "reorder": "Đặt lại",
+    "trackOrder": "Theo dõi đơn hàng",
+    "exportPdf": "Xuất PDF",
+    "uploadSignedPdf": "Tải lên PDF đã ký",
+    "submitForApproval": "Gửi để phê duyệt",
+    "downloadInvoice": "Tải xuống hóa đơn",
+    "submitOrder": "Gửi đơn hàng",
+    "viewDetails": "Xem chi tiết",
+    "details": "Chi tiết",
+    "refresh": "Làm mới",
+    "startShopping": "Bắt đầu mua sắm",
+    "exportPDF": "Xuất PDF",
+    "uploadSignedPdf": "Tải lên PDF đã ký",
+    "submitOrderToAdmin": "Gửi đơn hàng cho quản trị viên",
+    "viewOrderHistory": "Xem lịch sử đơn hàng",
+    "refreshStatus": "Làm mới trạng thái"
+  },
+  
+  "title": {
+    "pendingOrder": "Đơn hàng đang chờ"
+  },
+  
+  "labels": {
+    "orderNumber": "Đơn hàng",
+    "complete": "Hoàn thành",
+    "orderSummary": "Tóm tắt đơn hàng",
+    "items": "Sản phẩm",
+    "department": "Phòng ban",
+    "quickTip": "Mẹo nhanh",
+    "username": "Tên người dùng",
+    "date": "Ngày",
+    "guestUser": "Người dùng khách",
+    "guest": "Khách",
+    "user": "Người dùng",
+    "unknownDepartment": "Phòng ban không xác định"
+  },
+  
+  "tips": {
+    "afterSigningPdf": "Sau khi ký PDF, bạn có thể tải lên trực tiếp từ Biểu mẫu đơn hàng hoặc trang Chi tiết đơn hàng.",
+    "signedPdfReady": "PDF đã ký của bạn đã sẵn sàng. Gửi cho quản trị viên để phê duyệt cuối cùng.",
+    "continueProcess": "Tiếp tục quy trình đơn hàng để tránh chậm trễ."
+  },
+  
+  "common": {
+    "notAvailable": "Không có",
+    "invalidDate": "Ngày không hợp lệ",
+    "actionRequired": "Cần hành động"
+  },
+  
+  "ui": {
+    "loading": "Đang tải...",
+    "submitting": "Đang gửi...",
+    "exporting": "Đang xuất..."
+  },
+  
+  "fields": {
+    "orderNumber": "Số đơn hàng",
+    "orderDate": "Ngày đặt hàng",
+    "deliveryDate": "Ngày giao hàng",
+    "totalAmount": "Tổng tiền",
+    "items": "Sản phẩm",
+    "quantity": "Số lượng",
+    "unitPrice": "Đơn giá",
+    "subtotal": "Tạm tính",
+    "tax": "Thuế",
+    "shipping": "Phí vận chuyển",
+    "discount": "Giảm giá",
+    "total": "Tổng cộng",
+    "notes": "Ghi chú",
+    "deliveryAddress": "Địa chỉ giao hàng",
+    "paymentMethod": "Phương thức thanh toán"
+  },
+  
+  "filters": {
+    "all": "Tất cả",
+    "byStatus": "Theo trạng thái",
+    "byDate": "Theo ngày",
+    "thisWeek": "Tuần này",
+    "thisMonth": "Tháng này",
+    "lastMonth": "Tháng trước",
+    "custom": "Tùy chỉnh"
+  },
+  
+  "messages": {
+    "noOrders": "Bạn chưa có đơn hàng nào",
+    "orderCreated": "Đơn hàng đã được tạo thành công",
+    "orderUpdated": "Đơn hàng đã được cập nhật",
+    "orderCancelled": "Đơn hàng đã được hủy",
+    "pdfExported": "PDF đã được xuất thành công",
+    "pdfUploaded": "PDF đã được tải lên thành công",
+    "orderSubmitted": "Đơn hàng đã được gửi để phê duyệt",
+    "confirmCancel": "Bạn có chắc chắn muốn hủy đơn hàng này?",
+    "confirmDelete": "Bạn có chắc chắn muốn xóa đơn hàng này?",
+    "windowOpen": "Cửa sổ MỞ",
+    "windowClosed": "Cửa sổ ĐÓNG",
+    "noItemsInCart": "Không có sản phẩm trong giỏ hàng",
+    "orderCreatedSuccess": "Đơn hàng đã tạo thành công! Vui lòng xuất PDF để ký.",
+    "pdfExportedSuccess": "PDF đã xuất thành công! Vui lòng ký và tải lên lại.",
+    "failedToExportPdf": "Không thể xuất PDF",
+    "noOrderToSubmit": "Không tìm thấy đơn hàng để gửi",
+    "orderSubmittedSuccess": "Đơn hàng đã gửi thành công! Quản trị viên sẽ xem xét yêu cầu của bạn.",
+    "failedToSubmitOrder": "Không thể gửi đơn hàng",
+    "confirmGoBack": "Bạn có chắc chắn muốn quay lại? Tiến trình đơn hàng hiện tại sẽ bị mất.",
+    "confirmCancelOrder": "Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.",
+    "orderCancelled": "Đơn hàng đã hủy",
+    "userInfoLoadError": "Không thể tải thông tin người dùng",
+    "uploadFailed": "Tải lên thất bại: {{error}}",
+    "signedPdfUploaded": "PDF đã ký đã tải lên thành công! Bạn có thể gửi đơn hàng cho quản trị viên ngay bây giờ.",
+    "orderWindowClosed": "Cửa sổ đặt hàng hiện đang đóng",
+    "startShopping": "Bắt đầu mua sắm"
+  },
+  
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "minQuantity": "Số lượng tối thiểu là 1",
+    "maxQuantity": "Số lượng vượt quá tồn kho",
+    "invalidDate": "Ngày không hợp lệ",
+    "futureDate": "Ngày phải trong tương lai"
+  },
+  
+  "table": {
+    "productName": "Tên sản phẩm",
+    "quantity": "Số lượng",
+    "unit": "Đơn vị",
+    "itemNumber": "Sản phẩm #{{number}}"
+  },
+  
+  "instructions": {
+    "exportPdfSteps": "1. Nhấp 'Xuất PDF' để tải xuống biểu mẫu đơn hàng của bạn\n2. In PDF và l��y chữ ký của trưởng phòng\n3. Quét hoặc chụp ảnh rõ ràng tài liệu đã ký\n4. Tải lên PDF đã ký trở lại hệ thống",
+    "uploadSignedSteps": "1. ✅ PDF đã xuất\n2. ⏳ Lấy chữ ký trưởng phòng trên biểu mẫu in\n3. ⏳ Tải lên PDF đã ký trở lại hệ thống",
+    "submittedSteps": "1. ✅ PDF đã xuất\n2. ✅ PDF đã ký đã tải lên\n3. ⏳ Đang chờ phê duyệt của quản trị viên",
+    "approvedMessage": "🎉 Đơn hàng của bạn đã được phê duyệt và sẽ được xử lý!"
+  }
+}

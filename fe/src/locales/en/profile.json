@@ -1,0 +1,104 @@
+{
+  "title": "Profile",
+  "myProfile": "My Profile",
+  "editProfile": "Edit Profile",
+  "accountSettings": "Account Settings",
+  "personalInfo": "Personal Information",
+  
+  "sections": {
+    "basicInfo": "Basic Information",
+    "contactInfo": "Contact Information",
+    "addressInfo": "Address Information",
+    "preferences": "Preferences",
+    "security": "Security",
+    "notifications": "Notifications"
+  },
+  
+  "fields": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "avatar": "Profile Picture",
+    "bio": "Biography",
+    "website": "Website",
+    "company": "Company",
+    "position": "Position",
+    "department": "Department"
+  },
+  
+  "address": {
+    "title": "Address",
+    "street": "Street Address",
+    "city": "City",
+    "state": "State/Province",
+    "zipCode": "ZIP/Postal Code",
+    "country": "Country",
+    "defaultAddress": "Default Address",
+    "billingAddress": "Billing Address",
+    "shippingAddress": "Shipping Address"
+  },
+  
+  "preferences": {
+    "language": "Language",
+    "timezone": "Timezone",
+    "currency": "Currency",
+    "theme": "Theme",
+    "emailNotifications": "Email Notifications",
+    "pushNotifications": "Push Notifications",
+    "marketingEmails": "Marketing Emails",
+    "orderUpdates": "Order Updates",
+    "newsletter": "Newsletter"
+  },
+  
+  "security": {
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "loginHistory": "Login History",
+    "activeSessions": "Active Sessions",
+    "securityQuestions": "Security Questions"
+  },
+  
+  "actions": {
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "upload": "Upload",
+    "remove": "Remove",
+    "changePhoto": "Change Photo",
+    "resetPassword": "Reset Password",
+    "deactivateAccount": "Deactivate Account"
+  },
+  
+  "messages": {
+    "profileUpdated": "Profile updated successfully",
+    "passwordChanged": "Password changed successfully",
+    "photoUploaded": "Profile photo uploaded successfully",
+    "photoRemoved": "Profile photo removed",
+    "settingsSaved": "Settings saved successfully",
+    "securityDescription": "Keep your account secure by updating your password regularly",
+    "confirmDeactivate": "Are you sure you want to deactivate your account?",
+    "confirmDelete": "Are you sure you want to delete this information?"
+  },
+  
+  "validation": {
+    "firstNameRequired": "First name is required",
+    "lastNameRequired": "Last name is required",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "phoneRequired": "Phone number is required",
+    "phoneInvalid": "Please enter a valid phone number",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "currentPasswordRequired": "Current password is required",
+    "currentPasswordIncorrect": "Current password is incorrect"
+  }
+}

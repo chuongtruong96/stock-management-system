@@ -1,0 +1,22 @@
+{
+  "name": "stationery-mgmt-migration",
+  "version": "1.0.0",
+  "description": "Image migration tools for Stationery Management System",
+  "main": "migrate-images.js",
+  "scripts": {
+    "migrate": "node migrate-images.js",
+    "test-cloudinary": "node test-cloudinary.js"
+  },
+  "dependencies": {
+    "cloudinary": "^1.41.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "image-migration",
+    "cloudinary",
+    "deployment"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

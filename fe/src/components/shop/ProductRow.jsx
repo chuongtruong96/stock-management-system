@@ -6,15 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
-import { useUniversalTranslation } from "../../context/UniversalTranslationContext";
 import { getProductImageUrl } from "utils/apiUtils";
 
 export default function ProductRow({ data, onAdd }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const { isInCart, getCartItemQty } = useCart();
-  const { t } = useTranslation();
-  const { translateText, currentLanguage } = useUniversalTranslation();
+  const { t, i18n } = useTranslation();
 
   const id = data.id ?? data.productId;
   const inCart = isInCart(id);
@@ -22,7 +20,7 @@ export default function ProductRow({ data, onAdd }) {
   
   // Get display name based on current language
   const getDisplayName = () => {
-    if (currentLanguage === 'vi') {
+    if (i18n.language === 'vi') {
       return data.nameVn || data.nameEn || data.name || 'Unnamed Product';
     } else {
       return data.nameEn || data.nameVn || data.name || 'Unnamed Product';

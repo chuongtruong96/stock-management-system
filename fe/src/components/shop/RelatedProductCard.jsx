@@ -16,11 +16,13 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from 'context/CartContext/useCart';
 import { getProductImageUrl } from 'utils/apiUtils';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 const RelatedProductCard = ({ product }) => {
   const navigate = useNavigate();
   const { addItem, isInCart } = useCart();
   const [adding, setAdding] = useState(false);
+  const { t } = useTranslation('products');
 
   const handleQuickAdd = async (e) => {
     e.stopPropagation();
@@ -41,12 +43,12 @@ const RelatedProductCard = ({ product }) => {
       };
       
       addItem(normalizedProduct, 1);
-      toast.success(`Added ${product.productName || product.name} to cart!`, {
+      toast.success(t('product.addedToCart'), {
         position: "bottom-right",
         autoClose: 2000,
       });
     } catch (error) {
-      toast.error('Failed to add item to cart');
+      toast.error(t('errors.addToCartError'));
     } finally {
       setAdding(false);
     }
@@ -112,13 +114,13 @@ const RelatedProductCard = ({ product }) => {
             
             {unitLabel && (
               <Typography variant="caption" color="text.secondary">
-                Unit: {unitLabel}
+                {t('product.unit')}: {unitLabel}
               </Typography>
             )}
 
             {/* Action Buttons */}
             <Box sx={{ display: 'flex', gap: 0.5, mt: 1 }}>
-              <Tooltip title="Quick Add to Cart">
+              <Tooltip title={t('actions.addToCart')}>
                 <IconButton
                   size="small"
                   onClick={handleQuickAdd}
@@ -142,7 +144,7 @@ const RelatedProductCard = ({ product }) => {
                 </IconButton>
               </Tooltip>
 
-              <Tooltip title="View Details">
+              <Tooltip title={t('actions.viewDetails')}>
                 <IconButton
                   size="small"
                   onClick={handleViewDetails}

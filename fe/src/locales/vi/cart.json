@@ -1,0 +1,78 @@
+{
+  "title": "Giỏ hàng",
+  "myCart": "Giỏ hàng của tôi",
+  "cartItems": "Sản phẩm trong giỏ",
+  "emptyCart": "Giỏ hàng của bạn đang trống",
+  "continueShopping": "Tiếp tục mua sắm",
+  
+  "actions": {
+    "addToCart": "Thêm vào giỏ hàng",
+    "removeFromCart": "Xóa khỏi giỏ hàng",
+    "updateQuantity": "Cập nhật số lượng",
+    "clearCart": "Xóa giỏ hàng",
+    "proceedToCheckout": "Tiến hành thanh toán",
+    "saveForLater": "Lưu để mua sau",
+    "moveToWishlist": "Chuyển vào danh sách yêu thích",
+    "viewCart": "Xem giỏ hàng"
+  },
+  
+  "fields": {
+    "product": "Sản phẩm",
+    "quantity": "Số lượng",
+    "unitPrice": "Đơn giá",
+    "totalPrice": "Tổng giá",
+    "subtotal": "Tạm tính",
+    "tax": "Thuế",
+    "shipping": "Phí vận chuyển",
+    "discount": "Giảm giá",
+    "total": "Tổng cộng",
+    "estimatedTotal": "Tổng ước tính"
+  },
+  
+  "quantity": {
+    "increase": "Tăng số lượng",
+    "decrease": "Giảm số lượng",
+    "remove": "Xóa sản ph��m",
+    "max": "Đã đạt số lượng tối đa",
+    "min": "Số lượng tối thiểu là 1",
+    "outOfStock": "Hết hàng",
+    "limitedStock": "Số lượng có hạn"
+  },
+  
+  "summary": {
+    "itemCount": "{{count}} sản phẩm",
+    "itemCount_plural": "{{count}} sản phẩm",
+    "subtotal": "Tạm tính ({{count}} sản phẩm)",
+    "estimatedTax": "Thuế ước tính",
+    "estimatedShipping": "Phí vận chuyển ước tính",
+    "estimatedTotal": "Tổng ước tính"
+  },
+  
+  "messages": {
+    "itemAdded": "Đã thêm sản phẩm vào giỏ hàng",
+    "itemRemoved": "Đã xóa sản phẩm khỏi giỏ hàng",
+    "itemUpdated": "Đã cập nhật giỏ hàng",
+    "cartCleared": "Đã xóa giỏ hàng",
+    "stockWarning": "Chỉ còn {{stock}} sản phẩm trong kho",
+    "priceChanged": "Giá đã thay đổi kể từ khi bạn thêm sản phẩm này",
+    "unavailable": "Sản phẩm này không còn có sẵn",
+    "confirmRemove": "Xóa sản phẩm này khỏi giỏ hàng?",
+    "confirmClear": "Xóa tất cả sản phẩm khỏi giỏ hàng?"
+  },
+  
+  "checkout": {
+    "title": "Thanh toán",
+    "reviewOrder": "Xem lại đơn hàng",
+    "shippingInfo": "Thông tin giao hàng",
+    "paymentInfo": "Thông tin thanh toán",
+    "orderSummary": "Tóm tắt đơn hàng",
+    "placeOrder": "Đặt hàng"
+  },
+  
+  "validation": {
+    "quantityRequired": "Số lượng là bắt buộc",
+    "quantityMin": "Số lượng tối thiểu là 1",
+    "quantityMax": "Số lượng tối đa là {{max}}",
+    "quantityInteger": "Số lượng phải là số nguyên"
+  }
+}

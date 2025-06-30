@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -14,6 +14,17 @@ import {
   Chip,
   IconButton,
   Alert,
+  Switch,
+  FormControlLabel,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  LinearProgress,
+  Tooltip,
+  Badge,
+  Fade,
+  Zoom,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -24,6 +35,16 @@ import {
   Business as BusinessIcon,
   Email as EmailIcon,
   Badge as BadgeIcon,
+  Settings as SettingsIcon,
+  Dashboard as DashboardIcon,
+  PhotoCamera as PhotoCameraIcon,
+  Language as LanguageIcon,
+  Notifications as NotificationsIcon,
+  Palette as PaletteIcon,
+  Assignment as AssignmentIcon,
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
+  TrendingUp as TrendingUpIcon,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { AuthContext } from "context/AuthContext";
@@ -32,10 +53,11 @@ import { userApi } from "services/api";
 
 export default function ProfilePage() {
   const { auth } = useContext(AuthContext);
-  const { t } = useTranslation();
+  const { t } = useTranslation('profile');
   const [editMode, setEditMode] = useState(false);
   const [passwordMode, setPasswordMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
   
   const [formData, setFormData] = useState({
     username: auth?.user?.username || "",
@@ -49,11 +71,42 @@ export default function ProfilePage() {
     confirmPassword: "",
   });
 
+  const [preferences, setPreferences] = useState({
+    language: 'en',
+    notifications: true,
+    emailNotifications: true,
+    theme: 'light',
+  });
+
+  const [userStats, setUserStats] = useState({
+    totalOrders: 24,
+    completedOrders: 18,
+    pendingOrders: 6,
+    joinDate: '2024-01-15',
+  });
+
+  useEffect(() => {
+    // Load user preferences and stats
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      // Simulate API calls
+      // const stats = await userApi.getUserStats();
+      // const prefs = await userApi.getUserPreferences();
+      // setUserStats(stats);
+      // setPreferences(prefs);
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    }
+  };
+
   const handleProfileUpdate = async () => {
     setLoading(true);
     try {
       // await userApi.updateProfile(formData);
-      toast.success(t('messages.profileUpdated') || "Profile updated successfully");
+      toast.success(t('messages.profileUpdated'));
       setEditMode(false);
     } catch (error) {
       toast.error(error.message || "Failed to update profile");
@@ -64,25 +117,48 @@ export default function ProfilePage() {
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("Passwords don't match");
+      toast.error(t('validation.passwordMismatch'));
       return;
     }
     
-    if (passwordData.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (passwordData.newPassword.length < 8) {
+      toast.error(t('validation.passwordMinLength'));
       return;
     }
 
     setLoading(true);
     try {
       // await userApi.changePassword(passwordData);
-      toast.success("Password changed successfully");
+      toast.success(t('messages.passwordChanged'));
       setPasswordMode(false);
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error) {
       toast.error(error.message || "Failed to change password");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePreferencesUpdate = async () => {
+    setLoading(true);
+    try {
+      // await userApi.updatePreferences(preferences);
+      toast.success(t('messages.preferencesUpdated') || "Preferences updated successfully");
+    } catch (error) {
+      toast.error(error.message || "Failed to update preferences");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfilePictureChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfilePicture(e.target.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -95,6 +171,18 @@ export default function ProfilePage() {
       department: auth?.user?.department || "",
     });
     setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  };
+
+  const calculateProfileCompletion = () => {
+    let completed = 0;
+    const total = 4;
+    
+    if (formData.username) completed++;
+    if (formData.email) completed++;
+    if (formData.department) completed++;
+    if (profilePicture || auth?.user?.avatar) completed++;
+    
+    return Math.round((completed / total) * 100);
   };
 
   return (
@@ -163,7 +251,7 @@ export default function ProfilePage() {
               >
                 <Typography variant="h5" fontWeight={600} color="primary">
                   <PersonIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-                  {t('user.profile')}
+                  {t('sections.basicInfo')}
                 </Typography>
                 {!editMode && !passwordMode && (
                   <IconButton
@@ -182,7 +270,7 @@ export default function ProfilePage() {
 
               <Stack spacing={3}>
                 <TextField
-                  label={t('user.username')}
+                  label={t('fields.fullName')}
                   value={formData.username}
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
@@ -196,7 +284,7 @@ export default function ProfilePage() {
                 />
 
                 <TextField
-                  label={t('user.email')}
+                  label={t('fields.email')}
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -210,7 +298,7 @@ export default function ProfilePage() {
                 />
 
                 <TextField
-                  label={t('user.department')}
+                  label={t('fields.department')}
                   value={formData.department}
                   disabled
                   fullWidth
@@ -227,7 +315,7 @@ export default function ProfilePage() {
                       startIcon={<CancelIcon />}
                       onClick={handleCancel}
                     >
-                      {t('common.cancel')}
+                      {t('actions.cancel')}
                     </Button>
                     <Button
                       variant="contained"
@@ -235,7 +323,7 @@ export default function ProfilePage() {
                       onClick={handleProfileUpdate}
                       disabled={loading}
                     >
-                      {t('common.save')}
+                      {t('actions.save')}
                     </Button>
                   </Stack>
                 )}
@@ -250,13 +338,13 @@ export default function ProfilePage() {
             <CardContent sx={{ p: 4 }}>
               <Typography variant="h6" fontWeight={600} color="primary" gutterBottom>
                 <SecurityIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-                Security
+                {t('sections.security')}
               </Typography>
 
               {!passwordMode ? (
                 <Box>
                   <Typography variant="body2" color="text.secondary" mb={2}>
-                    Keep your account secure by updating your password regularly.
+                    {t('messages.securityDescription')}
                   </Typography>
                   <Button
                     variant="outlined"
@@ -264,17 +352,17 @@ export default function ProfilePage() {
                     onClick={() => setPasswordMode(true)}
                     startIcon={<SecurityIcon />}
                   >
-                    Change Password
+                    {t('security.changePassword')}
                   </Button>
                 </Box>
               ) : (
                 <Stack spacing={2}>
                   <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
-                    Password must be at least 6 characters long.
+                    {t('validation.passwordMinLength')}
                   </Alert>
 
                   <TextField
-                    label="Current Password"
+                    label={t('security.currentPassword')}
                     type="password"
                     size="small"
                     value={passwordData.currentPassword}
@@ -288,7 +376,7 @@ export default function ProfilePage() {
                   />
 
                   <TextField
-                    label="New Password"
+                    label={t('security.newPassword')}
                     type="password"
                     size="small"
                     value={passwordData.newPassword}
@@ -302,7 +390,7 @@ export default function ProfilePage() {
                   />
 
                   <TextField
-                    label="Confirm Password"
+                    label={t('security.confirmPassword')}
                     type="password"
                     size="small"
                     value={passwordData.confirmPassword}
@@ -322,7 +410,7 @@ export default function ProfilePage() {
                       onClick={handleCancel}
                       fullWidth
                     >
-                      Cancel
+                      {t('actions.cancel')}
                     </Button>
                     <Button
                       variant="contained"
@@ -336,7 +424,7 @@ export default function ProfilePage() {
                       }
                       fullWidth
                     >
-                      Update
+                      {t('actions.save')}
                     </Button>
                   </Stack>
                 </Stack>

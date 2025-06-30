@@ -783,11 +783,12 @@ export const reportApi = {
   exportPdf: (month) => api.get("/reports/export/pdf", { params: { month }, responseType: "blob" }).then(response => response.data),
 };
 
-// Translation API - LibreTranslate integration
+// Translation API - Google Translate integration
 export const translationApi = {
-  translateText: (text, targetLang = 'en') => 
+  translateText: (text, sourceLang = 'auto', targetLang = 'en') => 
     api.post("/products/translate", { 
       text, 
+      sourceLang,
       targetLang 
     }).then(response => response.data.translatedText || response.data),
   
@@ -796,11 +797,19 @@ export const translationApi = {
       params: { targetLang } 
     }).then(unwrap),
     
-  translateCategory: (categoryName, targetLang = 'en') =>
+  translateCategory: (categoryName, sourceLang = 'auto', targetLang = 'en') =>
     api.post("/products/translate", { 
       text: categoryName, 
+      sourceLang,
       targetLang 
     }).then(response => response.data.translatedText || response.data),
+    
+  batchTranslate: (texts, sourceLang = 'auto', targetLang = 'en') =>
+    api.post("/products/translate/batch", {
+      texts,
+      sourceLang,
+      targetLang
+    }).then(response => response.data),
 };
 
 export default api;

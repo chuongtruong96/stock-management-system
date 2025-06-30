@@ -17,8 +17,6 @@ import {
   setLayout,
 } from "context";
 import { AuthContext } from "context/AuthContext";
-import { UniversalTranslationProvider } from "context/UniversalTranslationContext";
-import TranslationWidget from "components/translation/TranslationWidget";
 import ProtectedRoute from "routes/ProtectedRoute";
 
 import Sidenav from "examples/Sidenav";
@@ -161,8 +159,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <UniversalTranslationProvider>
-        <ToastContainer position="top-right" autoClose={3000} theme="light" />
+      <ToastContainer position="top-right" autoClose={3000} theme="light" />
 
       {!isAuthScreen &&
         auth?.token &&
@@ -205,12 +202,8 @@ export default function App() {
         )}
 
       <Suspense fallback={<Loading />}>
-              <Routes>{routeElements}</Routes>
-            </Suspense>
-            
-            {/* Universal Translation Widget */}
-        <TranslationWidget />
-      </UniversalTranslationProvider>
+        <Routes>{routeElements}</Routes>
+      </Suspense>
     </ThemeProvider>
   );
 }

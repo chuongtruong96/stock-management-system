@@ -31,7 +31,6 @@ import SearchBar from "components/common/SearchBar";
 import { useCart } from "../../context/CartContext/useCart";
 import { useNotifications } from "context/NotificationContext";
 import { useTranslation } from "react-i18next";
-import { useUniversalTranslation } from "context/UniversalTranslationContext";
 import { AuthContext } from "context/AuthContext";
 
 const SearchBox = styled("div")(({ theme }) => ({
@@ -60,7 +59,6 @@ export default function UserLayout() {
   const { pathname } = useLocation();
   const { cartCount, openCart } = useCart();
   const { t, i18n } = useTranslation();
-  const { toggleLanguage, currentLanguage, isTranslating } = useUniversalTranslation();
   const { auth } = useContext(AuthContext);
 
   const [profEl, setProfEl] = useState(null);
@@ -70,8 +68,8 @@ export default function UserLayout() {
 
   const handleLanguageChange = async (lng) => {
     setLangEl(null);
-    if (lng !== currentLanguage) {
-      toggleLanguage();
+    if (lng !== i18n.language) {
+      i18n.changeLanguage(lng);
     }
   };
 
@@ -207,7 +205,7 @@ export default function UserLayout() {
               },
             }}>
               <SearchBar
-                placeholder={t('common.search') + " products, categories..."}
+                placeholder={t('search.searchPlaceholder') + " products, categories..."}
                 size="small"
               />
             </Box>
@@ -494,7 +492,7 @@ export default function UserLayout() {
         >
           <PersonIcon fontSize="small" sx={{ mr: 2, color: '#667eea' }} /> 
           <Typography variant="body2" fontWeight={500}>
-            {t('user.profile')}
+            Profile
           </Typography>
         </MenuItem>
         <Divider sx={{ my: 1 }} />
@@ -513,7 +511,7 @@ export default function UserLayout() {
         >
           <LogoutIcon fontSize="small" sx={{ mr: 2, color: 'error.main' }} /> 
           <Typography variant="body2" fontWeight={500} color="error.main">
-            {t('user.logout')}
+            Logout
           </Typography>
         </MenuItem>
       </Menu>
@@ -535,36 +533,34 @@ export default function UserLayout() {
       >
         <MenuItem 
           onClick={() => handleLanguageChange('en')}
-          disabled={isTranslating}
           sx={{ 
             py: 1.5,
             px: 2,
-            fontWeight: currentLanguage === 'en' ? 600 : 400,
-            bgcolor: currentLanguage === 'en' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
+            fontWeight: i18n.language === 'en' ? 600 : 400,
+            bgcolor: i18n.language === 'en' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
             '&:hover': {
               bgcolor: 'rgba(102, 126, 234, 0.12)',
             },
           }}
         >
           <Typography variant="body2">
-            🇺🇸 English {isTranslating && currentLanguage !== 'en' ? '(Translating...)' : ''}
+            🇺🇸 English
           </Typography>
         </MenuItem>
         <MenuItem 
           onClick={() => handleLanguageChange('vi')}
-          disabled={isTranslating}
           sx={{ 
             py: 1.5,
             px: 2,
-            fontWeight: currentLanguage === 'vi' ? 600 : 400,
-            bgcolor: currentLanguage === 'vi' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
+            fontWeight: i18n.language === 'vi' ? 600 : 400,
+            bgcolor: i18n.language === 'vi' ? 'rgba(102, 126, 234, 0.08)' : 'transparent',
             '&:hover': {
               bgcolor: 'rgba(102, 126, 234, 0.12)',
             },
           }}
         >
           <Typography variant="body2">
-            🇻🇳 Tiếng Việt {isTranslating && currentLanguage !== 'vi' ? '(Đang dịch...)' : ''}
+            🇻🇳 Tiếng Việt
           </Typography>
         </MenuItem>
       </Menu>

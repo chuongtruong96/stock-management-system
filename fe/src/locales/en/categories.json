@@ -1,0 +1,71 @@
+{
+  "title": "Categories",
+  "allCategories": "All Categories",
+  "browseCategories": "Browse Categories",
+  "categoryDetails": "Category Details",
+  "subcategories": "Subcategories",
+  
+  "actions": {
+    "viewCategory": "View Category",
+    "viewAll": "View All",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "filterByCategory": "Filter by Category"
+  },
+  
+  "fields": {
+    "name": "Category Name",
+    "description": "Description",
+    "productCount": "Products",
+    "subcategoryCount": "Subcategories",
+    "image": "Category Image",
+    "featured": "Featured"
+  },
+  
+  "labels": {
+    "items": "items",
+    "products": "products",
+    "item": "item",
+    "product": "product"
+  },
+  
+  "sorting": {
+    "alphabetical": "Alphabetical",
+    "productCount": "Product Count",
+    "newest": "Newest",
+    "popular": "Most Popular"
+  },
+  
+  "display": {
+    "grid": "Grid View",
+    "list": "List View",
+    "compact": "Compact View"
+  },
+  
+  "messages": {
+    "noCategories": "No categories found",
+    "noProducts": "No products in this category",
+    "loadingCategories": "Loading categories...",
+    "categoryNotFound": "Category not found",
+    "emptyCategory": "This category is empty"
+  },
+  
+  "breadcrumb": {
+    "home": "Home",
+    "categories": "Categories",
+    "current": "Current Category"
+  },
+  
+  "filters": {
+    "all": "All",
+    "featured": "Featured",
+    "withProducts": "With Products",
+    "empty": "Empty Categories"
+  },
+  
+  "stats": {
+    "totalCategories": "Total Categories",
+    "totalProducts": "Total Products",
+    "featuredCategories": "Featured Categories"
+  }
+}

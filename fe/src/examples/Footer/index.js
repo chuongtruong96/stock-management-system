@@ -14,12 +14,14 @@ import {
   LocationOn as LocationIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 /**
  * Compact Footer component for internal use
  */
 function Footer({ company }) {
   const navigate = useNavigate();
+  const { t } = useTranslation('navigation');
   const currentYear = new Date().getFullYear();
 
   const handleLinkClick = (path) => {
@@ -65,10 +67,10 @@ function Footer({ company }) {
                 </Box>
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600} color="white">
-                    Stationery Management
+                    {t('footer.brandName')}
                   </Typography>
                   <Typography variant="caption" color="grey.400">
-                    System
+                    {t('footer.brandSubtitle')}
                   </Typography>
                 </Box>
               </Stack>
@@ -99,7 +101,7 @@ function Footer({ company }) {
             {/* Quick Links */}
             <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
               <Typography variant="subtitle1" fontWeight={600} color="white" sx={{ mb: 1.5 }}>
-                Quick Links
+                {t('footer.quickLinks')}
               </Typography>
               <Stack spacing={0.5}>
                 <Link 
@@ -110,7 +112,7 @@ function Footer({ company }) {
                   variant="body2"
                   sx={{ textAlign: "left" }}
                 >
-                  Browse Catalog
+                  {t('footer.browseCatalog')}
                 </Link>
                 <Link 
                   component="button"
@@ -120,7 +122,7 @@ function Footer({ company }) {
                   variant="body2"
                   sx={{ textAlign: "left" }}
                 >
-                  My Requests
+                  {t('footer.myRequests')}
                 </Link>
                 <Link 
                   component="button"
@@ -130,7 +132,7 @@ function Footer({ company }) {
                   variant="body2"
                   sx={{ textAlign: "left" }}
                 >
-                  New Order
+                  {t('footer.newOrder')}
                 </Link>
                 <Link 
                   component="button"
@@ -140,7 +142,7 @@ function Footer({ company }) {
                   variant="body2"
                   sx={{ textAlign: "left" }}
                 >
-                  Profile
+                  {t('footer.profile')}
                 </Link>
                 <Link 
                   component="button"
@@ -150,7 +152,7 @@ function Footer({ company }) {
                   variant="body2"
                   sx={{ textAlign: "left" }}
                 >
-                  Notifications
+                  {t('footer.notifications')}
                 </Link>
               </Stack>
             </Box>
@@ -172,23 +174,23 @@ function Footer({ company }) {
               sx={{ color: "grey.400" }}
             >
               <Typography variant="body2">
-                © {currentYear} Stationery Management System. Made with
+                © {currentYear} {t('footer.copyright')}
               </Typography>
               <FavoriteIcon fontSize="small" sx={{ color: "red" }} />
               <Typography variant="body2">
-                by {company.name}
+                {t('footer.madeBy')} {company.name}
               </Typography>
             </Stack>
 
             <Stack direction="row" spacing={3}>
               <Link href="#" color="grey.400" underline="hover" variant="body2">
-                Privacy Policy
+                {t('footer.privacyPolicy')}
               </Link>
               <Link href="#" color="grey.400" underline="hover" variant="body2">
-                Terms of Service
+                {t('footer.termsOfService')}
               </Link>
               <Link href="#" color="grey.400" underline="hover" variant="body2">
-                Help
+                {t('footer.help')}
               </Link>
             </Stack>
           </Stack>

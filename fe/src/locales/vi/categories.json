@@ -1,0 +1,71 @@
+{
+  "title": "Danh mục",
+  "allCategories": "Tất cả danh mục",
+  "browseCategories": "Duyệt danh mục",
+  "categoryDetails": "Chi tiết danh mục",
+  "subcategories": "Danh mục con",
+  
+  "actions": {
+    "viewCategory": "Xem danh mục",
+    "viewAll": "Xem tất cả",
+    "showMore": "Hiển thị thêm",
+    "showLess": "Hiển thị ít hơn",
+    "filterByCategory": "Lọc theo danh mục"
+  },
+  
+  "fields": {
+    "name": "Tên danh mục",
+    "description": "Mô tả",
+    "productCount": "Sản phẩm",
+    "subcategoryCount": "Danh mục con",
+    "image": "Hình ảnh danh mục",
+    "featured": "Nổi bật"
+  },
+  
+  "labels": {
+    "items": "mục",
+    "products": "sản phẩm",
+    "item": "mục",
+    "product": "sản phẩm"
+  },
+  
+  "sorting": {
+    "alphabetical": "Theo bảng chữ cái",
+    "productCount": "Số lượng sản phẩm",
+    "newest": "Mới nhất",
+    "popular": "Phổ biến nhất"
+  },
+  
+  "display": {
+    "grid": "Xem dạng lưới",
+    "list": "Xem dạng danh sách",
+    "compact": "Xem thu gọn"
+  },
+  
+  "messages": {
+    "noCategories": "Không tìm thấy danh mục nào",
+    "noProducts": "Không có sản phẩm trong danh mục này",
+    "loadingCategories": "Đang tải danh mục...",
+    "categoryNotFound": "Không tìm thấy danh mục",
+    "emptyCategory": "Danh mục này đang trống"
+  },
+  
+  "breadcrumb": {
+    "home": "Trang chủ",
+    "categories": "Danh mục",
+    "current": "Danh mục hiện tại"
+  },
+  
+  "filters": {
+    "all": "Tất cả",
+    "featured": "Nổi bật",
+    "withProducts": "Có sản phẩm",
+    "empty": "Danh mục trống"
+  },
+  
+  "stats": {
+    "totalCategories": "Tổng số danh mục",
+    "totalProducts": "Tổng số sản phẩm",
+    "featuredCategories": "Danh mục nổi bật"
+  }
+}

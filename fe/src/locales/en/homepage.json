@@ -1,0 +1,88 @@
+{
+  "welcome": "Welcome to Stationery Management System",
+  "subtitle": "Your one-stop solution for office supplies",
+  
+  "hero": {
+    "title": "Streamline Your Office Supply Management",
+    "subtitle": "Efficient ordering, tracking, and inventory management for your organization",
+    "cta": "Get Started"
+  },
+  
+  "search": {
+    "placeholder": "Search items, categories...",
+    "button": "Search",
+    "noResults": "No results found",
+    "suggestions": "Popular searches"
+  },
+  
+  "actions": {
+    "browseCatalog": "Browse Catalog",
+    "myRequests": "My Requests",
+    "browseAllItems": "Browse All Items",
+    "viewAllFavorites": "View All Favorites",
+    "viewFullCatalog": "View Full Catalog"
+  },
+  
+  "quickActions": {
+    "title": "Quick Actions",
+    "browseCatalog": "Browse Catalog",
+    "viewOrders": "View Orders",
+    "manageInventory": "Manage Inventory",
+    "reports": "Reports"
+  },
+  
+  "sections": {
+    "categories": {
+      "title": "Browse Categories",
+      "subtitle": "Browse",
+      "viewAll": "View All Categories"
+    },
+    "popular": {
+      "title": "Frequently Ordered Items",
+      "subtitle": "Most requested",
+      "empty": "No popular products yet",
+      "viewAll": "View All Products"
+    },
+    "recent": {
+      "title": "Recent Orders",
+      "subtitle": "Your latest requests",
+      "viewAll": "View Order History"
+    },
+    "favorites": {
+      "title": "Favorite Items",
+      "subtitle": "Your saved items",
+      "empty": "No favorite items yet",
+      "viewAll": "View All Favorites"
+    },
+    "features": {
+      "title": "Management Features",
+      "subtitle": "System capabilities"
+    }
+  },
+  
+  "features": {
+    "inventory": {
+      "title": "Inventory Tracking",
+      "description": "Real-time stock levels and automated reorder alerts"
+    },
+    "ordering": {
+      "title": "Order Management",
+      "description": "Streamlined approval workflow and order tracking"
+    },
+    "analytics": {
+      "title": "Usage Analytics",
+      "description": "Track consumption patterns and optimize ordering"
+    },
+    "tracking": {
+      "title": "Order Tracking",
+      "description": "Monitor order status from request to delivery"
+    }
+  },
+  
+  "stats": {
+    "totalProducts": "Total Products",
+    "activeOrders": "Active Orders",
+    "categories": "Categories",
+    "users": "Users"
+  }
+}

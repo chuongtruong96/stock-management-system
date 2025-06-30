@@ -1,0 +1,104 @@
+{
+  "title": "Hồ sơ",
+  "myProfile": "Hồ sơ của tôi",
+  "editProfile": "Chỉnh sửa hồ sơ",
+  "accountSettings": "Cài đặt tài khoản",
+  "personalInfo": "Thông tin cá nhân",
+  
+  "sections": {
+    "basicInfo": "Thông tin cơ bản",
+    "contactInfo": "Thông tin liên hệ",
+    "addressInfo": "Thông tin địa chỉ",
+    "preferences": "Tùy chọn",
+    "security": "Bảo mật",
+    "notifications": "Thông báo"
+  },
+  
+  "fields": {
+    "firstName": "Tên",
+    "lastName": "Họ",
+    "fullName": "Họ và tên",
+    "email": "Địa chỉ email",
+    "phone": "Số điện thoại",
+    "dateOfBirth": "Ngày sinh",
+    "gender": "Giới tính",
+    "avatar": "Ảnh đại diện",
+    "bio": "Tiểu sử",
+    "website": "Website",
+    "company": "Công ty",
+    "position": "Chức vụ",
+    "department": "Phòng ban"
+  },
+  
+  "address": {
+    "title": "Địa chỉ",
+    "street": "Địa chỉ đường phố",
+    "city": "Thành phố",
+    "state": "Tỉnh/Thành phố",
+    "zipCode": "Mã bưu điện",
+    "country": "Quốc gia",
+    "defaultAddress": "Địa chỉ mặc định",
+    "billingAddress": "Địa chỉ thanh toán",
+    "shippingAddress": "Địa chỉ giao hàng"
+  },
+  
+  "preferences": {
+    "language": "Ngôn ngữ",
+    "timezone": "Múi giờ",
+    "currency": "Tiền tệ",
+    "theme": "Giao diện",
+    "emailNotifications": "Thông báo email",
+    "pushNotifications": "Thông báo đẩy",
+    "marketingEmails": "Email tiếp thị",
+    "orderUpdates": "Cập nhật đơn hàng",
+    "newsletter": "Bản tin"
+  },
+  
+  "security": {
+    "changePassword": "Đổi mật khẩu",
+    "currentPassword": "Mật khẩu hiện tại",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "twoFactorAuth": "Xác thực hai yếu tố",
+    "loginHistory": "Lịch sử đăng nhập",
+    "activeSessions": "Phiên hoạt động",
+    "securityQuestions": "Câu hỏi bảo mật"
+  },
+  
+  "actions": {
+    "save": "Lưu thay đổi",
+    "cancel": "Hủy",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "upload": "Tải lên",
+    "remove": "Xóa bỏ",
+    "changePhoto": "Đổi ảnh",
+    "resetPassword": "Đặt lại mật khẩu",
+    "deactivateAccount": "Vô hiệu hóa tài khoản"
+  },
+  
+  "messages": {
+    "profileUpdated": "Hồ sơ đã được cập nhật thành công",
+    "passwordChanged": "Mật khẩu đã được thay đổi thành công",
+    "photoUploaded": "Ảnh đại diện đã được tải lên thành công",
+    "photoRemoved": "Ảnh đại diện ��ã được xóa",
+    "settingsSaved": "Cài đặt đã được lưu thành công",
+    "securityDescription": "Giữ tài khoản của bạn an toàn bằng cách cập nhật mật khẩu thường xuyên",
+    "confirmDeactivate": "Bạn có chắc chắn muốn vô hiệu hóa tài khoản của mình?",
+    "confirmDelete": "Bạn có chắc chắn muốn xóa thông tin này?"
+  },
+  
+  "validation": {
+    "firstNameRequired": "Tên là bắt buộc",
+    "lastNameRequired": "Họ là bắt buộc",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ",
+    "phoneRequired": "Số điện thoại là bắt buộc",
+    "phoneInvalid": "Vui lòng nhập số điện thoại hợp lệ",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "passwordMinLength": "Mật khẩu ph��i có ít nhất 8 ký tự",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "currentPasswordRequired": "Mật khẩu hiện tại là bắt buộc",
+    "currentPasswordIncorrect": "Mật khẩu hiện tại không đúng"
+  }
+}

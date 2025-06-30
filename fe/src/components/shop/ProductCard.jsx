@@ -33,7 +33,6 @@ import CardBase from "../common/CardBase";
 import QuantitySelector from "./QuantitySelector";
 import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
-import { useUniversalTranslation } from "../../context/UniversalTranslationContext";
 import { useOrderWindow } from "../../context/OrderWindowContext";
 import { getProductImageUrl } from "utils/apiUtils";
 
@@ -58,8 +57,9 @@ function ProductCard({
   const [imageError, setImageError] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const { isInCart, getCartItemQty } = useCart();
-  const { t } = useTranslation();
-  const { translateText, currentLanguage } = useUniversalTranslation();
+  const { t } = useTranslation('products');
+  const { t: tCart } = useTranslation('cart');
+  const { i18n } = useTranslation();
   const { canOrder, reason, isAdminOverride } = useOrderWindow();
 
   // Memoized values for better performance
@@ -70,7 +70,7 @@ function ProductCard({
     
     // Get display name based on current language
     const getDisplayName = () => {
-      if (currentLanguage === 'vi') {
+      if (i18n.language === 'vi') {
         return nameVn || nameEn || name || 'Unnamed Product';
       } else {
         return nameEn || nameVn || name || 'Unnamed Product';
@@ -89,7 +89,7 @@ function ProductCard({
       isNew: isNew || false,
       isFeatured: isFeatured || false,
     };
-  }, [data, currentLanguage]);
+  }, [data, i18n.language]);
 
   const inCart = useMemo(() => productData ? isInCart(productData.id) : false, [productData, isInCart]);
   const cartQty = useMemo(() => productData ? getCartItemQty(productData.id) : 0, [productData, getCartItemQty]);
@@ -132,7 +132,7 @@ function ProductCard({
   const handleAddToCart = useCallback(() => {
     if (productData && onAdd) {
       onAdd(productData, qty);
-      toast.success(t('product.addedToCart', 'Added to cart successfully!'));
+      toast.success(t('product.addedToCart'));
     }
   }, [productData, onAdd, qty, t]);
 
@@ -143,8 +143,8 @@ function ProductCard({
     }
     toast.success(
       isFavorite 
-        ? t('product.removedFromFavorites', 'Removed from favorites')
-        : t('product.addedToFavorites', 'Added to favorites')
+        ? t('product.removedFromFavorites')
+        : t('product.addedToFavorites')
     );
   }, [isFavorite, onFavoriteToggle, productData, t]);
 
@@ -163,7 +163,7 @@ function ProductCard({
       } else {
         // Fallback: copy to clipboard
         await navigator.clipboard.writeText(shareData.url);
-        toast.success(t('product.linkCopied', 'Product link copied to clipboard!'));
+        toast.success(t('product.linkCopied'));
       }
       
       if (onShare) {
@@ -171,7 +171,7 @@ function ProductCard({
       }
     } catch (error) {
       console.error('Error sharing:', error);
-      toast.error(t('product.shareError', 'Failed to share product'));
+      toast.error(t('product.shareError'));
     }
   }, [productData, onShare, t]);
 
@@ -370,7 +370,7 @@ function ProductCard({
                   transition: "opacity 0.3s ease-in-out",
                 }}
               >
-                <Tooltip title={t('product.viewDetails', 'View Details')}>
+                <Tooltip title={t('product.viewDetails')}>
                   <IconButton
                     onClick={handleViewProduct}
                     sx={{
@@ -393,7 +393,7 @@ function ProductCard({
               <Zoom in timeout={300}>
                 <Chip
                   icon={<CheckCircleIcon />}
-                  label={`${t('product.inCart')} (${cartQty})`}
+                  label={`${t('status.inCart')} (${cartQty})`}
                   color="success"
                   size="small"
                   sx={{
@@ -587,8 +587,8 @@ function ProductCard({
                     }}
                   >
                     {!canOrder 
-                      ? t('product.orderWindowClosed', 'Order Window Closed')
-                      : t('product.addToCart', 'Add to Cart')
+                      ? t('product.orderWindowClosed')
+                      : t('product.addToCart')
                     }
                   </Button>
                 </Stack>
@@ -612,7 +612,7 @@ function ProductCard({
                     },
                   }}
                 >
-                  {t('cart.viewCart', 'View Cart')} ({cartQty})
+                  {tCart('actions.viewCart')} ({cartQty})
                 </Button>
               )}
             </CardActions>

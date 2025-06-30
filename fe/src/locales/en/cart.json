@@ -1,0 +1,78 @@
+{
+  "title": "Shopping Cart",
+  "myCart": "My Cart",
+  "cartItems": "Cart Items",
+  "emptyCart": "Your cart is empty",
+  "continueShopping": "Continue Shopping",
+  
+  "actions": {
+    "addToCart": "Add to Cart",
+    "removeFromCart": "Remove from Cart",
+    "updateQuantity": "Update Quantity",
+    "clearCart": "Clear Cart",
+    "proceedToCheckout": "Proceed to Checkout",
+    "saveForLater": "Save for Later",
+    "moveToWishlist": "Move to Wishlist",
+    "viewCart": "View Cart"
+  },
+  
+  "fields": {
+    "product": "Product",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "totalPrice": "Total Price",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "shipping": "Shipping",
+    "discount": "Discount",
+    "total": "Total",
+    "estimatedTotal": "Estimated Total"
+  },
+  
+  "quantity": {
+    "increase": "Increase quantity",
+    "decrease": "Decrease quantity",
+    "remove": "Remove item",
+    "max": "Maximum quantity reached",
+    "min": "Minimum quantity is 1",
+    "outOfStock": "Out of stock",
+    "limitedStock": "Limited stock available"
+  },
+  
+  "summary": {
+    "itemCount": "{{count}} item",
+    "itemCount_plural": "{{count}} items",
+    "subtotal": "Subtotal ({{count}} items)",
+    "estimatedTax": "Estimated Tax",
+    "estimatedShipping": "Estimated Shipping",
+    "estimatedTotal": "Estimated Total"
+  },
+  
+  "messages": {
+    "itemAdded": "Item added to cart",
+    "itemRemoved": "Item removed from cart",
+    "itemUpdated": "Cart updated",
+    "cartCleared": "Cart cleared",
+    "stockWarning": "Only {{stock}} items left in stock",
+    "priceChanged": "Price has changed since you added this item",
+    "unavailable": "This item is no longer available",
+    "confirmRemove": "Remove this item from your cart?",
+    "confirmClear": "Clear all items from your cart?"
+  },
+  
+  "checkout": {
+    "title": "Checkout",
+    "reviewOrder": "Review Your Order",
+    "shippingInfo": "Shipping Information",
+    "paymentInfo": "Payment Information",
+    "orderSummary": "Order Summary",
+    "placeOrder": "Place Order"
+  },
+  
+  "validation": {
+    "quantityRequired": "Quantity is required",
+    "quantityMin": "Minimum quantity is 1",
+    "quantityMax": "Maximum quantity is {{max}}",
+    "quantityInteger": "Quantity must be a whole number"
+  }
+}

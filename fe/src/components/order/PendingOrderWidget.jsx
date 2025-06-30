@@ -24,60 +24,65 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-const ORDER_STATUS_CONFIG = {
-  pending: {
-    label: "PDF Export Required",
-    color: "warning",
-    progress: 25,
-    icon: <DownloadIcon />,
-    description: "Your order is ready. Export PDF for signature.",
-    actionText: "Export PDF",
-    urgency: "medium"
-  },
-  exported: {
-    label: "Upload Signed PDF",
-    color: "info", 
-    progress: 50,
-    icon: <UploadIcon />,
-    description: "PDF exported. Please get it signed and upload back.",
-    actionText: "Upload Signed PDF",
-    urgency: "high"
-  },
-  uploaded: {
-    label: "Submit to Admin",
-    color: "secondary",
-    progress: 75,
-    icon: <SendIcon />,
-    description: "Signed PDF uploaded. Ready to submit for approval.",
-    actionText: "Submit Order",
-    urgency: "high"
-  },
-  submitted: {
-    label: "Awaiting Approval",
-    color: "primary",
-    progress: 90,
-    icon: <ScheduleIcon />,
-    description: "Order submitted. Waiting for admin approval.",
-    actionText: "View Details",
-    urgency: "low"
-  }
-};
 
 const PendingOrderWidget = ({ order, onRefresh }) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation('orders');
 
   if (!order) return null;
 
-  const config = ORDER_STATUS_CONFIG[order.status] || {
-    label: order.status,
-    color: "default",
-    progress: 0,
-    icon: <AssignmentIcon />,
-    description: "Order status unknown",
-    actionText: "View Order",
-    urgency: "low"
+  const getOrderStatusConfig = (status) => {
+    const configs = {
+      pending: {
+        label: t('status.pdfExportRequired'),
+        color: "warning",
+        progress: 25,
+        icon: <DownloadIcon />,
+        description: t('status.pdfExportDescription'),
+        actionText: t('actions.exportPdf'),
+        urgency: "medium"
+      },
+      exported: {
+        label: t('status.uploadSignedPdf'),
+        color: "info", 
+        progress: 50,
+        icon: <UploadIcon />,
+        description: t('status.uploadSignedDescription'),
+        actionText: t('actions.uploadSignedPdf'),
+        urgency: "high"
+      },
+      uploaded: {
+        label: t('status.submitToAdmin'),
+        color: "secondary",
+        progress: 75,
+        icon: <SendIcon />,
+        description: t('status.submitToAdminDescription'),
+        actionText: t('actions.submitOrder'),
+        urgency: "high"
+      },
+      submitted: {
+        label: t('status.awaitingApproval'),
+        color: "primary",
+        progress: 90,
+        icon: <ScheduleIcon />,
+        description: t('status.awaitingApprovalDescription'),
+        actionText: t('actions.viewDetails'),
+        urgency: "low"
+      }
+    };
+
+    return configs[status] || {
+      label: status,
+      color: "default",
+      progress: 0,
+      icon: <AssignmentIcon />,
+      description: t('status.unknownStatus'),
+      actionText: t('actions.viewOrder'),
+      urgency: "low"
+    };
   };
+
+  const config = getOrderStatusConfig(order.status);
 
   const handleContinueOrder = () => {
     navigate('/order-form');
@@ -88,7 +93,7 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return t('common.notAvailable');
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
@@ -98,7 +103,7 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
         minute: '2-digit'
       });
     } catch {
-      return "Invalid Date";
+      return t('common.invalidDate');
     }
   };
 
@@ -145,7 +150,7 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
             zIndex: 1,
           }}
         >
-          🔥 Action Required
+          🔥 {t('common.actionRequired')}
         </Box>
       )}
 
@@ -169,10 +174,10 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
             </Box>
             <Box>
               <Typography variant="h6" fontWeight={600} color="text.primary">
-                📋 Pending Order
+                📋 {t('title.pendingOrder')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Order #{order.orderId || order.id} • {formatDate(order.createdAt)}
+                {t('labels.orderNumber')} #{order.orderId || order.id} • {formatDate(order.createdAt)}
               </Typography>
             </Box>
           </Stack>
@@ -183,7 +188,7 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
             onClick={onRefresh}
             sx={{ minWidth: 'auto', p: 1 }}
           >
-            Refresh
+            {t('actions.refresh')}
           </Button>
         </Stack>
 
@@ -198,7 +203,7 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
               sx={{ fontWeight: 600 }}
             />
             <Typography variant="body2" color="text.secondary" fontWeight={500}>
-              {config.progress}% Complete
+              {config.progress}% {t('labels.complete')}
             </Typography>
           </Stack>
           
@@ -233,14 +238,14 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
         {/* Order Summary */}
         <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(255,255,255,0.7)', borderRadius: 2 }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            Order Summary:
+            {t('labels.orderSummary')}:
           </Typography>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="body2">
-              Items: {order.itemCount || 'N/A'}
+              {t('labels.items')}: {order.itemCount || t('common.notAvailable')}
             </Typography>
             <Typography variant="body2">
-              Department: {order.departmentName || 'N/A'}
+              {t('labels.department')}: {order.departmentName || t('common.notAvailable')}
             </Typography>
           </Stack>
         </Box>
@@ -287,7 +292,7 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
               },
             }}
           >
-            Details
+            {t('actions.details')}
           </Button>
         </Stack>
 
@@ -295,12 +300,12 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
         {config.urgency === 'high' && (
           <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(255, 193, 7, 0.1)', borderRadius: 1 }}>
             <Typography variant="caption" color="text.secondary" display="block">
-              💡 <strong>Quick Tip:</strong> {
+              💡 <strong>{t('labels.quickTip')}:</strong> {
                 order.status === 'exported' 
-                  ? 'After getting your PDF signed, you can upload it directly from the Order Form or Order Details page.'
+                  ? t('tips.afterSigningPdf')
                   : order.status === 'uploaded'
-                    ? 'Your signed PDF is ready. Submit it to admin for final approval.'
-                    : 'Continue your order process to avoid delays.'
+                    ? t('tips.signedPdfReady')
+                    : t('tips.continueProcess')
               }
             </Typography>
           </Box>
