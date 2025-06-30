@@ -10,6 +10,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,9 @@ public class ProductService {
     
     @PersistenceContext
     private EntityManager entityManager;
+    
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     
 
@@ -157,9 +161,6 @@ public class ProductService {
                 .map(map::toDto).collect(Collectors.toList());
     }
 
-    @Value("${upload.dir:uploads}")
-    private String uploadDir;
-
     @Transactional
     public ProductDTO uploadImage(Integer id, MultipartFile file) throws IOException {
         Product p = repo.findById(id)
@@ -171,26 +172,33 @@ public class ProductService {
         if (!file.getContentType().startsWith("image/"))
             throw new IllegalStateException("Only image files allowed");
 
-        if (file.getSize() > 5 * 1024 * 1024) // 5 MB
-            throw new IllegalStateException("File too large (>5MB)");
+        if (file.getSize() > 10 * 1024 * 1024) // 10 MB (increased for better quality)
+            throw new IllegalStateException("File too large (>10MB)");
 
-        /* --- SAVE --- */
-        Path dir = Paths.get(uploadDir, "product-img");
-        Files.createDirectories(dir);
-
-        String ext = Optional.ofNullable(file.getOriginalFilename())
-                .filter(f -> f.contains("."))
-                .map(f -> f.substring(f.lastIndexOf('.')))
-                .orElse("");
-
-        String fn = id + ext; // ví dụ: 12.jpg
-        Path path = dir.resolve(fn);
-
-        Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
-        p.setImage(fn);
-
-        return map.toDto(repo.save(p));
+        /* --- UPLOAD TO CLOUDINARY --- */
+        try {
+            // Delete old image if exists
+            if (p.getImage() != null && p.getImage().startsWith("https://res.cloudinary.com/")) {
+                String publicId = cloudinaryService.extractPublicId(p.getImage());
+                if (publicId != null) {
+                    cloudinaryService.deleteImage(publicId);
+                }
+            }
+            
+            // Upload new image with product ID as public ID
+            String cloudinaryUrl = cloudinaryService.uploadImage(
+                file, 
+                "stationery-mgmt/products", 
+                id.toString()
+            );
+            
+            p.setImage(cloudinaryUrl);
+            
+            return map.toDto(repo.save(p));
+            
+        } catch (Exception e) {
+            throw new IOException("Failed to upload image to Cloudinary: " + e.getMessage(), e);
+        }
     }
 
     /* ========== DASHBOARD METHODS ========== */

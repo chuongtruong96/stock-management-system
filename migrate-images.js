@@ -169,17 +169,21 @@ function generateUrlMapping(allResults) {
 function generateSqlUpdates(mapping) {
   const sqlStatements = [];
   
-  // Product images
+  // Product images - using correct column name 'image'
   Object.entries(mapping.products).forEach(([oldPath, newUrl]) => {
+    // Convert BE/uploads to /uploads for database matching
+    const dbPath = oldPath.replace('BE/uploads', '/uploads');
     sqlStatements.push(
-      `UPDATE products SET image_url = '${newUrl}' WHERE image_url = '${oldPath}';`
+      `UPDATE products SET image = '${newUrl}' WHERE image = '${dbPath}';`
     );
   });
   
-  // Category icons
+  // Category icons - using correct column name 'icon'
   Object.entries(mapping.categories).forEach(([oldPath, newUrl]) => {
+    // Convert BE/uploads to /uploads for database matching
+    const dbPath = oldPath.replace('BE/uploads', '/uploads');
     sqlStatements.push(
-      `UPDATE categories SET icon_url = '${newUrl}' WHERE icon_url = '${oldPath}';`
+      `UPDATE categories SET icon = '${newUrl}' WHERE icon = '${dbPath}';`
     );
   });
   

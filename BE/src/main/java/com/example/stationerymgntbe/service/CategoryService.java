@@ -1,13 +1,9 @@
 package com.example.stationerymgntbe.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +20,9 @@ public class CategoryService {
 
     private final CategoryRepository repo;
     private final CategoryMapper     map;
+    
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     /* ---------- Lấy tất cả ---------- */
     public List<CategoryDTO> all(){
@@ -61,21 +60,43 @@ public class CategoryService {
     public void delete(Integer id){ repo.deleteById(id); }
 
     /* ---------- Upload icon ---------- */
-    @Value("${upload.dir:uploads}")
-    private String uploadDir;
-
     public CategoryDTO uploadIcon(Integer id, MultipartFile file) throws IOException{
         Category c = repo.findById(id)
                          .orElseThrow(() -> new ResourceNotFoundException("Cat "+id));
 
-        Path dir = Paths.get(uploadDir,"cat-icons");
-        Files.createDirectories(dir);
-        Path p   = dir.resolve(id + "_" + file.getOriginalFilename());
+        /* --- VALIDATION --- */
+        if (file.isEmpty()) throw new IllegalStateException("Empty file");
 
-        Files.copy(file.getInputStream(), p, StandardCopyOption.REPLACE_EXISTING);
-        c.setIcon(p.getFileName().toString());
+        if (!file.getContentType().startsWith("image/"))
+            throw new IllegalStateException("Only image files allowed");
 
-        return map.toDto( repo.save(c) );
+        if (file.getSize() > 5 * 1024 * 1024) // 5 MB
+            throw new IllegalStateException("File too large (>5MB)");
+
+        /* --- UPLOAD TO CLOUDINARY --- */
+        try {
+            // Delete old icon if exists
+            if (c.getIcon() != null && c.getIcon().startsWith("https://res.cloudinary.com/")) {
+                String publicId = cloudinaryService.extractPublicId(c.getIcon());
+                if (publicId != null) {
+                    cloudinaryService.deleteImage(publicId);
+                }
+            }
+            
+            // Upload new icon with category ID as public ID
+            String cloudinaryUrl = cloudinaryService.uploadImage(
+                file, 
+                "stationery-mgmt/categories", 
+                id.toString()
+            );
+            
+            c.setIcon(cloudinaryUrl);
+            
+            return map.toDto(repo.save(c));
+            
+        } catch (Exception e) {
+            throw new IOException("Failed to upload icon to Cloudinary: " + e.getMessage(), e);
+        }
     }
     
 }
