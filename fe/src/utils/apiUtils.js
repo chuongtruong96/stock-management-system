@@ -41,27 +41,38 @@ export const getStaticResourceUrl = (resourcePath) => {
 
 /**
  * Get the full URL for a category icon
- * @param {string} iconFilename - The icon filename
+ * @param {string} iconPath - The icon path (can be Cloudinary URL or local filename)
  * @returns {string} Full URL to the icon
  */
-export const getCategoryIconUrl = (iconFilename) => {
-  if (!iconFilename || iconFilename === 'null' || iconFilename === 'undefined') {
+export const getCategoryIconUrl = (iconPath) => {
+  if (!iconPath || iconPath === 'null' || iconPath === 'undefined') {
     return '';
   }
   
-  return getStaticResourceUrl(`icons/${iconFilename}`);
+  // If it's already a full URL (Cloudinary), return as is
+  if (iconPath.startsWith('http://') || iconPath.startsWith('https://')) {
+    return iconPath;
+  }
+  
+  // Legacy local path handling (for development or fallback)
+  return getStaticResourceUrl(`icons/${iconPath}`);
 };
 
 /**
  * Get the full URL for a product image
- * @param {string} imageFilename - The image filename
+ * @param {string} imagePath - The image path (can be Cloudinary URL or local filename)
  * @returns {string} Full URL to the image
  */
-export const getProductImageUrl = (imageFilename) => {
-  if (!imageFilename || imageFilename === 'null' || imageFilename === 'undefined') {
+export const getProductImageUrl = (imagePath) => {
+  if (!imagePath || imagePath === 'null' || imagePath === 'undefined') {
     return '';
   }
   
-  // Use the correct assets path as configured in WebConfig.java
-  return getStaticResourceUrl(`assets/prod/${imageFilename}`);
+  // If it's already a full URL (Cloudinary), return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // Legacy local path handling (for development or fallback)
+  return getStaticResourceUrl(`assets/prod/${imagePath}`);
 };
