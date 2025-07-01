@@ -19,7 +19,10 @@ public class Product extends AbstractEntity {
     private String code;
 
     @Column(name = "name", nullable = false)
-    private String name; // Vietnamese name - English translation via LibreTranslation when needed
+    private String name; // Vietnamese name (primary)
+    
+    @Column(name = "name_en")
+    private String nameEn; // English name
     
     private String image;
 

@@ -126,6 +126,7 @@ public class ProductService {
 
         p.setCode(d.getCode());
         p.setName(d.getName());
+        p.setNameEn(d.getNameEn());
 
         // Handle unit - prefer unitId if available, fallback to unit name
         Unit u;

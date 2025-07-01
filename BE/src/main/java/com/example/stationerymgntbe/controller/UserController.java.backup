@@ -10,7 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -29,13 +28,19 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDetailDTO>> getCurrentUserInfo(Principal principal) {
         try {
+            System.out.println("🔍 USER_CONTROLLER: /me endpoint called");
+            System.out.println("🔍 USER_CONTROLLER: Principal: " + principal);
+            System.out.println("🔍 USER_CONTROLLER: Principal name: " + (principal != null ? principal.getName() : "null"));
+            
             log.info("Retrieving user info for: {}", principal != null ? principal.getName() : "unknown");
             
             UserDetailDTO userInfo = userService.getCurrentUserDetailInfo();
+            System.out.println("🔍 USER_CONTROLLER: User info retrieved successfully: " + userInfo.getUsername());
             
             return ResponseEntity.ok(ApiResponse.success("User information retrieved successfully", userInfo));
             
         } catch (Exception e) {
+            System.out.println("🔍 USER_CONTROLLER: Error in /me endpoint: " + e.getMessage());
             log.error("Error retrieving user info for: {}", principal != null ? principal.getName() : "unknown", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Failed to retrieve user information: " + e.getMessage()));
@@ -104,100 +109,6 @@ public class UserController {
                 .body(ApiResponse.error("User not found: " + e.getMessage()));
         }
     }
-
-    // ============================================================================
-    // USER CRUD OPERATIONS - Using existing UserDTO
-    // ============================================================================
-
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserDetailDTO>> createUser(@RequestBody UserDTO userDTO) {
-        try {
-            log.info("Creating new user: {}", userDTO.getUsername());
-            
-            // Create a working response using existing DTOs
-            UserDetailDTO createdUser = new UserDetailDTO();
-            createdUser.setId((int) (System.currentTimeMillis() % Integer.MAX_VALUE));
-            createdUser.setUsername(userDTO.getUsername());
-            createdUser.setEmail(userDTO.getEmail());
-            createdUser.setActive(true);
-            createdUser.setCreatedAt(LocalDateTime.now());
-            createdUser.setUpdatedAt(LocalDateTime.now());
-            createdUser.setDepartmentName("Department " + userDTO.getDepartmentId());
-            
-            // Create role DTO
-            RoleDTO roleDTO = new RoleDTO();
-            roleDTO.setName(userDTO.getRoleName());
-            roleDTO.setDescription(userDTO.getRoleName() + " Role");
-            createdUser.setRole(roleDTO);
-            
-            log.info("User created successfully: {}", createdUser.getUsername());
-            
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("User created successfully", createdUser));
-            
-        } catch (Exception e) {
-            log.error("Error creating user: {}", userDTO.getUsername(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Failed to create user: " + e.getMessage()));
-        }
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserDetailDTO>> updateUser(
-            @PathVariable Integer id,
-            @RequestBody UserDTO userDTO) {
-        try {
-            log.info("Updating user: {}", id);
-            
-            // Create a working response using existing DTOs
-            UserDetailDTO updatedUser = new UserDetailDTO();
-            updatedUser.setId(id);
-            updatedUser.setUsername(userDTO.getUsername());
-            updatedUser.setEmail(userDTO.getEmail());
-            updatedUser.setActive(userDTO.isActive());
-            updatedUser.setUpdatedAt(LocalDateTime.now());
-            updatedUser.setDepartmentName("Department " + userDTO.getDepartmentId());
-            
-            // Create role DTO
-            RoleDTO roleDTO = new RoleDTO();
-            roleDTO.setName(userDTO.getRoleName());
-            roleDTO.setDescription(userDTO.getRoleName() + " Role");
-            updatedUser.setRole(roleDTO);
-            
-            log.info("User updated successfully: {}", updatedUser.getUsername());
-            
-            return ResponseEntity.ok(ApiResponse.success("User updated successfully", updatedUser));
-            
-        } catch (Exception e) {
-            log.error("Error updating user: {}", id, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Failed to update user: " + e.getMessage()));
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Integer id) {
-        try {
-            log.info("Deleting user: {}", id);
-            
-            // Mock successful deletion
-            log.info("User deleted successfully: {}", id);
-            
-            return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
-            
-        } catch (Exception e) {
-            log.error("Error deleting user: {}", id, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Failed to delete user: " + e.getMessage()));
-        }
-    }
-
-    // ============================================================================
-    // ADMIN SPECIFIC OPERATIONS
-    // ============================================================================
 
     @PutMapping("/{id}/department")
     @PreAuthorize("hasRole('ADMIN')")

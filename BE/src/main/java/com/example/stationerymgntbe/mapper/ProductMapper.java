@@ -13,6 +13,7 @@ public interface ProductMapper {
     
     @Mapping(source = "productId", target = "id")
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "nameEn", target = "nameEn")
     @Mapping(source = "code", target = "code")
     @Mapping(source = "image", target = "image")
     @Mapping(target = "categoryId", ignore = true)
@@ -58,6 +59,7 @@ public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "productId", ignore = true)
     @Mapping(source = "name", target = "name")
+    @Mapping(source = "nameEn", target = "nameEn")
     @Mapping(source = "code", target = "code")
     @Mapping(source = "image", target = "image")
     Product toEntity(ProductDTO dto);
