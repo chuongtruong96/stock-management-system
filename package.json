@@ -1,22 +1,39 @@
 {
-  "name": "stationery-mgmt-migration",
+  "name": "stationery-management-system",
   "version": "1.0.0",
-  "description": "Image migration tools for Stationery Management System",
-  "main": "migrate-images.js",
+  "description": "PMH Stationery Management System - Full Stack Application",
+  "main": "deploy.js",
   "scripts": {
-    "migrate": "node migrate-images.js",
-    "test-cloudinary": "node test-cloudinary.js"
+    "deploy": "node deploy.js",
+    "upload-logos": "node upload-logos-to-cloudinary.js",
+    "build-frontend": "cd fe && npm install && npm run build",
+    "build-backend": "cd BE && mvn clean package -DskipTests",
+    "dev-frontend": "cd fe && npm start",
+    "dev-backend": "cd BE && mvn spring-boot:run",
+    "install-all": "cd fe && npm install && cd ../BE && mvn clean install",
+    "test-frontend": "cd fe && npm test",
+    "test-backend": "cd BE && mvn test"
   },
-  "dependencies": {
-    "cloudinary": "^1.41.0",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {},
   "keywords": [
-    "image-migration",
-    "cloudinary",
-    "deployment"
+    "stationery",
+    "management",
+    "inventory",
+    "react",
+    "spring-boot",
+    "java",
+    "mysql"
   ],
-  "author": "Your Name",
-  "license": "MIT"
+  "author": "PMH Development Company",
+  "license": "MIT",
+  "devDependencies": {
+    "cloudinary": "^1.41.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "your-github-repository-url"
+  }
 }

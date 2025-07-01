@@ -10,7 +10,7 @@ import { Client } from "@stomp/stompjs";
 import { AuthContext } from "context/AuthContext";
 import { useBackendStatus } from "./BackendStatusContext";
 
-import { notificationApi } from "../services/api"; // Updated import
+import { notificationApi } from "../services/api";
 
 const Ctx = createContext(null);
 export const useNotifications = () => useContext(Ctx);
@@ -21,51 +21,57 @@ export function NotificationProvider({ children }) {
   const { auth } = useContext(AuthContext);
   const { isBackendAvailable } = useBackendStatus();
 
-  /* ---------- 1. Lấy lần đầu ---------- */
+  /* ---------- 1. Fetch initial notifications ---------- */
   useEffect(() => {
-    if (auth.token && isBackendAvailable) {
-      notificationApi.fetch() // Updated to notificationApi.fetch, removed .data
-        .then((r) => setItems(r))
-        .catch(console.error);
+    if (auth.token) {
+      console.log("[NOTIFY] Fetching notifications...");
+      notificationApi.fetch()
+        .then((r) => {
+          console.log("[NOTIFY] Fetched notifications:", r);
+          setItems(Array.isArray(r) ? r : []);
+        })
+        .catch((error) => {
+          console.error("[NOTIFY] Failed to fetch notifications:", error);
+          // Don't clear items on fetch error, keep existing ones
+          // Only clear if it's an auth error
+          if (error.response?.status === 401) {
+            setItems([]);
+          }
+        });
     } else {
-      // khi logout hoặc backend không available, xóa hết notification cũ
+      // when logout, clear all notifications
+      console.log("[NOTIFY] No auth token, clearing notifications");
       setItems([]);
     }
-  }, [auth.token, isBackendAvailable]);
+  }, [auth.token]);
 
-  /* ---------- 2. Kết nối STOMP ---------- */
+  /* ---------- 2. WebSocket Connection ---------- */
   useEffect(() => {
-    if (!isBackendAvailable) {
-      console.log("[NOTIFY‑WS] Backend not available, skipping WebSocket connection");
+    // Only connect if we have a token and backend is available
+    if (!auth.token || !isBackendAvailable) {
+      console.log("[NOTIFY‑WS] Skipping WebSocket connection - token:", !!auth.token, "backend:", isBackendAvailable);
       return;
     }
-    
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const token = user?.token;
-    if (!token) {
-      console.log("[NOTIFY‑WS] No token found, skipping WebSocket connection");
-      return; // chưa login
-    }
 
-    console.log("[NOTIFY‑WS] Connecting with token:", token ? "present" : "missing");
+    console.log("[NOTIFY‑WS] Connecting with token:", auth.token ? "present" : "missing");
 
     // Determine WebSocket URL based on environment
     const getWebSocketUrl = () => {
-    // In development, use the backend port
-    if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
-    return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8080/ws`;
-    }
-    // In production, use relative URL
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${wsProtocol}//${window.location.host}/ws`;
+      // In development, use the backend port
+      if (process.env.NODE_ENV === 'development' && window?.location?.port === '3000') {
+        return `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//localhost:8080/ws`;
+      }
+      // In production, use relative URL
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${wsProtocol}//${window.location.host}/ws`;
     };
     
     const client = new Client({
       brokerURL: getWebSocketUrl(),
-      reconnectDelay: 5000, // Reduced delay for faster reconnection
-      maxReconnectAttempts: 10, // Increased attempts
+      reconnectDelay: 5000,
+      maxReconnectAttempts: 10,
       connectHeaders: { 
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${auth.token}`,
         'Access-Control-Allow-Origin': '*'
       },
       debug: (m) => {
@@ -75,18 +81,28 @@ export function NotificationProvider({ children }) {
       },
       onConnect: (frame) => {
         console.log("[NOTIFY‑WS] Connected successfully", frame);
-        // ① notification riêng
         try {
+          // Subscribe to user-specific notifications
           const userSub = client.subscribe("/user/queue/notifications", (msg) => {
             console.log("[NOTIFY‑WS] Received user notification:", msg.body);
-            setItems((prev) => [JSON.parse(msg.body), ...prev]);
+            try {
+              const notification = JSON.parse(msg.body);
+              setItems((prev) => [notification, ...prev]);
+            } catch (parseError) {
+              console.error("[NOTIFY‑WS] Failed to parse notification:", parseError);
+            }
           });
           console.log("[NOTIFY‑WS] Subscribed to user notifications");
           
-          // ② notification global (nếu có)
+          // Subscribe to global notifications
           const globalSub = client.subscribe("/topic/notifications/global", (msg) => {
             console.log("[NOTIFY‑WS] Received global notification:", msg.body);
-            setItems((prev) => [JSON.parse(msg.body), ...prev]);
+            try {
+              const notification = JSON.parse(msg.body);
+              setItems((prev) => [notification, ...prev]);
+            } catch (parseError) {
+              console.error("[NOTIFY‑WS] Failed to parse global notification:", parseError);
+            }
           });
           console.log("[NOTIFY‑WS] Subscribed to global notifications");
         } catch (error) {
@@ -115,17 +131,35 @@ export function NotificationProvider({ children }) {
     };
   }, [auth.token, isBackendAvailable]);
 
-  /* ---------- 3. Helpers ---------- */
+  /* ---------- 3. Helper functions ---------- */
   const markAsRead = useCallback((id) => {
+    console.log("[NOTIFY] Marking notification as read:", id);
     setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, read: true } : i))
+      prev.map((i) => (i.id === id ? { ...i, read: true, readAt: new Date().toISOString() } : i))
     );
-    notificationApi.markRead(id).catch(console.error); // Updated to notificationApi.markRead
+    notificationApi.markRead(id).catch((error) => {
+      console.error("[NOTIFY] Failed to mark as read:", error);
+      // Revert the optimistic update on error
+      setItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, read: false, readAt: null } : i))
+      );
+    });
   }, []);
-  const markAll = () =>
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
 
-  /* ---------- ctx ---------- */
+  const markAll = useCallback(() => {
+    console.log("[NOTIFY] Marking all notifications as read");
+    const now = new Date().toISOString();
+    setItems((prev) => prev.map((n) => ({ ...n, read: true, readAt: now })));
+    
+    // Call API to mark all as read if available
+    if (notificationApi.markAllRead) {
+      notificationApi.markAllRead().catch((error) => {
+        console.error("[NOTIFY] Failed to mark all as read:", error);
+      });
+    }
+  }, []);
+
+  /* ---------- context value ---------- */
   return (
     <Ctx.Provider value={{ items, markAsRead, markAll }}>
       {children}

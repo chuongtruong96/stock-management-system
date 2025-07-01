@@ -13,14 +13,16 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { productApi } from 'services/api';
 import RelatedProductCard from './RelatedProductCard';
 
 const RelatedProducts = ({ currentProduct }) => {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   
   const { data: relatedProducts, isLoading, error } = useQuery({
-    queryKey: ["relatedProducts", currentProduct?.categoryId],
+    queryKey: ["relatedProducts", currentProduct?.categoryId, i18n.language],
     queryFn: async () => {
       if (!currentProduct?.categoryId) return [];
       

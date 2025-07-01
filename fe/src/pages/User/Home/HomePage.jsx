@@ -37,7 +37,7 @@ import ProductCardCompact from "components/shop/ProductCardCompact";
 import ContentState from "components/common/ContentState";
 import DevelopmentNotice from "components/common/DevelopmentNotice";
 import DebugInfo from "components/common/DebugInfo";
-import PendingOrderWidget from "components/order/PendingOrderWidget";
+import CollapsiblePendingOrderWidget from "components/order/CollapsiblePendingOrderWidget";
 import { useBackendStatus } from "context/BackendStatusContext";
 import { usePendingOrder } from "hooks/usePendingOrder";
 
@@ -104,7 +104,7 @@ const usePageTranslation = () => {
 };
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { tCommon, tHomepage, tProducts, tCategories, tNavigation } =
     usePageTranslation();
   const navigate = useNavigate();
@@ -145,7 +145,7 @@ export default function HomePage() {
     isLoading: catLoad,
     error: catErr,
   } = useQuery({
-    queryKey: ["cats"],
+    queryKey: ["cats", i18n.language],
     queryFn: categoryApi.all,
     staleTime: 60_000,
   });
@@ -155,7 +155,7 @@ export default function HomePage() {
     isLoading: popLoad,
     error: popErr,
   } = useQuery({
-    queryKey: ["popular"],
+    queryKey: ["popular", i18n.language],
     queryFn: async () => {
       const result = await productApi.top(8);
       console.log("Popular products data:", result);
@@ -171,7 +171,7 @@ export default function HomePage() {
     isLoading: favLoad,
     error: favErr,
   } = useQuery({
-    queryKey: ["favorites"],
+    queryKey: ["favorites", i18n.language],
     queryFn: getFavoriteProducts,
     staleTime: 30_000,
     enabled: getFavorites().length > 0, // Only fetch if there are favorites
@@ -350,13 +350,14 @@ export default function HomePage() {
           </Container>
         </Box>
 
-        {/* Pending Order Widget */}
+        {/* Enhanced Collapsible Pending Order Widget */}
         {hasPendingOrder && (
-          <Box sx={{ py: { xs: 4, md: 6 } }}>
+          <Box sx={{ py: { xs: 2, md: 3 } }}>
             <Container maxWidth="lg">
-              <PendingOrderWidget
+              <CollapsiblePendingOrderWidget
                 order={pendingOrder}
                 onRefresh={refreshPendingOrder}
+                defaultCollapsed={true}
               />
             </Container>
           </Box>

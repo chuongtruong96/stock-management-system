@@ -6,6 +6,8 @@ import {
   Badge,
   Box,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import { getCategoryNameSimple } from "utils/categoryNameUtils";
 import "../../css/components/CategorySidebar.css";
 
 export default function CategorySidebar({
@@ -14,6 +16,7 @@ export default function CategorySidebar({
   onSelect,
   sticky = true,
 }) {
+  const { i18n } = useTranslation();
   const total =
     list.reduce((s, c) => s + (c.productCount ?? 0), 0) || list.length;
 
@@ -54,7 +57,7 @@ export default function CategorySidebar({
             onClick={() => onSelect(c.categoryId)}
           >
             <ListItemText
-              primary={c.nameEn || c.nameVn || c.code}
+              primary={getCategoryNameSimple(c, i18n.language)}
               primaryTypographyProps={{
                 fontWeight: active === c.categoryId ? 700 : 500,
               }}

@@ -236,12 +236,30 @@
     "mostPopular": "Most popular",
     "leastPopular": "Least popular",
     "mostRecent": "Most recent",
-    "leastRecent": "Least recent"
+    "leastRecent": "Least recent",
+    "default": "Default",
+    "nameAsc": "Name A–Z",
+    "nameDesc": "Name Z–A",
+    "priceAsc": "Price ↑",
+    "priceDesc": "Price ↓"
   },
   "actions": {
     "search": "Search"
   },
   "ui": {
     "translating": "Translating content..."
+  },
+  "productsFound": "products found",
+  "filtered": "Filtered",
+  "show": "Show",
+  "categoryFilters": "Category Filters",
+  "clearAll": "Clear All",
+  "selected": "selected",
+  "filterByCategories": "Filter by Categories",
+  "available": "available",
+  "noCategoriesAvailable": "No categories available",
+  "view": {
+    "grid": "Grid View",
+    "list": "List View"
   }
 }

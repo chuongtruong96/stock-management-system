@@ -18,6 +18,7 @@ import {
   Inventory as AllProductsIcon,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
+import { getCategoryNameSimple } from "utils/categoryNameUtils";
 
 export default function CategorySidebar({ 
   list = [], 
@@ -26,7 +27,7 @@ export default function CategorySidebar({
   sticky = true, 
   loading = false 
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const total = list.reduce((s, c) => s + (c.productCount ?? 0), 0) || list.length;
   const isAll = active.length === 0;
   const sxSticky = sticky ? { position: "sticky", top: 120 } : {};
@@ -177,7 +178,7 @@ export default function CategorySidebar({
           {/* Category Items */}
           {list.map((c) => {
             const selected = active.includes(c.categoryId);
-            const categoryName = c.nameEn || c.nameVn || c.code;
+            const categoryName = getCategoryNameSimple(c, i18n.language);
             
             return (
               <ListItemButton

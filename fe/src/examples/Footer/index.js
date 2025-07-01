@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 /**
- * Compact Footer component for internal use
+ * Compact Footer component for internal use - Minimized version
  */
 function Footer({ company }) {
   const navigate = useNavigate();
@@ -34,165 +34,174 @@ function Footer({ company }) {
       sx={{
         bgcolor: "grey.900",
         color: "white",
-        py: { xs: 3, md: 4 },
+        py: 1.5, // Reduced from 3-4 to 1.5
         mt: "auto",
+        borderTop: "1px solid",
+        borderTopColor: "grey.700",
       }}
     >
       <Container maxWidth="lg">
-        <Stack spacing={3}>
-          {/* Main Footer Content */}
+        {/* Single Row Compact Footer */}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={2}
+        >
+          {/* Left Side - Brand & Copyright */}
           <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={3}
-            justifyContent="space-between"
-            alignItems={{ xs: "center", md: "flex-start" }}
-          >
-            {/* Company Info */}
-            <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 2,
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography variant="h6" fontWeight={700} color="white">
-                    📋
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600} color="white">
-                    {t('footer.brandName')}
-                  </Typography>
-                  <Typography variant="caption" color="grey.400">
-                    {t('footer.brandSubtitle')}
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {/* Contact Info */}
-              <Stack spacing={0.5}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <EmailIcon fontSize="small" sx={{ color: "grey.400" }} />
-                  <Typography variant="body2" color="grey.300">
-                    nguyenchuong@pmh.com.vn
-                  </Typography>
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <PhoneIcon fontSize="small" sx={{ color: "grey.400" }} />
-                  <Typography variant="body2" color="grey.300">
-                    +84 903 803 396
-                  </Typography>
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <LocationIcon fontSize="small" sx={{ color: "grey.400" }} />
-                  <Typography variant="body2" color="grey.300">
-                    Ho Chi Minh City, Vietnam
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Box>
-
-            {/* Quick Links */}
-            <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
-              <Typography variant="subtitle1" fontWeight={600} color="white" sx={{ mb: 1.5 }}>
-                {t('footer.quickLinks')}
-              </Typography>
-              <Stack spacing={0.5}>
-                <Link 
-                  component="button"
-                  onClick={() => handleLinkClick("/products")}
-                  color="grey.300" 
-                  underline="hover"
-                  variant="body2"
-                  sx={{ textAlign: "left" }}
-                >
-                  {t('footer.browseCatalog')}
-                </Link>
-                <Link 
-                  component="button"
-                  onClick={() => handleLinkClick("/order-history")}
-                  color="grey.300" 
-                  underline="hover"
-                  variant="body2"
-                  sx={{ textAlign: "left" }}
-                >
-                  {t('footer.myRequests')}
-                </Link>
-                <Link 
-                  component="button"
-                  onClick={() => handleLinkClick("/order-form")}
-                  color="grey.300" 
-                  underline="hover"
-                  variant="body2"
-                  sx={{ textAlign: "left" }}
-                >
-                  {t('footer.newOrder')}
-                </Link>
-                <Link 
-                  component="button"
-                  onClick={() => handleLinkClick("/profile")}
-                  color="grey.300" 
-                  underline="hover"
-                  variant="body2"
-                  sx={{ textAlign: "left" }}
-                >
-                  {t('footer.profile')}
-                </Link>
-                <Link 
-                  component="button"
-                  onClick={() => handleLinkClick("/notifications")}
-                  color="grey.300" 
-                  underline="hover"
-                  variant="body2"
-                  sx={{ textAlign: "left" }}
-                >
-                  {t('footer.notifications')}
-                </Link>
-              </Stack>
-            </Box>
-          </Stack>
-
-          <Divider sx={{ borderColor: "grey.700" }} />
-
-          {/* Bottom Footer */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
+            direction="row"
             alignItems="center"
             spacing={2}
           >
-            <Stack
-              direction="row"
-              alignItems="center"
-              spacing={1}
-              sx={{ color: "grey.400" }}
-            >
-              <Typography variant="body2">
-                © {currentYear} {t('footer.copyright')}
-              </Typography>
-              <FavoriteIcon fontSize="small" sx={{ color: "red" }} />
-              <Typography variant="body2">
-                {t('footer.madeBy')} {company.name}
+            {/* Compact Brand */}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Box
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 1.5,
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography variant="body2" fontWeight={700} color="white">
+                  📋
+                </Typography>
+              </Box>
+              <Typography variant="body2" fontWeight={600} color="white">
+                {t('footer.brandName') || 'Stationery Management'}
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={3}>
-              <Link href="#" color="grey.400" underline="hover" variant="body2">
-                {t('footer.privacyPolicy')}
+            {/* Copyright */}
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={0.5}
+              sx={{ color: "grey.400", display: { xs: "none", md: "flex" } }}
+            >
+              <Typography variant="caption">
+                © {currentYear}
+              </Typography>
+              <FavoriteIcon fontSize="small" sx={{ color: "red", fontSize: "0.875rem" }} />
+              <Typography variant="caption">
+                {company.name}
+              </Typography>
+            </Stack>
+          </Stack>
+
+          {/* Center - Quick Actions (Hidden on mobile) */}
+          <Stack 
+            direction="row" 
+            spacing={2} 
+            sx={{ display: { xs: "none", md: "flex" } }}
+          >
+            <Link 
+              component="button"
+              onClick={() => handleLinkClick("/products")}
+              color="grey.300" 
+              underline="hover"
+              variant="caption"
+              sx={{ 
+                fontSize: "0.75rem",
+                "&:hover": { color: "white" },
+                transition: "color 0.2s ease"
+              }}
+            >
+              {t('footer.browseCatalog') || 'Browse'}
+            </Link>
+            <Link 
+              component="button"
+              onClick={() => handleLinkClick("/order-history")}
+              color="grey.300" 
+              underline="hover"
+              variant="caption"
+              sx={{ 
+                fontSize: "0.75rem",
+                "&:hover": { color: "white" },
+                transition: "color 0.2s ease"
+              }}
+            >
+              {t('footer.myRequests') || 'Orders'}
+            </Link>
+            <Link 
+              component="button"
+              onClick={() => handleLinkClick("/profile")}
+              color="grey.300" 
+              underline="hover"
+              variant="caption"
+              sx={{ 
+                fontSize: "0.75rem",
+                "&:hover": { color: "white" },
+                transition: "color 0.2s ease"
+              }}
+            >
+              {t('footer.profile') || 'Profile'}
+            </Link>
+          </Stack>
+
+          {/* Right Side - Contact & Links */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={2}
+          >
+            {/* Contact Info */}
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ display: { xs: "none", lg: "flex" } }}>
+              <EmailIcon fontSize="small" sx={{ color: "grey.400", fontSize: "1rem" }} />
+              <Typography variant="caption" color="grey.300">
+                nguyenchuong@pmh.com.vn
+              </Typography>
+            </Stack>
+
+            {/* Legal Links */}
+            <Stack direction="row" spacing={1.5} sx={{ display: { xs: "none", sm: "flex" } }}>
+              <Link 
+                href="#" 
+                color="grey.400" 
+                underline="hover" 
+                variant="caption"
+                sx={{ 
+                  fontSize: "0.75rem",
+                  "&:hover": { color: "white" },
+                  transition: "color 0.2s ease"
+                }}
+              >
+                {t('footer.privacyPolicy') || 'Privacy'}
               </Link>
-              <Link href="#" color="grey.400" underline="hover" variant="body2">
-                {t('footer.termsOfService')}
-              </Link>
-              <Link href="#" color="grey.400" underline="hover" variant="body2">
-                {t('footer.help')}
+              <Link 
+                href="#" 
+                color="grey.400" 
+                underline="hover" 
+                variant="caption"
+                sx={{ 
+                  fontSize: "0.75rem",
+                  "&:hover": { color: "white" },
+                  transition: "color 0.2s ease"
+                }}
+              >
+                {t('footer.help') || 'Help'}
               </Link>
             </Stack>
+          </Stack>
+
+          {/* Mobile Copyright */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.5}
+            sx={{ color: "grey.400", display: { xs: "flex", md: "none" } }}
+          >
+            <Typography variant="caption">
+              © {currentYear}
+            </Typography>
+            <FavoriteIcon fontSize="small" sx={{ color: "red", fontSize: "0.75rem" }} />
+            <Typography variant="caption">
+              {company.name}
+            </Typography>
           </Stack>
         </Stack>
       </Container>

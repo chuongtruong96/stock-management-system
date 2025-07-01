@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 
-const PendingOrderWidget = ({ order, onRefresh }) => {
+const PendingOrderWidget = ({ order, onRefresh, embedded = false }) => {
   const navigate = useNavigate();
   const { t } = useTranslation('orders');
 
@@ -118,15 +118,17 @@ const PendingOrderWidget = ({ order, onRefresh }) => {
 
   return (
     <Card
-      elevation={4}
+      elevation={embedded ? 0 : 4}
       sx={{
-        borderRadius: 3,
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-        border: '2px solid',
+        borderRadius: embedded ? 0 : 3,
+        background: embedded 
+          ? 'transparent' 
+          : 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+        border: embedded ? 'none' : '2px solid',
         borderColor: config.urgency === 'high' ? 'warning.main' : 'primary.light',
         position: 'relative',
         overflow: 'visible',
-        '&:hover': {
+        '&:hover': embedded ? {} : {
           transform: 'translateY(-4px)',
           boxShadow: '0 8px 25px rgba(102, 126, 234, 0.25)',
         },

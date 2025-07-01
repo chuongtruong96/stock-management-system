@@ -182,5 +182,23 @@
     "orderSubmittedSuccess": "Đơn hàng đã được gửi thành công! Nó sẽ được gửi đến admin để duyệt cuối cùng.",
     "waitingForAdminApproval": "Đang chờ admin duyệt",
     "orderApproved": "Đơn hàng đã được duyệt"
-  }
+  },
+
+  "productManagement": "Quản lý sản phẩm",
+  "productName": "Tên sản phẩm",
+  "productCode": "Mã sản phẩm",
+  "category": "Danh mục",
+  "unit": "Đơn vị",
+  "image": "Hình ảnh",
+  "actions": "Thao tác",
+  "addProduct": "Thêm sản phẩm",
+  "editProduct": "Sửa sản phẩm",
+  "selectCategory": "Chọn danh mục",
+  "productUpdated": "Sản phẩm đã được cập nhật thành công",
+  "productAdded": "Sản phẩm đã được thêm thành công",
+  "confirmDeleteProduct": "Bạn có chắc chắn muốn xóa sản phẩm này?",
+  "productDeleted": "Sản phẩm đã được xóa thành công",
+  "errorLoadingProducts": "Lỗi khi tải sản phẩm",
+  "failedToLoadData": "Không thể tải dữ liệu",
+  "retry": "Thử lại"
 }

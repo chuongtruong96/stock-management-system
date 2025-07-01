@@ -1,4 +1,3 @@
-
 import Drawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 
@@ -11,9 +10,8 @@ export default styled(Drawer)(({ theme, ownerState }) => {
   const { xxl } = boxShadows;
   const { pxToRem, linearGradient } = functions;
 
-  let backgroundValue = darkMode
-    ? background.sidenav
-    : linearGradient(gradients.dark.main, gradients.dark.state);
+  // Apply beautiful gradient theme to match dashboard
+  let backgroundValue = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
 
   if (transparentSidenav) {
     backgroundValue = transparent.main;

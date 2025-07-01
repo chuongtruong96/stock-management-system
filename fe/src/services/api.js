@@ -775,12 +775,110 @@ export const dashboardApi = {
   getMonthlyOrdersChart: (months = 6) => api.get("/dashboard/charts/monthly-orders", { params: { months } }).then(unwrap),
 };
 
-// Report API - Enhanced reporting endpoints
+// Report API - Unified reporting endpoints with enhanced features
 export const reportApi = {
+  /* ════════════════════════ CORE REPORT ENDPOINTS ═════════════════════════ */
   getSummary: (year, month) => api.get("/reports", { params: { year, month } }).then(unwrap),
   getFull: (year, month) => api.get("/reports/full", { params: { year, month } }).then(unwrap),
+
+  /* ════════════════════════ EXPORT ENDPOINTS ═════════════════════════ */
   exportExcel: (month) => api.get("/reports/export/excel", { params: { month }, responseType: "blob" }).then(response => response.data),
   exportPdf: (month) => api.get("/reports/export/pdf", { params: { month }, responseType: "blob" }).then(response => response.data),
+
+  /* ════════════════════════ ANALYTICS ENDPOINTS ═════════════════════════ */
+  getDepartmentAnalytics: (year, month) => api.get("/reports/analytics/departments", { params: { year, month } }).then(unwrap),
+  getProductTrends: (year, month, months = 6) => api.get("/reports/analytics/trends", { params: { year, month, months } }).then(unwrap),
+  getComparison: (currentYear, currentMonth, compareYear, compareMonth) => 
+    api.get("/reports/analytics/comparison", { 
+      params: { currentYear, currentMonth, compareYear, compareMonth } 
+    }).then(unwrap),
+  getRealtimeStats: () => api.get("/reports/analytics/realtime").then(unwrap),
+  getCategoryDistribution: (year, month) => api.get("/reports/analytics/categories", { params: { year, month } }).then(unwrap),
+
+  /* ════════════════════════ ADVANCED FILTERING ═════════════════════════ */
+  getFilteredAnalytics: (filters) => api.post("/reports/analytics/filtered", filters).then(unwrap),
+  getCustomDateRangeAnalytics: (startDate, endDate) => 
+    api.get("/reports/analytics/daterange", { 
+      params: { 
+        startDate: startDate.toISOString(), 
+        endDate: endDate.toISOString() 
+      } 
+    }).then(unwrap),
+
+  /* ════════════════════════ DASHBOARD ENDPOINTS ═════════════════════════ */
+  getDashboardData: (year, month) => api.get("/reports/dashboard", { params: { year, month } }).then(unwrap),
+  getEnhancedDashboard: (year, month, compareYear = null, compareMonth = null) => {
+    const params = { year, month };
+    if (compareYear && compareMonth) {
+      params.compareYear = compareYear;
+      params.compareMonth = compareMonth;
+    }
+    return api.get("/reports/dashboard/enhanced", { params }).then(unwrap);
+  },
+
+  /* ════════════════════════ SYSTEM HEALTH ════════════════��════════ */
+  getSystemHealthMetrics: () => api.get("/reports/system/health").then(unwrap),
+  getFilterOptions: () => api.get("/reports/filter-options").then(unwrap),
+
+  /* ════════════════════════ CONVENIENCE METHODS ═════════════════════════ */
+  getAllAnalytics: async (year, month) => {
+    try {
+      const [
+        departmentAnalytics,
+        productTrends,
+        categoryDistribution,
+        realtimeStats
+      ] = await Promise.all([
+        reportApi.getDepartmentAnalytics(year, month),
+        reportApi.getProductTrends(year, month, 6),
+        reportApi.getCategoryDistribution(year, month),
+        reportApi.getRealtimeStats()
+      ]);
+
+      return {
+        departmentAnalytics,
+        productTrends,
+        categoryDistribution,
+        realtimeStats,
+        metadata: {
+          year,
+          month,
+          generatedAt: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('Failed to fetch all analytics:', error);
+      throw error;
+    }
+  },
+
+  // Date range convenience methods
+  getLast7DaysAnalytics: () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    return reportApi.getCustomDateRangeAnalytics(startDate, endDate);
+  },
+
+  getLast30DaysAnalytics: () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    return reportApi.getCustomDateRangeAnalytics(startDate, endDate);
+  },
+
+  getLastQuarterAnalytics: () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 3);
+    return reportApi.getCustomDateRangeAnalytics(startDate, endDate);
+  },
+
+  // Legacy compatibility methods
+  getEnhancedReport: (year, month) => reportApi.getAllAnalytics(year, month),
+  getEnhancedCategoryDistribution: (year, month) => reportApi.getCategoryDistribution(year, month),
+  getDepartmentCategoryPreferences: (year, month) => reportApi.getDepartmentAnalytics(year, month),
+  getAdvancedDashboard: (year, month) => reportApi.getEnhancedDashboard(year, month),
 };
 
 // Translation API - Google Translate integration

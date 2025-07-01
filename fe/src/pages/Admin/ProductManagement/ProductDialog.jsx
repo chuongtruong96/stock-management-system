@@ -261,27 +261,14 @@ export default function ProductDialog({
                 <em>{t("selectCategory") || "Select Category"}</em>
               </MenuItem>
               {categories.map((category) => {
-                // Handle category name properly
-                let categoryName = 'Unknown Category';
-                if (typeof category.nameEn === 'string') {
-                  categoryName = category.nameEn;
-                } else if (typeof category.nameEn === 'object' && category.nameEn) {
-                  categoryName = category.nameEn.en || category.nameEn.nameEn || category.nameEn.name || 'Unknown Category';
-                } else if (category.categoryName) {
-                  categoryName = category.categoryName;
-                } else if (category.name) {
-                  categoryName = category.name;
-                }
-
-                // Handle Vietnamese name
-                let vietnameseName = '';
-                if (category.nameVn && typeof category.nameVn === 'string') {
-                  vietnameseName = ` (${category.nameVn})`;
-                }
+                // Use the same translation utility as the main component
+                const categoryName = category.nameEn || category.categoryName || category.name || 'Unknown Category';
+                const vietnameseName = category.nameVn ? ` (${category.nameVn})` : '';
+                const displayName = categoryName + vietnameseName;
 
                 return (
                   <MenuItem key={category.categoryId || category.id} value={category.categoryId || category.id}>
-                    {categoryName}{vietnameseName}
+                    {displayName}
                   </MenuItem>
                 );
               })}
@@ -381,4 +368,3 @@ export default function ProductDialog({
     </Dialog>
   );
 }
-  

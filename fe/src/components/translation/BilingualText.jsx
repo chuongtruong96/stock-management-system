@@ -2,6 +2,7 @@
 import React from 'react';
 import { Typography, Skeleton } from '@mui/material';
 import { useTranslation } from "react-i18next";
+import { getProductName } from 'utils/productNameUtils';
 
 /**
  * Component that displays bilingual content from database fields
@@ -14,8 +15,7 @@ import { useTranslation } from "react-i18next";
  * @param {string} props.fallback - Fallback text if both en/vi are empty
  * @param {string} props.component - MUI Typography component variant
  * @param {object} props.sx - MUI sx prop for styling
- * @param {boolean} props.enableTranslation - Whether to use AI translation as fallback
- * @param {object} props.translationOptions - Options for AI translation
+ * @param {object} props.product - Product object (for product names)
  * @returns {JSX.Element} - Bilingual text component
  */
 const BilingualText = ({ 
@@ -24,18 +24,23 @@ const BilingualText = ({
   fallback = 'No content available',
   component = 'body1', 
   sx = {}, 
-  enableTranslation = false, // Disabled since we removed universal translation
-  translationOptions = {},
+  product = null, // Product object for product names
   ...props 
 }) => {
   const { i18n } = useTranslation();
 
-  // Determine the primary and fallback text based on current language
-  const primaryText = i18n.language === 'vi' ? vi : en;
-  const fallbackText = i18n.language === 'vi' ? en : vi;
-  
-  // Get the best available text (no AI translation, just fallback)
-  const displayText = primaryText || fallbackText || fallback;
+  // Determine the display text
+  let displayText;
+
+  if (product) {
+    // For product names, use the database fields
+    displayText = getProductName(product, i18n.language);
+  } else {
+    // Original bilingual logic for other content
+    const primaryText = i18n.language === 'vi' ? vi : en;
+    const fallbackText = i18n.language === 'vi' ? en : vi;
+    displayText = primaryText || fallbackText || fallback;
+  }
 
   return (
     <Typography 

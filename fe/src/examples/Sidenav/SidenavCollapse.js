@@ -56,7 +56,14 @@ function SidenavCollapse({ icon, name, active, ...rest }) {
           }
         >
           {typeof icon === "string" ? (
-            <Icon sx={(theme) => collapseIcon(theme, { active })}>{icon}</Icon>
+            <Icon sx={(theme) => collapseIcon(theme, { 
+              active, 
+              transparentSidenav, 
+              whiteSidenav, 
+              darkMode 
+            })}>
+              {icon}
+            </Icon>
           ) : (
             icon
           )}
@@ -64,14 +71,31 @@ function SidenavCollapse({ icon, name, active, ...rest }) {
 
         <ListItemText
           primary={name}
-          sx={(theme) =>
-            collapseText(theme, {
+          sx={(theme) => ({
+            ...collapseText(theme, {
               miniSidenav,
               transparentSidenav,
               whiteSidenav,
               active,
-            })
-          }
+            }),
+            "& .MuiListItemText-primary": {
+              color: (() => {
+                // Active items always use white text for better contrast
+                if (active) return theme.palette.white.main;
+                
+                // White sidenav in light mode uses dark text
+                if (whiteSidenav && !darkMode) return theme.palette.dark.main;
+                
+                // Transparent sidenav uses dark text in light mode, white in dark mode
+                if (transparentSidenav) return darkMode ? theme.palette.white.main : theme.palette.dark.main;
+                
+                // Default: white text for better contrast
+                return theme.palette.white.main;
+              })(),
+              fontWeight: active ? 600 : 500,
+              fontSize: "0.875rem",
+            }
+          })}
         />
       </MDBox>
     </ListItem>

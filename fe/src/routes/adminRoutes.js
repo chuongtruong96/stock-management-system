@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Box, CircularProgress, Alert, Typography } from "@mui/material";
 import { ErrorBoundary } from "react-error-boundary";
-import DashboardShell from "layouts/DashboardShell";
+import CleanAdminLayout from "layouts/CleanAdminLayout";
 
 // Enhanced lazy loading with better error handling and preloading
 const AdminDashboard = lazy(() => 
@@ -124,7 +124,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => (
 );
 
 /**
- * Enhanced Higher-order component to wrap admin pages with DashboardShell
+ * Enhanced Higher-order component to wrap admin pages with CleanAdminLayout
  * Includes error boundaries, suspense, and better loading states
  * @param {React.Component} Component - The component to wrap
  * @param {string} titleKey - Translation key for the page title
@@ -132,9 +132,9 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => (
  * @param {string} loadingMessage - Custom loading message
  * @returns {Object} Route configuration object
  */
-const withDashboardShell = (Component, titleKey, icon = "dashboard", loadingMessage) => ({
+const withCleanAdminLayout = (Component, titleKey, icon = "dashboard", loadingMessage) => ({
   element: (
-    <DashboardShell titleKey={titleKey} icon={icon}>
+    <CleanAdminLayout titleKey={titleKey} icon={icon}>
       <ErrorBoundary
         FallbackComponent={ErrorFallback}
         onError={(error, errorInfo) => {
@@ -150,31 +150,33 @@ const withDashboardShell = (Component, titleKey, icon = "dashboard", loadingMess
           <Component />
         </Suspense>
       </ErrorBoundary>
-    </DashboardShell>
+    </CleanAdminLayout>
   ),
 });
 
 /**
- * Enhanced Admin routes configuration with better metadata and organization
+ * Enhanced Admin routes configuration with CleanAdminLayout
  * All routes require 'admin' role and include enhanced error handling
  */
 export const adminRoutes = [
   {
     path: "admin",
     element: (
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        onError={(error, errorInfo) => {
-          console.error("Admin page error:", error, errorInfo);
-        }}
-        onReset={() => {
-          window.location.reload();
-        }}
-      >
-        <Suspense fallback={<EnhancedLoading message="Loading dashboard..." />}>
-          <AdminDashboard />
-        </Suspense>
-      </ErrorBoundary>
+      <CleanAdminLayout titleKey="nav.adminDashboard" icon="dashboard">
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          onError={(error, errorInfo) => {
+            console.error("Admin page error:", error, errorInfo);
+          }}
+          onReset={() => {
+            window.location.reload();
+          }}
+        >
+          <Suspense fallback={<EnhancedLoading message="Loading dashboard..." />}>
+            <AdminDashboard />
+          </Suspense>
+        </ErrorBoundary>
+      </CleanAdminLayout>
     ),
     allowedRoles: ["admin"],
     meta: {
@@ -185,7 +187,7 @@ export const adminRoutes = [
   },
   {
     path: "order-management",
-    ...withDashboardShell(
+    ...withCleanAdminLayout(
       OrderManagement, 
       "nav.orderManagement", 
       "assignment",
@@ -200,7 +202,7 @@ export const adminRoutes = [
   },
   {
     path: "category-management",
-    ...withDashboardShell(
+    ...withCleanAdminLayout(
       CategoryManagement, 
       "nav.categoryManagement", 
       "category",
@@ -215,7 +217,7 @@ export const adminRoutes = [
   },
   {
     path: "product-management",
-    ...withDashboardShell(
+    ...withCleanAdminLayout(
       ProductManagement, 
       "nav.productManagement", 
       "inventory",
@@ -230,7 +232,7 @@ export const adminRoutes = [
   },
   {
     path: "unit-management",
-    ...withDashboardShell(
+    ...withCleanAdminLayout(
       UnitManagement, 
       "nav.unitManagement", 
       "straighten",
@@ -245,7 +247,7 @@ export const adminRoutes = [
   },
   {
     path: "user-management",
-    ...withDashboardShell(
+    ...withCleanAdminLayout(
       UserManagement, 
       "nav.userManagement", 
       "people",
@@ -260,7 +262,7 @@ export const adminRoutes = [
   },
   {
     path: "reports",
-    ...withDashboardShell(
+    ...withCleanAdminLayout(
       Reports, 
       "nav.reports", 
       "bar_chart",
@@ -274,21 +276,23 @@ export const adminRoutes = [
     },
   },
   {
-    path: "admin/profile",
+    path: "profile",
     element: (
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        onError={(error, errorInfo) => {
-          console.error("Admin profile error:", error, errorInfo);
-        }}
-        onReset={() => {
-          window.location.reload();
-        }}
-      >
-        <Suspense fallback={<EnhancedLoading message="Loading profile..." />}>
-          <AdminProfile />
-        </Suspense>
-      </ErrorBoundary>
+      <CleanAdminLayout titleKey="nav.profile" icon="person">
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          onError={(error, errorInfo) => {
+            console.error("Admin profile error:", error, errorInfo);
+          }}
+          onReset={() => {
+            window.location.reload();
+          }}
+        >
+          <Suspense fallback={<EnhancedLoading message="Loading profile..." />}>
+            <AdminProfile />
+          </Suspense>
+        </ErrorBoundary>
+      </CleanAdminLayout>
     ),
     allowedRoles: ["admin"],
     meta: {

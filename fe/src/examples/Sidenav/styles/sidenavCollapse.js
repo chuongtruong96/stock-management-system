@@ -1,4 +1,3 @@
-
 function collapseItem(theme, ownerState) {
   const { palette, transitions, breakpoints, boxShadows, borders, functions } = theme;
   const { active, transparentSidenav, whiteSidenav, darkMode, sidenavColor } = ownerState;
@@ -10,12 +9,9 @@ function collapseItem(theme, ownerState) {
 
   return {
     background: active
-      ? linearGradient(gradients[sidenavColor].main, gradients[sidenavColor].state)
+      ? rgba(white.main, 0.2)
       : transparent.main,
-    color:
-      (transparentSidenav && !darkMode && !active) || (whiteSidenav && !active)
-        ? dark.main
-        : white.main,
+    color: white.main, // Always white for gradient background
     display: "flex",
     alignItems: "center",
     width: "100%",
@@ -25,7 +21,7 @@ function collapseItem(theme, ownerState) {
     cursor: "pointer",
     userSelect: "none",
     whiteSpace: "nowrap",
-    boxShadow: active && !whiteSidenav && !darkMode && !transparentSidenav ? md : "none",
+    boxShadow: active ? md : "none",
     [breakpoints.up("xl")]: {
       transition: transitions.create(["box-shadow", "background-color"], {
         easing: transitions.easing.easeInOut,
@@ -34,18 +30,7 @@ function collapseItem(theme, ownerState) {
     },
 
     "&:hover, &:focus": {
-      backgroundColor: () => {
-        let backgroundValue;
-
-        if (!active) {
-          backgroundValue =
-            transparentSidenav && !darkMode
-              ? grey[300]
-              : rgba(whiteSidenav ? grey[400] : white.main, 0.2);
-        }
-
-        return backgroundValue;
-      },
+      backgroundColor: rgba(white.main, 0.1),
     },
   };
 }
@@ -61,10 +46,7 @@ function collapseIconBox(theme, ownerState) {
   return {
     minWidth: pxToRem(32),
     minHeight: pxToRem(32),
-    color:
-      (transparentSidenav && !darkMode && !active) || (whiteSidenav && !active)
-        ? dark.main
-        : white.main,
+    color: white.main, // Always white for gradient background
     borderRadius: borderRadius.md,
     display: "grid",
     placeItems: "center",
@@ -74,39 +56,48 @@ function collapseIconBox(theme, ownerState) {
     }),
 
     "& svg, svg g": {
-      color: transparentSidenav || whiteSidenav ? dark.main : white.main,
+      color: white.main, // Always white for gradient background
     },
   };
 }
 
-const collapseIcon = ({ palette: { white, gradients } }, { active }) => ({
-  color: active ? white.main : gradients.dark.state,
+const collapseIcon = ({ palette: { white, dark, gradients } }, { active, transparentSidenav, whiteSidenav, darkMode }) => ({
+  color: white.main, // Always white for gradient background
 });
 
 function collapseText(theme, ownerState) {
   const { typography, transitions, breakpoints, functions } = theme;
   const { miniSidenav, transparentSidenav, active } = ownerState;
 
-  const { size, fontWeightRegular, fontWeightLight } = typography;
+  const { size, fontWeightRegular, fontWeightMedium } = typography;
   const { pxToRem } = functions;
 
   return {
-    marginLeft: pxToRem(10),
+    marginLeft: pxToRem(12),
 
     [breakpoints.up("xl")]: {
-      opacity: miniSidenav || (miniSidenav && transparentSidenav) ? 0 : 1,
-      maxWidth: miniSidenav || (miniSidenav && transparentSidenav) ? 0 : "100%",
-      marginLeft: miniSidenav || (miniSidenav && transparentSidenav) ? 0 : pxToRem(10),
-      transition: transitions.create(["opacity", "margin"], {
+      // Show text when expanded, hide when collapsed
+      opacity: miniSidenav ? 0 : 1,
+      maxWidth: miniSidenav ? 0 : "100%",
+      marginLeft: miniSidenav ? 0 : pxToRem(12),
+      visibility: miniSidenav ? "hidden" : "visible",
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      transition: transitions.create(["opacity", "margin", "visibility", "max-width"], {
         easing: transitions.easing.easeInOut,
         duration: transitions.duration.standard,
       }),
     },
 
     "& span": {
-      fontWeight: active ? fontWeightRegular : fontWeightLight,
-      fontSize: size.sm,
-      lineHeight: 0,
+      fontWeight: active ? fontWeightMedium : fontWeightRegular,
+      fontSize: "0.875rem",
+      lineHeight: 1.4,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      display: "block",
+      color: theme.palette.white.main, // Always white for gradient background
     },
   };
 }

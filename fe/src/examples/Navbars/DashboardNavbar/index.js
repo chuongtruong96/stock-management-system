@@ -43,7 +43,7 @@ import MDBox from "components/template/MDBox";
 import MDInput from "components/template/MDInput";
 
 // Material Dashboard 2 React example components
-import Breadcrumbs from "examples/Breadcrumbs";
+import NavbarBreadcrumbs from "examples/Breadcrumbs/NavbarBreadcrumbs";
 import NotificationItem from "examples/Items/NotificationItem";
 import NotificationBell from "components/layout/NotificationBell";
 
@@ -143,6 +143,8 @@ function DashboardNavbar({ absolute, light, isMini }) {
       'user-management': 'User Management',
       'unit-management': 'Unit Management',
       'reports': 'Reports & Analytics',
+      'notifications': 'Notifications',
+      'profile': 'Profile',
     };
     
     const currentRoute = route[route.length - 1];
@@ -214,7 +216,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
       {/* Menu Items */}
       <MenuItem 
         component={Link} 
-        to="/admin/profile" 
+        to="/profile" 
         onClick={closeAccountMenu}
         sx={{ py: 1.5, gap: 1.5 }}
       >
@@ -264,7 +266,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
       })}
     >
       <Toolbar sx={(theme) => ({ ...navbarContainer(theme), minHeight: '56px !important', height: '56px' })}>
-        {/* Left Section - Responsive Breadcrumbs */}
+        {/* Left Section - Clean Breadcrumbs */}
         <MDBox
           color="inherit"
           mb={{ xs: 1, md: 0 }}
@@ -286,11 +288,11 @@ function DashboardNavbar({ absolute, light, isMini }) {
               <MenuIcon sx={iconsStyle} fontSize="medium" />
             </IconButton>
 
-            {/* Responsive Breadcrumbs */}
+            {/* Clean Navbar Breadcrumbs */}
             <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-              {/* Desktop: Show full breadcrumbs */}
+              {/* Desktop: Show clean breadcrumbs */}
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <Breadcrumbs
+                <NavbarBreadcrumbs
                   icon="home"
                   title={getPageTitle()}
                   route={route}

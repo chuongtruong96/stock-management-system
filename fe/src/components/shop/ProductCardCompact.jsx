@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import CardBase from "../common/CardBase";
 import { useTranslation } from "react-i18next";
 import BilingualText from "../translation/BilingualText";
+import { getProductImageUrl } from "utils/apiUtils";
 
 /** Compact product card for homepage/category display - view only */
 function ProductCardCompact({ data }) {
@@ -28,13 +29,9 @@ function ProductCardCompact({ data }) {
   const { 
     id, 
     name, 
-    nameEn, 
-    nameVn, 
     image, 
     unit, 
-    description, 
-    descriptionEn, 
-    descriptionVn 
+    description
   } = data;
 
   /* Always coerce unit to a string in case backend changes */
@@ -45,8 +42,8 @@ function ProductCardCompact({ data }) {
     return String(unit);
   })();
 
-  const imageSrc = image
-    ? `/uploads/product-img/${image}`
+  const imageSrc = image 
+    ? getProductImageUrl(image)
     : "/placeholder-prod.png";
 
   return (
@@ -223,8 +220,7 @@ function ProductCardCompact({ data }) {
 
       <CardContent sx={{ flexGrow: 1, p: 2, height: 140, position: 'relative', zIndex: 2 }}>
         <BilingualText
-          en={nameEn || name}
-          vi={nameVn}
+          vi={name}
           fallback="Unnamed Product"
           component="subtitle1"
           sx={{
@@ -246,10 +242,9 @@ function ProductCardCompact({ data }) {
           enableTranslation={true}
         />
 
-        {(descriptionEn || descriptionVn || description) && (
+        {description && (
           <BilingualText
-            en={descriptionEn || description}
-            vi={descriptionVn}
+            vi={description}
             fallback=""
             component="body2"
             sx={{

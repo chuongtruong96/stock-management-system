@@ -227,7 +227,7 @@
     "sortOrder": "Thứ tự sắp xếp",
     "ascending": "Tăng dần",
     "descending": "Giảm dần",
-    "newest": "Mới nhất",
+    "newest": "Mới nh��t",
     "oldest": "Cũ nhất",
     "alphabetical": "Theo bảng chữ cái",
     "reverseAlphabetical": "Ngược bảng chữ cái",
@@ -236,12 +236,30 @@
     "mostPopular": "Phổ biến nhất",
     "leastPopular": "Ít phổ biến nhất",
     "mostRecent": "Gần đây nhất",
-    "leastRecent": "Lâu nhất"
+    "leastRecent": "Lâu nhất",
+    "default": "Mặc định",
+    "nameAsc": "Tên A–Z",
+    "nameDesc": "Tên Z–A",
+    "priceAsc": "Giá ↑",
+    "priceDesc": "Giá ↓"
   },
   "actions": {
     "search": "Tìm kiếm"
   },
   "ui": {
     "translating": "Đang dịch nội dung..."
+  },
+  "productsFound": "sản phẩm được tìm thấy",
+  "filtered": "Đã lọc",
+  "show": "Hiển thị",
+  "categoryFilters": "Bộ lọc danh mục",
+  "clearAll": "Xóa tất cả",
+  "selected": "đã chọn",
+  "filterByCategories": "Lọc theo danh mục",
+  "available": "có sẵn",
+  "noCategoriesAvailable": "Không có danh mục nào",
+  "view": {
+    "grid": "Xem dạng lưới",
+    "list": "Xem dạng danh sách"
   }
 }

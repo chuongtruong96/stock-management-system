@@ -14,6 +14,10 @@ import {
   Skeleton,
   Badge,
   Zoom,
+  Grow,
+  Slide,
+  Collapse,
+  CircularProgress,
 } from "@mui/material";
 import {
   ShoppingCart as ShoppingCartIcon,
@@ -35,6 +39,7 @@ import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
 import { useOrderWindow } from "../../context/OrderWindowContext";
 import { getProductImageUrl } from "utils/apiUtils";
+import { getProductName } from "utils/productNameUtils";
 
 /** Enhanced Single product tile with improved UI/UX and advanced features */
 function ProductCard({ 
@@ -56,6 +61,9 @@ function ProductCard({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const { isInCart, getCartItemQty } = useCart();
   const { t } = useTranslation('products');
   const { t: tCart } = useTranslation('cart');
@@ -66,20 +74,15 @@ function ProductCard({
   const productData = useMemo(() => {
     if (!data) return null;
     
-    const { id, name, nameVn, nameEn, image, unit, description, price, discount, stock, isNew, isFeatured } = data;
+    const { id, image, unit, description, price, discount, stock, isNew, isFeatured } = data;
     
-    // Get display name based on current language
-    const getDisplayName = () => {
-      if (i18n.language === 'vi') {
-        return nameVn || nameEn || name || 'Unnamed Product';
-      } else {
-        return nameEn || nameVn || name || 'Unnamed Product';
-      }
-    };
+    // Use the enhanced utility function to get the correct name and translation status
+    const nameResult = getProductName(data, i18n.language);
     
     return {
       id,
-      name: getDisplayName(),
+      name: nameResult.name,
+      hasTranslation: nameResult.hasTranslation,
       image,
       unit,
       description: description || '',
@@ -129,12 +132,39 @@ function ProductCard({
     }
   }, [navigate, productData?.id]);
 
-  const handleAddToCart = useCallback(() => {
-    if (productData && onAdd) {
-      onAdd(productData, qty);
-      toast.success(t('product.addedToCart'));
+  const handleAddToCart = useCallback(async () => {
+    if (productData && onAdd && !isAddingToCart) {
+      setIsAddingToCart(true);
+      
+      try {
+        // Simulate async operation
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        onAdd(productData, qty);
+        
+        // Show success animation
+        setShowSuccess(true);
+        toast.success(t('product.addedToCart'), {
+          position: "bottom-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        // Reset success state after animation
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 2000);
+        
+      } catch (error) {
+        toast.error(t('product.addToCartError'));
+      } finally {
+        setIsAddingToCart(false);
+      }
     }
-  }, [productData, onAdd, qty, t]);
+  }, [productData, onAdd, qty, t, isAddingToCart]);
 
   const handleFavoriteToggle = useCallback(() => {
     setIsFavorite(prev => !prev);
@@ -149,7 +179,9 @@ function ProductCard({
   }, [isFavorite, onFavoriteToggle, productData, t]);
 
   const handleShare = useCallback(async () => {
-    if (!productData) return;
+    if (!productData || isSharing) return;
+    
+    setIsSharing(true);
     
     const shareData = {
       title: productData.name,
@@ -163,7 +195,10 @@ function ProductCard({
       } else {
         // Fallback: copy to clipboard
         await navigator.clipboard.writeText(shareData.url);
-        toast.success(t('product.linkCopied'));
+        toast.success(t('product.linkCopied'), {
+          position: "bottom-right",
+          autoClose: 2000,
+        });
       }
       
       if (onShare) {
@@ -172,8 +207,10 @@ function ProductCard({
     } catch (error) {
       console.error('Error sharing:', error);
       toast.error(t('product.shareError'));
+    } finally {
+      setTimeout(() => setIsSharing(false), 500);
     }
-  }, [productData, onShare, t]);
+  }, [productData, onShare, t, isSharing]);
 
   const handleQuantityChange = useCallback((newQty) => {
     setQty(Math.max(1, newQty));
@@ -291,6 +328,7 @@ function ProductCard({
                     <IconButton
                       size="small"
                       onClick={handleShare}
+                      disabled={isSharing}
                       sx={{
                         bgcolor: 'rgba(255, 255, 255, 0.9)',
                         color: 'text.secondary',
@@ -298,10 +336,17 @@ function ProductCard({
                           bgcolor: 'white',
                           transform: 'scale(1.1)',
                         },
+                        '&:disabled': {
+                          bgcolor: 'rgba(255, 255, 255, 0.7)',
+                        },
                         transition: 'all 0.2s ease-in-out',
                       }}
                     >
-                      <ShareIcon />
+                      {isSharing ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <ShareIcon />
+                      )}
                     </IconButton>
                   </Fade>
                 )}
@@ -411,28 +456,50 @@ function ProductCard({
 
           <CardContent sx={{ flexGrow: 1, p: compact ? 2 : 2.5, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ flexGrow: 1 }}>
-              <Typography
-                variant={compact ? "subtitle1" : "h6"}
-                fontWeight={600}
-                sx={{
-                  display: "-webkit-box",
-                  WebkitBoxOrient: "vertical",
-                  WebkitLineClamp: 2,
-                  overflow: "hidden",
-                  color: inCart ? "success.main" : "text.primary",
-                  mb: 1.5,
-                  minHeight: compact ? 44 : 52,
-                  fontSize: compact ? '0.95rem' : '1.05rem',
-                  lineHeight: 1.3,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    color: 'primary.main',
-                  },
-                }}
-                onClick={handleViewProduct}
-              >
-                {productData.name}
-              </Typography>
+              <Box sx={{ mb: 1.5 }}>
+                <Typography
+                  variant={compact ? "subtitle1" : "h6"}
+                  fontWeight={600}
+                  sx={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 2,
+                    overflow: "hidden",
+                    color: inCart ? "success.main" : "text.primary",
+                    minHeight: compact ? 44 : 52,
+                    fontSize: compact ? '0.95rem' : '1.05rem',
+                    lineHeight: 1.3,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      color: 'primary.main',
+                    },
+                  }}
+                  onClick={handleViewProduct}
+                >
+                  {productData.name}
+                </Typography>
+                
+                {/* Translation Status Indicator */}
+                {!productData.hasTranslation && (
+                  <Tooltip title={i18n.language === 'en' ? 'English translation not available' : 'Bản dịch tiếng Việt chưa có'}>
+                    <Chip
+                      label={i18n.language === 'en' ? 'VN' : 'EN'}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        fontSize: '0.6rem',
+                        height: 16,
+                        mt: 0.5,
+                        borderColor: 'warning.main',
+                        color: 'warning.main',
+                        '& .MuiChip-label': {
+                          px: 0.5,
+                        },
+                      }}
+                    />
+                  </Tooltip>
+                )}
+              </Box>
 
               {!compact && productData.description && (
                 <Typography
@@ -552,41 +619,71 @@ function ProductCard({
                   <Button
                     fullWidth
                     variant="contained"
-                    startIcon={canOrder ? <ShoppingCartIcon /> : <DoNotDisturbIcon />}
+                    startIcon={
+                      isAddingToCart ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : showSuccess ? (
+                        <Zoom in={showSuccess} timeout={300}>
+                          <CheckCircleIcon />
+                        </Zoom>
+                      ) : canOrder ? (
+                        <ShoppingCartIcon />
+                      ) : (
+                        <DoNotDisturbIcon />
+                      )
+                    }
                     onClick={handleAddToCart}
-                    disabled={!canOrder}
+                    disabled={!canOrder || isAddingToCart}
                     sx={{
                       borderRadius: 2.5,
                       py: 1.2,
                       fontWeight: 600,
                       fontSize: compact ? '0.85rem' : '0.9rem',
-                      background: canOrder 
+                      background: showSuccess
+                        ? "linear-gradient(45deg, #4caf50 30%, #66bb6a 90%)"
+                        : canOrder 
                         ? "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)"
                         : "linear-gradient(45deg, #f44336 30%, #ff5722 90%)",
-                      boxShadow: canOrder 
+                      boxShadow: showSuccess
+                        ? "0 3px 10px rgba(76, 175, 80, 0.25)"
+                        : canOrder 
                         ? "0 3px 10px rgba(33, 150, 243, 0.25)"
                         : "0 3px 10px rgba(244, 67, 54, 0.25)",
                       "&:hover": {
-                        background: canOrder 
+                        background: showSuccess
+                          ? "linear-gradient(45deg, #4caf50 30%, #66bb6a 90%)"
+                          : canOrder 
                           ? "linear-gradient(45deg, #1976D2 30%, #1BA3D3 90%)"
                           : "linear-gradient(45deg, #d32f2f 30%, #f57c00 90%)",
-                        boxShadow: canOrder 
+                        boxShadow: showSuccess
+                          ? "0 5px 15px rgba(76, 175, 80, 0.35)"
+                          : canOrder 
                           ? "0 5px 15px rgba(33, 150, 243, 0.35)"
                           : "0 5px 15px rgba(244, 67, 54, 0.35)",
-                        transform: "translateY(-1px)",
+                        transform: isAddingToCart ? "none" : "translateY(-1px)",
                       },
                       "&:disabled": {
                         background: !canOrder 
                           ? "linear-gradient(45deg, #f44336 30%, #ff5722 90%)"
+                          : isAddingToCart
+                          ? "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)"
                           : "grey.300",
-                        color: !canOrder ? "white" : "grey.500",
+                        color: (!canOrder || isAddingToCart) ? "white" : "grey.500",
                         boxShadow: !canOrder 
                           ? "0 3px 10px rgba(244, 67, 54, 0.25)"
+                          : isAddingToCart
+                          ? "0 3px 10px rgba(33, 150, 243, 0.25)"
                           : "none",
+                        opacity: isAddingToCart ? 0.8 : 1,
                       },
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                   >
-                    {!canOrder 
+                    {isAddingToCart 
+                      ? t('product.adding')
+                      : showSuccess
+                      ? t('product.added')
+                      : !canOrder 
                       ? t('product.orderWindowClosed')
                       : t('product.addToCart')
                     }

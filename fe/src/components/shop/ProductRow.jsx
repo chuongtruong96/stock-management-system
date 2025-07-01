@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useCart } from "context/CartContext/useCart";
 import { useTranslation } from "react-i18next";
 import { getProductImageUrl } from "utils/apiUtils";
+import { getProductName } from "utils/productNameUtils";
 
 export default function ProductRow({ data, onAdd }) {
   const navigate = useNavigate();
@@ -18,16 +19,10 @@ export default function ProductRow({ data, onAdd }) {
   const inCart = isInCart(id);
   const cartQty = getCartItemQty(id);
   
-  // Get display name based on current language
-  const getDisplayName = () => {
-    if (i18n.language === 'vi') {
-      return data.nameVn || data.nameEn || data.name || 'Unnamed Product';
-    } else {
-      return data.nameEn || data.nameVn || data.name || 'Unnamed Product';
-    }
-  };
-  
-  const displayName = getDisplayName();
+  // Use the enhanced utility function to get the correct name and translation status
+  const nameResult = getProductName(data, i18n.language);
+  const displayName = nameResult.name;
+  const hasTranslation = nameResult.hasTranslation;
 
   return (
     <Paper
@@ -78,14 +73,35 @@ export default function ProductRow({ data, onAdd }) {
       </Box>
 
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-        <Typography 
-          variant="subtitle1" 
-          fontWeight={600} 
-          noWrap
-          sx={{ color: inCart ? "#666" : "inherit" }}
-        >
-          {displayName}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography 
+            variant="subtitle1" 
+            fontWeight={600} 
+            noWrap
+            sx={{ color: inCart ? "#666" : "inherit" }}
+          >
+            {displayName}
+          </Typography>
+          
+          {/* Translation Status Indicator */}
+          {!hasTranslation && (
+            <Chip
+              label={i18n.language === 'en' ? 'VN' : 'EN'}
+              size="small"
+              variant="outlined"
+              sx={{
+                fontSize: '0.6rem',
+                height: 16,
+                borderColor: 'warning.main',
+                color: 'warning.main',
+                '& .MuiChip-label': {
+                  px: 0.5,
+                },
+              }}
+            />
+          )}
+        </Box>
+        
         {data.price && (
           <Typography variant="subtitle2" color="primary">
             {data.price.toLocaleString()} ₫

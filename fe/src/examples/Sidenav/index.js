@@ -1,23 +1,28 @@
 import { useContext, useEffect, useState } from "react";
-
-// react-router-dom components
 import { useLocation, NavLink } from "react-router-dom";
 import { AuthContext } from "context/AuthContext";
-// prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
 
 // @mui material components
-import List from "@mui/material/List";
-import Divider from "@mui/material/Divider";
-import Link from "@mui/material/Link";
-import Icon from "@mui/material/Icon";
-import { Box, Typography, Avatar, Chip, Tooltip, IconButton } from "@mui/material";
-import { 
-  Settings as SettingsIcon, 
+import {
+  List,
+  Divider,
+  Link,
+  Icon,
+  Box,
+  Typography,
+  Avatar,
+  Chip,
+  Tooltip,
+  IconButton,
+  Fade,
+  alpha,
+} from "@mui/material";
+import {
+  Settings as SettingsIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
   ChevronLeft as ChevronLeftIcon,
-  Menu as MenuIcon,
 } from "@mui/icons-material";
 
 // Material Dashboard 2 React components
@@ -51,50 +56,49 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   } = controller;
   const location = useLocation();
   const { hasRole, auth, logout } = useContext(AuthContext);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1200);
 
   const collapseName = location.pathname.replace("/", "");
 
-  let textColor = "white";
-  let iconColor = "white";
-
-  if (transparentSidenav || (whiteSidenav && !darkMode)) {
-    textColor = "dark";
-    iconColor = "dark";
-  } else if (whiteSidenav && darkMode) {
-    textColor = "inherit";
-    iconColor = "inherit";
-  }
+  // Force white text for gradient background
+  const textColor = "white";
+  const iconColor = textColor;
 
   const closeSidenav = () => setMiniSidenav(dispatch, true);
   const toggleSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
 
   useEffect(() => {
-    const handleMini = () => {
+    function handleMini() {
       const narrow = window.innerWidth < 1200;
+      setIsMobile(narrow);
 
-      // Only auto-minimize on mobile, don't auto-expand
-      if (narrow && !miniSidenav) {
-        setMiniSidenav(dispatch, true);
-      }
-      
+      // Update transparent and white sidenav based on screen size
       if ((narrow ? false : transparentSidenav) !== transparentSidenav)
         setTransparentSidenav(dispatch, narrow ? false : transparentSidenav);
       if ((narrow ? false : whiteSidenav) !== whiteSidenav)
         setWhiteSidenav(dispatch, narrow ? false : whiteSidenav);
+    }
+
+    let resizeTimeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(handleMini, 150);
     };
 
-    window.addEventListener("resize", handleMini);
+    window.addEventListener("resize", debouncedResize);
     handleMini();
 
-    return () => window.removeEventListener("resize", handleMini);
-  }, [dispatch, miniSidenav, transparentSidenav, whiteSidenav]);
+    return () => {
+      window.removeEventListener("resize", debouncedResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, [dispatch, transparentSidenav, whiteSidenav]);
 
   // Render all the routes from the routes.js (All the visible items on the Sidenav)
   const filtered = routes.filter(
     (r) =>
-      r.type !== "collapse" || // tiêu đề / divider luôn hiển thị
-      !r.allowedRoles || // không ràng buộc
+      r.type !== "collapse" ||
+      !r.allowedRoles ||
       r.allowedRoles.some((role) => hasRole(role))
   );
 
@@ -132,14 +136,23 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
           <MDTypography
             key={key}
             color={textColor}
-            display="block"
+            display={miniSidenav ? "none" : "block"}
             variant="caption"
             fontWeight="bold"
             textTransform="uppercase"
             pl={3}
-            mt={2}
+            mt={3}
             mb={1}
             ml={1}
+            sx={{
+              opacity: miniSidenav ? 0 : 1,
+              visibility: miniSidenav ? "hidden" : "visible",
+              transition: "all 0.3s ease",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              letterSpacing: "0.5px",
+              fontSize: "0.75rem",
+            }}
           >
             {title}
           </MDTypography>
@@ -148,10 +161,11 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         returnValue = (
           <Divider
             key={key}
-            light={
-              (!darkMode && !whiteSidenav && !transparentSidenav) ||
-              (darkMode && !transparentSidenav && whiteSidenav)
-            }
+            sx={{
+              my: 2,
+              mx: 2,
+              borderColor: alpha("rgba(255,255,255,1)", 0.2),
+            }}
           />
         );
       }
@@ -163,223 +177,309 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   return (
     <SidenavRoot
       {...rest}
-      variant="permanent"
+      variant={isMobile ? "temporary" : "permanent"}
+      open={isMobile ? !miniSidenav : true}
+      onClose={() => isMobile && setMiniSidenav(dispatch, true)}
+      ModalProps={{
+        keepMounted: true,
+        ...(isMobile && {
+          BackdropProps: {
+            sx: {
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              backdropFilter: "blur(8px)",
+            },
+          },
+        }),
+      }}
       ownerState={{ transparentSidenav, whiteSidenav, miniSidenav, darkMode }}
     >
-      {/* Enhanced Header */}
-      <MDBox pt={3} pb={1} px={4} textAlign="center">
-        {/* Close button for mobile */}
+      {/* Header Section */}
+      <MDBox>
+        {/* Mobile close button */}
         <MDBox
           display={{ xs: "block", xl: "none" }}
           position="absolute"
-          top={0}
-          right={0}
-          p={1.625}
+          top={8}
+          right={8}
+          p={1}
           onClick={closeSidenav}
-          sx={{ cursor: "pointer" }}
+          sx={{
+            cursor: "pointer",
+            borderRadius: 1,
+            zIndex: 10,
+            "&:hover": {
+              bgcolor: alpha("rgba(255,255,255,1)", 0.1),
+            },
+          }}
         >
-          <MDTypography variant="h6" color="secondary">
-            <Icon sx={{ fontWeight: "bold" }}>close</Icon>
-          </MDTypography>
+          <Icon sx={{ color: iconColor, fontSize: "1.25rem" }}>close</Icon>
         </MDBox>
 
-        {/* Toggle button for desktop */}
+        {/* Desktop toggle button */}
         {!miniSidenav && (
           <MDBox
             position="absolute"
-            top={0}
-            right={0}
-            p={1.625}
+            top={8}
+            right={8}
+            p={1}
             onClick={toggleSidenav}
-            sx={{ 
+            sx={{
               cursor: "pointer",
               display: { xs: "none", xl: "block" },
+              borderRadius: 1,
               opacity: 0.7,
-              "&:hover": { opacity: 1 }
+              zIndex: 10,
+              transition: "all 0.2s ease",
+              "&:hover": {
+                opacity: 1,
+                bgcolor: alpha("rgba(255,255,255,1)", 0.1),
+              },
             }}
           >
-            <Tooltip title="Collapse sidebar">
-            <ChevronLeftIcon sx={{ color: iconColor, fontSize: "1.2rem" }} />
+            <Tooltip title="Collapse sidebar" placement="bottom">
+              <ChevronLeftIcon sx={{ color: iconColor, fontSize: "1.25rem" }} />
             </Tooltip>
           </MDBox>
         )}
 
-        {/* Brand Logo and Name */}
-        <MDBox component={NavLink} to="/admin" display="flex" alignItems="center" sx={{ textDecoration: "none" }}>
+        {/* Brand Section */}
+        <MDBox
+          component={NavLink}
+          to="/admin"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none",
+            p: 2,
+            mx: 1,
+            mt: 1,
+            borderRadius: 2,
+            transition: "all 0.3s ease",
+            "&:hover": {
+              bgcolor: alpha("rgba(255,255,255,1)", 0.1),
+              transform: "translateY(-1px)",
+            },
+          }}
+        >
           {brand && (
-            <MDBox 
-              component="img" 
-              src={brand} 
-              alt="Brand" 
-              width="2rem" 
-              sx={{ 
-                borderRadius: 1,
-                mr: miniSidenav ? 0 : 1,
-                transition: "all 0.3s ease"
+            <MDBox
+              component="img"
+              src={brand}
+              alt="Brand Logo"
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                mr: miniSidenav ? 0 : 1.5,
+                transition: "all 0.3s ease",
+                flexShrink: 0,
               }}
             />
           )}
-          <MDBox
-            width={!brandName && "100%"}
-            sx={(theme) => sidenavLogoLabel(theme, { miniSidenav })}
-          >
-            <MDTypography
-              component="h6"
-              variant="button"
-              fontWeight="medium"
-              color={textColor}
-              sx={{
-                fontSize: miniSidenav ? "0.8rem" : "0.9rem",
-                transition: "all 0.3s ease"
-              }}
-            >
-              {brandName}
-            </MDTypography>
-          </MDBox>
-        </MDBox>
-      </MDBox>
-
-      <Divider
-        light={
-          (!darkMode && !whiteSidenav && !transparentSidenav) ||
-          (darkMode && !transparentSidenav && whiteSidenav)
-        }
-      />
-
-      {/* Enhanced User Profile Section */}
-      {auth?.user && !miniSidenav && (
-      <MDBox px={3} py={2}>
-      <Box
-      sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: 1.5,
-      p: 1.5,
-      borderRadius: 2,
-      bgcolor: whiteSidenav && !darkMode 
-      ? "rgba(0, 0, 0, 0.05)" 
-      : "rgba(255, 255, 255, 0.1)",
-      border: whiteSidenav && !darkMode 
-      ? "1px solid rgba(0, 0, 0, 0.1)" 
-      : "1px solid rgba(255, 255, 255, 0.2)",
-      backdropFilter: "blur(10px)",
-      transition: "all 0.3s ease",
-      "&:hover": {
-      bgcolor: whiteSidenav && !darkMode 
-      ? "rgba(0, 0, 0, 0.08)" 
-      : "rgba(255, 255, 255, 0.15)",
-      transform: "translateY(-1px)",
-      }
-      }}
-      >
-            <Avatar
-              sx={{
-                width: 36,
-                height: 36,
-                bgcolor: "primary.main",
-                fontSize: "0.9rem",
-                fontWeight: "bold"
-              }}
-            >
-              {auth.user.username?.charAt(0).toUpperCase() || "U"}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                variant="subtitle2"
+          {!miniSidenav && (
+            <MDBox sx={{ flex: 1, minWidth: 0 }}>
+              <MDTypography
+                variant="h6"
+                color={textColor}
                 sx={{
-                  color: textColor,
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  fontSize: brandName && brandName.length > 15 ? "0.9rem" : "1.1rem",
+                  letterSpacing: "0.5px",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  whiteSpace: "nowrap"
+                  whiteSpace: "nowrap",
                 }}
               >
-                {auth.user.username}
-              </Typography>
-              <Chip
-              label={auth.user.roles?.[0] || "User"}
-              size="small"
-              sx={{
-              height: 18,
-              fontSize: "0.65rem",
-              bgcolor: whiteSidenav && !darkMode 
-              ? "rgba(0, 0, 0, 0.1)" 
-              : "rgba(255, 255, 255, 0.2)",
-              color: textColor,
-              "& .MuiChip-label": {
-              px: 1
-              }
-              }}
-              />
-            </Box>
-          </Box>
+                {brandName}
+              </MDTypography>
+            </MDBox>
+          )}
         </MDBox>
-      )}
+
+        {/* User Profile Section */}
+        {auth?.user && (
+          <MDBox
+            sx={{
+              mx: 1,
+              mb: 0.5,
+              p: miniSidenav ? 1 : 2,
+              borderRadius: 2,
+              bgcolor: alpha("rgba(255,255,255,1)", 0.1),
+              border: `1px solid ${alpha("rgba(255,255,255,1)", 0.15)}`,
+              transition: "all 0.3s ease",
+            }}
+          >
+            {miniSidenav ? (
+              // Collapsed view - just avatar with tooltip
+              <Tooltip title={`${auth.user.username} (${auth.user.roles?.[0] || "User"})`} placement="right">
+                <Box sx={{ display: "flex", justifyContent: "center" }}>
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: alpha("rgba(255,255,255,1)", 0.2),
+                      color: "white",
+                      fontSize: "0.9rem",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {auth.user.username?.charAt(0).toUpperCase() || "U"}
+                  </Avatar>
+                </Box>
+              </Tooltip>
+            ) : (
+              // Expanded view - full profile
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Avatar
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    bgcolor: alpha("rgba(255,255,255,1)", 0.2),
+                    color: "white",
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                    flexShrink: 0,
+                  }}
+                >
+                  {auth.user.username?.charAt(0).toUpperCase() || "U"}
+                </Avatar>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      color: textColor,
+                      fontWeight: 600,
+                      fontSize: "0.875rem",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      mb: 0.25,
+                    }}
+                  >
+                    {auth.user.username}
+                  </Typography>
+                  <Chip
+                    label={auth.user.roles?.[0] || "User"}
+                    size="small"
+                    sx={{
+                      height: 18,
+                      fontSize: "0.65rem",
+                      fontWeight: 500,
+                      bgcolor: alpha("rgba(255,255,255,1)", 0.2),
+                      color: textColor,
+                      "& .MuiChip-label": {
+                        px: 1,
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
+          </MDBox>
+        )}
+      </MDBox>
+
+      {/* Divider */}
+      <Divider
+        sx={{
+          mx: 1,
+          my: 1,
+          borderColor: alpha("rgba(255,255,255,1)", 0.2),
+        }}
+      />
 
       {/* Navigation Menu */}
-      <List sx={{ px: 1 }}>{renderRoutes}</List>
+      <List sx={{ px: 1, pt: 0, pb: 2, flex: 1 }}>{renderRoutes}</List>
 
-      {/* Enhanced Footer Actions */}
+      {/* Footer Actions */}
       <MDBox sx={{ mt: "auto", p: 2 }}>
+        <Divider
+          sx={{
+            mb: 2,
+            borderColor: alpha("rgba(255,255,255,1)", 0.2),
+          }}
+        />
         {!miniSidenav ? (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <MDButton
-              component={NavLink}
-              to="/admin/profile"
-              variant="outlined"
-              color="white"
-              size="small"
-              startIcon={<PersonIcon />}
-              sx={{
-                borderColor: "rgba(255, 255, 255, 0.3)",
-                color: textColor,
-                "&:hover": {
-                  borderColor: "rgba(255, 255, 255, 0.5)",
-                  bgcolor: "rgba(255, 255, 255, 0.1)"
-                }
-              }}
-            >
-              Profile
-            </MDButton>
-            <MDButton
-              onClick={logout}
-              variant="outlined"
-              color="error"
-              size="small"
-              startIcon={<LogoutIcon />}
-              sx={{
-                borderColor: "rgba(244, 67, 54, 0.5)",
-                color: "#f44336",
-                "&:hover": {
-                  borderColor: "#f44336",
-                  bgcolor: "rgba(244, 67, 54, 0.1)"
-                }
-              }}
-            >
-              Logout
-            </MDButton>
-          </Box>
+          <Fade in={!miniSidenav} timeout={300}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <MDButton
+                component={NavLink}
+                to="/profile"
+                variant="outlined"
+                color="white"
+                size="small"
+                startIcon={<PersonIcon />}
+                sx={{
+                  borderColor: alpha("rgba(255,255,255,1)", 0.3),
+                  color: textColor,
+                  fontWeight: 500,
+                  borderRadius: 2,
+                  "&:hover": {
+                    borderColor: alpha("rgba(255,255,255,1)", 0.5),
+                    bgcolor: alpha("rgba(255,255,255,1)", 0.1),
+                  },
+                }}
+              >
+                Profile
+              </MDButton>
+              <MDButton
+                onClick={logout}
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<LogoutIcon />}
+                sx={{
+                  borderColor: alpha("#f44336", 0.5),
+                  color: "#f44336",
+                  fontWeight: 500,
+                  borderRadius: 2,
+                  "&:hover": {
+                    borderColor: "#f44336",
+                    bgcolor: alpha("#f44336", 0.1),
+                  },
+                }}
+              >
+                Logout
+              </MDButton>
+            </Box>
+          </Fade>
         ) : (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+              alignItems: "center",
+            }}
+          >
             <Tooltip title="Profile" placement="right">
-            <IconButton
-            component={NavLink}
-            to="/admin/profile"
-            size="small"
-            sx={{ color: iconColor }}
-            >
-            <PersonIcon fontSize="small" />
-            </IconButton>
+              <IconButton
+                component={NavLink}
+                to="/profile"
+                size="small"
+                sx={{
+                  color: iconColor,
+                  "&:hover": {
+                    bgcolor: alpha("rgba(255,255,255,1)", 0.1),
+                  },
+                }}
+              >
+                <PersonIcon fontSize="small" />
+              </IconButton>
             </Tooltip>
             <Tooltip title="Logout" placement="right">
-            <IconButton
-            onClick={logout}
-            size="small"
-            sx={{ color: "#f44336" }}
-            >
-            <LogoutIcon fontSize="small" />
-            </IconButton>
+              <IconButton
+                onClick={logout}
+                size="small"
+                sx={{
+                  color: "#f44336",
+                  "&:hover": {
+                    bgcolor: alpha("#f44336", 0.1),
+                  },
+                }}
+              >
+                <LogoutIcon fontSize="small" />
+              </IconButton>
             </Tooltip>
           </Box>
         )}

@@ -32,6 +32,7 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../common/LanguageToggle";
+import { getCategoryNameSimple } from "utils/categoryNameUtils";
 
 export default function ToolbarFilter({
   keyword,
@@ -47,15 +48,14 @@ export default function ToolbarFilter({
   onToggleCat,
   totalProducts = 0,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [showCategories, setShowCategories] = useState(false);
 
   const sortOptions = [
-    { value: "default", label: "Default" },
-    { value: "nameAsc", label: "Name A–Z", icon: "🔤" },
-    { value: "nameDesc", label: "Name Z–A", icon: "🔤" },
-    { value: "priceAsc", label: "Price ↑", icon: "💰" },
-    { value: "priceDesc", label: "Price ↓", icon: "💰" },
+    { value: "default", label: t('sort.default') || "Default" },
+    { value: "nameAsc", label: t('sort.nameAsc') || "Name A–Z", icon: "🔤" },
+    { value: "nameDesc", label: t('sort.nameDesc') || "Name Z–A", icon: "🔤" },
+    
   ];
 
   const pageSizeOptions = [9, 12, 15, 24];
@@ -131,13 +131,24 @@ export default function ToolbarFilter({
               justifyContent="space-between"
             >
               {/* Results Count */}
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ whiteSpace: 'nowrap' }}
-              >
-                {totalProducts} products found
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ whiteSpace: 'nowrap' }}
+                >
+                  <strong>{totalProducts.toLocaleString()}</strong> {t('common.productsFound') || 'products found'}
+                </Typography>
+                {hasActiveFilters && (
+                  <Chip
+                    label={t('common.filtered') || 'Filtered'}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    sx={{ fontSize: '0.7rem', height: 20 }}
+                  />
+                )}
+              </Box>
 
               {/* Controls */}
               <Stack 
@@ -148,8 +159,8 @@ export default function ToolbarFilter({
               >
                 {/* Page Size */}
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent={{ xs: "space-between", sm: "flex-start" }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-                    Show:
+                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                    {t('common.show') || 'Show'}:
                   </Typography>
                   <ToggleButtonGroup
                     size="small"
@@ -159,13 +170,20 @@ export default function ToolbarFilter({
                     sx={{
                       '& .MuiToggleButton-root': {
                         borderRadius: 2,
-                        px: 2,
+                        px: 1.5,
+                        minWidth: 36,
+                        fontSize: '0.8rem',
                         '&.Mui-selected': {
                           bgcolor: 'primary.main',
                           color: 'white',
+                          fontWeight: 600,
                           '&:hover': {
                             bgcolor: 'primary.dark',
                           },
+                        },
+                        '&:hover': {
+                          bgcolor: 'primary.light',
+                          color: 'primary.main',
                         },
                       },
                     }}
@@ -179,7 +197,7 @@ export default function ToolbarFilter({
                 </Stack>
 
                 {/* Sort */}
-                <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 140 } }}>
+                <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 160 } }}>
                   <Select
                     value={sort}
                     onChange={(e) => setSort(e.target.value)}
@@ -187,16 +205,23 @@ export default function ToolbarFilter({
                     sx={{
                       borderRadius: 2,
                       bgcolor: 'background.paper',
+                      fontSize: '0.85rem',
                       '& .MuiSelect-select': {
                         display: 'flex',
                         alignItems: 'center',
+                        py: 1,
+                      },
+                      '&:hover': {
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'primary.main',
+                        },
                       },
                     }}
                   >
                     {sortOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
+                      <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.85rem' }}>
                         <Stack direction="row" alignItems="center" spacing={1}>
-                          {option.icon && <span>{option.icon}</span>}
+                          {option.icon && <span style={{ fontSize: '0.9rem' }}>{option.icon}</span>}
                           <span>{option.label}</span>
                         </Stack>
                       </MenuItem>
@@ -205,7 +230,9 @@ export default function ToolbarFilter({
                 </FormControl>
 
                 {/* Language Toggle */}
-                <LanguageToggle size="small" />
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <LanguageToggle size="small" />
+                </Box>
 
                 {/* View Toggle */}
                 <ToggleButtonGroup
@@ -216,6 +243,7 @@ export default function ToolbarFilter({
                   sx={{
                     '& .MuiToggleButton-root': {
                       borderRadius: 2,
+                      px: 1.5,
                       '&.Mui-selected': {
                         bgcolor: 'secondary.main',
                         color: 'white',
@@ -223,16 +251,20 @@ export default function ToolbarFilter({
                           bgcolor: 'secondary.dark',
                         },
                       },
+                      '&:hover': {
+                        bgcolor: 'secondary.light',
+                        color: 'secondary.main',
+                      },
                     },
                   }}
                 >
                   <ToggleButton value="grid">
-                    <Tooltip title="Grid View">
+                    <Tooltip title={t('view.grid') || 'Grid View'}>
                       <ViewModuleIcon fontSize="small" />
                     </Tooltip>
                   </ToggleButton>
                   <ToggleButton value="list">
-                    <Tooltip title="List View">
+                    <Tooltip title={t('view.list') || 'List View'}>
                       <ViewListIcon fontSize="small" />
                     </Tooltip>
                   </ToggleButton>
@@ -242,102 +274,191 @@ export default function ToolbarFilter({
           </Stack>
 
           {/* Category Filter Toggle */}
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
             <Button
               variant="outlined"
               startIcon={<FilterIcon />}
               endIcon={
-                <Badge badgeContent={selectedCats.length} color="secondary">
+                <Badge 
+                  badgeContent={selectedCats.length} 
+                  color="secondary"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '0.7rem',
+                      minWidth: 16,
+                      height: 16,
+                    }
+                  }}
+                >
                   {showCategories ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </Badge>
               }
               onClick={() => setShowCategories(!showCategories)}
               sx={{
-                borderRadius: 2,
+                borderRadius: 2.5,
                 textTransform: 'none',
-                borderColor: 'divider',
-                color: 'text.primary',
+                borderColor: selectedCats.length > 0 ? 'secondary.main' : 'divider',
+                color: selectedCats.length > 0 ? 'secondary.main' : 'text.primary',
+                bgcolor: selectedCats.length > 0 ? 'secondary.light' : 'transparent',
+                fontWeight: selectedCats.length > 0 ? 600 : 500,
+                px: 2.5,
+                py: 1,
                 '&:hover': {
-                  borderColor: 'primary.main',
-                  bgcolor: 'primary.light',
-                  color: 'primary.main',
+                  borderColor: 'secondary.main',
+                  bgcolor: 'secondary.light',
+                  color: 'secondary.main',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                 },
+                transition: 'all 0.2s ease-in-out',
               }}
             >
-              Category Filters
+              {t('common.categoryFilters') || 'Category Filters'}
             </Button>
 
-            {hasActiveFilters && (
-              <Button
-                variant="text"
-                startIcon={<ClearIcon />}
-                onClick={clearAllFilters}
-                sx={{
-                  textTransform: 'none',
-                  color: 'text.secondary',
-                  '&:hover': {
-                    color: 'error.main',
-                    bgcolor: 'error.light',
-                  },
-                }}
-              >
-                Clear All
-              </Button>
-            )}
+            <Stack direction="row" spacing={1} alignItems="center">
+              {hasActiveFilters && (
+                <Button
+                  variant="text"
+                  startIcon={<ClearIcon />}
+                  onClick={clearAllFilters}
+                  size="small"
+                  sx={{
+                    textTransform: 'none',
+                    color: 'text.secondary',
+                    borderRadius: 2,
+                    px: 2,
+                    fontSize: '0.85rem',
+                    '&:hover': {
+                      color: 'error.main',
+                      bgcolor: 'error.light',
+                      transform: 'translateY(-1px)',
+                    },
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                >
+                  {t('common.clearAll') || 'Clear All'}
+                </Button>
+              )}
+              
+              {/* Quick stats */}
+              {selectedCats.length > 0 && (
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                  {selectedCats.length} {t('common.selected') || 'selected'}
+                </Typography>
+              )}
+            </Stack>
           </Stack>
         </Stack>
       </Box>
 
       {/* Category Filters */}
-      <Collapse in={showCategories}>
-        <Divider />
-        <Box sx={{ p: 2.5, bgcolor: 'grey.50' }}>
-          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-            Filter by Categories
-          </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 1,
-              maxHeight: 200,
-              overflowY: "auto",
-              '&::-webkit-scrollbar': {
-                width: 6,
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'transparent',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(0,0,0,0.2)',
-                borderRadius: 3,
-              },
-            }}
-          >
-            {categories.map((c) => {
-              const selected = selectedCats.includes(c.categoryId);
-              const categoryName = c.nameEn || c.nameVn || c.code;
+      <Collapse in={showCategories} timeout={300}>
+        <Divider sx={{ borderColor: 'divider' }} />
+        <Box sx={{ 
+          p: 3, 
+          bgcolor: 'linear-gradient(135deg, rgba(248,249,250,0.8) 0%, rgba(255,255,255,0.9) 100%)',
+          borderBottomLeftRadius: 3,
+          borderBottomRightRadius: 3,
+        }}>
+          <Stack spacing={2.5}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Typography variant="subtitle2" fontWeight={600} color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FilterIcon fontSize="small" color="secondary" />
+                {t('common.filterByCategories') || 'Filter by Categories'}
+              </Typography>
               
-              return (
-                <Chip
-                  key={c.categoryId}
-                  label={categoryName}
-                  color={selected ? "secondary" : "default"}
-                  variant={selected ? "filled" : "outlined"}
-                  onClick={() => onToggleCat(c.categoryId)}
-                  sx={{
-                    borderRadius: 2,
-                    fontWeight: selected ? 600 : 500,
-                    transition: 'all 0.2s ease-in-out',
+              {categories.length > 0 && (
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                  {categories.length} {t('common.available') || 'available'}
+                </Typography>
+              )}
+            </Stack>
+            
+            {categories.length === 0 ? (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 3,
+                color: 'text.secondary',
+                bgcolor: 'background.paper',
+                borderRadius: 2,
+                border: '1px dashed',
+                borderColor: 'divider',
+              }}>
+                <Typography variant="body2">
+                  {t('common.noCategoriesAvailable') || 'No categories available'}
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1.5,
+                  maxHeight: 240,
+                  overflowY: "auto",
+                  p: 1,
+                  bgcolor: 'background.paper',
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&::-webkit-scrollbar': {
+                    width: 8,
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'rgba(0,0,0,0.05)',
+                    borderRadius: 4,
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: 'rgba(0,0,0,0.2)',
+                    borderRadius: 4,
                     '&:hover': {
-                      transform: 'translateY(-1px)',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                      background: 'rgba(0,0,0,0.3)',
                     },
-                  }}
-                />
-              );
-            })}
-          </Box>
+                  },
+                }}
+              >
+                {categories.map((c) => {
+                  const selected = selectedCats.includes(c.categoryId);
+                  
+                  // Use the utility function to get the correct name based on language
+                  const categoryName = getCategoryNameSimple(c, i18n.language);
+                  
+                  return (
+                    <Chip
+                      key={c.categoryId}
+                      label={categoryName}
+                      color={selected ? "secondary" : "default"}
+                      variant={selected ? "filled" : "outlined"}
+                      onClick={() => onToggleCat(c.categoryId)}
+                      sx={{
+                        borderRadius: 2.5,
+                        fontWeight: selected ? 600 : 500,
+                        fontSize: '0.85rem',
+                        px: 1,
+                        py: 0.5,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: selected 
+                            ? '0 4px 12px rgba(156, 39, 176, 0.3)' 
+                            : '0 4px 12px rgba(0,0,0,0.15)',
+                          borderColor: selected ? 'secondary.main' : 'primary.main',
+                        },
+                        '&:active': {
+                          transform: 'translateY(0px)',
+                        },
+                        ...(selected && {
+                          boxShadow: '0 2px 8px rgba(156, 39, 176, 0.2)',
+                        }),
+                      }}
+                    />
+                  );
+                })}
+              </Box>
+            )}
+          </Stack>
         </Box>
       </Collapse>
     </Paper>

@@ -24,11 +24,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { getCategoryNameSimple } from "utils/categoryNameUtils";
 import { productApi, categoryApi } from "services/api";
 import { getProductImageUrl } from "utils/apiUtils";
 
 const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" }) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -45,7 +46,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
 
   // Search suggestions query
   const { data: suggestions = [], isLoading } = useQuery({
-    queryKey: ["searchSuggestions", query],
+    queryKey: ["searchSuggestions", query, i18n.language],
     queryFn: async () => {
       if (query.length < 2) return [];
       
@@ -71,7 +72,7 @@ const SearchBar = ({ placeholder, onSearch, fullWidth = true, size = "medium" })
         .map(c => ({
           type: "category",
           id: c.categoryId,
-          title: c.nameEn || c.nameVn,
+          title: getCategoryNameSimple(c, i18n.language),
           subtitle: t('search.category'),
           image: c.icon,
         }));
